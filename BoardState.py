@@ -4,6 +4,9 @@
 
 
 class Territory:
+        """
+        Represents all static information about a territory
+        """
         
         #neighbors list has the target and conditions
         #conditions could be 'edge' class which asks if its passible
@@ -15,6 +18,10 @@ class Territory:
                 self.is_water = is_seazone
                 
 class Unit:
+        """
+        Provides a basic template for a unit
+        """
+        
         # movement ability
         # attack defense
         # transport capacity
@@ -36,6 +43,12 @@ class Unit:
         
         
 class Rules:
+        """
+        Contains static game data: a board representing territories, assignment of neighbors 
+        for each territory (which is contained within a dictionary from string to
+        territory), and prototypes for units.
+        """
+        
         # defines all the prototypes for units. definitions
         # also says all territorries and how they are conneted.
         # if has __ tech, attack ++
@@ -655,6 +668,9 @@ class Rules:
                 self.bomber = Unit("bomber", "air", 12, 4, 1, 6)
                 
 class Territory_state:
+        """
+        Object representing all fluid information about a territory
+        """
         
         def __init__(self, territory_owner):
                 self.owner = territory_owner
@@ -677,6 +693,11 @@ class Territory_state:
 
 
 class Game:
+        """
+        IN PROGRESS. Trying to represent the game as a whole, including all static and fluid
+        information (including turn phase and turn ownership -- not yet defined anywhere).
+        Will want to be able to make changes as game progresses.
+        """
         def __init__(self, rules):
                 #dictionary from territory to territory state
                 
@@ -697,6 +718,10 @@ class Game:
 # check phase
 
 def passable(unit, current_territory, goal_territory):
+        """
+        a function that will check if a theoretical move is valid.
+        """
+                            
         if (unit.unit_type == "land"):
                 if (goal_territory.is_water == 0 and (goal_territory.name in current_territory.neighbors)):
                         return True
