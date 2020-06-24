@@ -1,7 +1,16 @@
+from stackqueue import *
+from urllib.request import urlopen
+from urllib.error import HTTPError
+from urllib.error import URLError
+import urllib
+import urllib
+import ssl
+import time
+
+
 # Make array representing board state
 # must be editable by reading exported files 
 # (either from xml or sheet)
-
 
 class Territory:
         """
@@ -54,182 +63,182 @@ class Rules:
         # rules.get_unit_type (tank)
         
         def __init__(self):
-                self.board = {"1 Sea Zone" : Territory("1 Sea Zone", 0, 1), \
-                "2 Sea Zone" : Territory("2 Sea Zone", 0, 1), \
-                "3 Sea Zone" : Territory("2 Sea Zone", 0, 1), \
-                "4 Sea Zone" : Territory("4 Sea Zone", 0, 1), \
-                "5 Sea Zone" : Territory("5 Sea Zone", 0, 1), \
-                "6 Sea Zone" : Territory("6 Sea Zone", 0, 1), \
-                "7 Sea Zone" : Territory("7 Sea Zone", 0, 1), \
-                "8 Sea Zone" : Territory("8 Sea Zone", 0, 1), \
-                "9 Sea Zone" : Territory("9 Sea Zone", 0, 1), \
-                "10 Sea Zone" : Territory("10 Sea Zone", 0, 1), \
-                "11 Sea Zone" : Territory("11 Sea Zone", 0, 1), \
-                "12 Sea Zone" : Territory("12 Sea Zone", 0, 1), \
-                "13 Sea Zone" : Territory("13 Sea Zone", 0, 1), \
-                "14 Sea Zone" : Territory("14 Sea Zone", 0, 1), \
-                "15 Sea Zone" : Territory("15 Sea Zone", 0, 1), \
-                "16 Sea Zone" : Territory("16 Sea Zone", 0, 1), \
-                "17 Sea Zone" : Territory("17 Sea Zone", 0, 1), \
-                "18 Sea Zone" : Territory("18 Sea Zone", 0, 1), \
-                "19 Sea Zone" : Territory("19 Sea Zone", 0, 1), \
-                "20 Sea one" : Territory("20 Sea Zone", 0, 1), \
-                "21 Sea Zone" : Territory("21 Sea Zone", 0, 1), \
-                "22 Sea Zone" : Territory("22 Sea Zone", 0, 1), \
-                "23 Sea Zone" : Territory("23 Sea Zone", 0, 1), \
-                "24 Sea Zone" : Territory("24 Sea Zone", 0, 1), \
-                "25 Sea Zone" : Territory("25 Sea Zone", 0, 1), \
-                "26 Sea Zone" : Territory("26 Sea Zone", 0, 1), \
-                "27 Sea Zone" : Territory("27 Sea Zone", 0, 1), \
-                "28 Sea Zone" : Territory("28 Sea Zone", 0, 1), \
-                "29 Sea Zone" : Territory("29 Sea Zone", 0, 1), \
-                "30 Sea Zone" : Territory("30 Sea Zone", 0, 1), \
-                "31 Sea Zone" : Territory("31 Sea Zone", 0, 1), \
-                "32 Sea Zone" : Territory("32 Sea Zone", 0, 1), \
-                "33 Sea Zone" : Territory("33 Sea Zone", 0, 1), \
-                "34 Sea Zone" : Territory("34 Sea Zone", 0, 1), \
-                "35 Sea Zone" : Territory("35 Sea Zone", 0, 1), \
-                "36 Sea Zone" : Territory("36 Sea Zone", 0, 1), \
-                "37 Sea Zone" : Territory("37 Sea Zone", 0, 1), \
-                "38 Sea Zone" : Territory("38 Sea Zone", 0, 1), \
-                "39 Sea Zone" : Territory("39 Sea Zone", 0, 1), \
-                "40 Sea Zone" : Territory("40 Sea Zone", 0, 1), \
-                "41 Sea Zone" : Territory("41 Sea Zone", 0, 1), \
-                "42 Sea Zone" : Territory("42 Sea Zone", 0, 1), \
-                "43 Sea Zone" : Territory("43 Sea Zone", 0, 1), \
-                "44 Sea Zone" : Territory("44 Sea Zone", 0, 1), \
-                "45 Sea Zone" : Territory("45 Sea Zone", 0, 1), \
-                "46 Sea Zone" : Territory("46 Sea Zone", 0, 1), \
-                "47 Sea Zone" : Territory("47 Sea Zone", 0, 1), \
-                "48 Sea Zone" : Territory("48 Sea Zone", 0, 1), \
-                "49 Sea Zone" : Territory("49 Sea Zone", 0, 1), \
-                "50 Sea Zone" : Territory("50 Sea Zone", 0, 1), \
-                "51 Sea Zone" : Territory("51 Sea Zone", 0, 1), \
-                "52 Sea Zone" : Territory("52 Sea Zone", 0, 1), \
-                "53 Sea Zone" : Territory("53 Sea Zone", 0, 1), \
-                "54 Sea Zone" : Territory("54 Sea Zone", 0, 1), \
-                "55 Sea Zone" : Territory("55 Sea Zone", 0, 1), \
-                "56 Sea Zone" : Territory("56 Sea Zone", 0, 1), \
-                "57 Sea Zone" : Territory("57 Sea Zone", 0, 1), \
-                "58 Sea Zone" : Territory("58 Sea Zone", 0, 1), \
-                "59 Sea Zone" : Territory("59 Sea Zone", 0, 1), \
-                "60 Sea Zone" : Territory("60 Sea Zone", 0, 1), \
-                "61 Sea Zone" : Territory("61 Sea Zone", 0, 1), \
-                "62 Sea Zone" : Territory("62 Sea Zone", 0, 1), \
-                "63 Sea Zone" : Territory("63 Sea Zone", 0, 1), \
-                "64 Sea Zone" : Territory("64 Sea Zone", 0, 1), \
-                "65 Sea Zone" : Territory("65 Sea Zone", 0, 1), \
-                "Afghanistan" : Territory("Afghanistan", 1, 0), \
-                "Alaska" : Territory("Alaska", 2, 0), \
-                "Algeria" : Territory("Algeria", 1, 0), \
-                "Anglo-Egyptian Sudan" : Territory("Anglo-Egyptian Sudan", 0, 0), \
-                "Angola" : Territory("Angola", 0, 0), \
+                self.board = {"1 Sea Zone" : Territory("1 Sea Zone", 0, True), \
+                "2 Sea Zone" : Territory("2 Sea Zone", 0, True), \
+                "3 Sea Zone" : Territory("2 Sea Zone", 0, True), \
+                "4 Sea Zone" : Territory("4 Sea Zone", 0, True), \
+                "5 Sea Zone" : Territory("5 Sea Zone", 0, True), \
+                "6 Sea Zone" : Territory("6 Sea Zone", 0, True), \
+                "7 Sea Zone" : Territory("7 Sea Zone", 0, True), \
+                "8 Sea Zone" : Territory("8 Sea Zone", 0, True), \
+                "9 Sea Zone" : Territory("9 Sea Zone", 0, True), \
+                "10 Sea Zone" : Territory("10 Sea Zone", 0, True), \
+                "11 Sea Zone" : Territory("11 Sea Zone", 0, True), \
+                "12 Sea Zone" : Territory("12 Sea Zone", 0, True), \
+                "13 Sea Zone" : Territory("13 Sea Zone", 0, True), \
+                "14 Sea Zone" : Territory("14 Sea Zone", 0, True), \
+                "15 Sea Zone" : Territory("15 Sea Zone", 0, True), \
+                "16 Sea Zone" : Territory("16 Sea Zone", 0, True), \
+                "17 Sea Zone" : Territory("17 Sea Zone", 0, True), \
+                "18 Sea Zone" : Territory("18 Sea Zone", 0, True), \
+                "19 Sea Zone" : Territory("19 Sea Zone", 0, True), \
+                "20 Sea one" : Territory("20 Sea Zone", 0, True), \
+                "21 Sea Zone" : Territory("21 Sea Zone", 0, True), \
+                "22 Sea Zone" : Territory("22 Sea Zone", 0, True), \
+                "23 Sea Zone" : Territory("23 Sea Zone", 0, True), \
+                "24 Sea Zone" : Territory("24 Sea Zone", 0, True), \
+                "25 Sea Zone" : Territory("25 Sea Zone", 0, True), \
+                "26 Sea Zone" : Territory("26 Sea Zone", 0, True), \
+                "27 Sea Zone" : Territory("27 Sea Zone", 0, True), \
+                "28 Sea Zone" : Territory("28 Sea Zone", 0, True), \
+                "29 Sea Zone" : Territory("29 Sea Zone", 0, True), \
+                "30 Sea Zone" : Territory("30 Sea Zone", 0, True), \
+                "31 Sea Zone" : Territory("31 Sea Zone", 0, True), \
+                "32 Sea Zone" : Territory("32 Sea Zone", 0, True), \
+                "33 Sea Zone" : Territory("33 Sea Zone", 0, True), \
+                "34 Sea Zone" : Territory("34 Sea Zone", 0, True), \
+                "35 Sea Zone" : Territory("35 Sea Zone", 0, True), \
+                "36 Sea Zone" : Territory("36 Sea Zone", 0, True), \
+                "37 Sea Zone" : Territory("37 Sea Zone", 0, True), \
+                "38 Sea Zone" : Territory("38 Sea Zone", 0, True), \
+                "39 Sea Zone" : Territory("39 Sea Zone", 0, True), \
+                "40 Sea Zone" : Territory("40 Sea Zone", 0, True), \
+                "41 Sea Zone" : Territory("41 Sea Zone", 0, True), \
+                "42 Sea Zone" : Territory("42 Sea Zone", 0, True), \
+                "43 Sea Zone" : Territory("43 Sea Zone", 0, True), \
+                "44 Sea Zone" : Territory("44 Sea Zone", 0, True), \
+                "45 Sea Zone" : Territory("45 Sea Zone", 0, True), \
+                "46 Sea Zone" : Territory("46 Sea Zone", 0, True), \
+                "47 Sea Zone" : Territory("47 Sea Zone", 0, True), \
+                "48 Sea Zone" : Territory("48 Sea Zone", 0, True), \
+                "49 Sea Zone" : Territory("49 Sea Zone", 0, True), \
+                "50 Sea Zone" : Territory("50 Sea Zone", 0, True), \
+                "51 Sea Zone" : Territory("51 Sea Zone", 0, True), \
+                "52 Sea Zone" : Territory("52 Sea Zone", 0, True), \
+                "53 Sea Zone" : Territory("53 Sea Zone", 0, True), \
+                "54 Sea Zone" : Territory("54 Sea Zone", 0, True), \
+                "55 Sea Zone" : Territory("55 Sea Zone", 0, True), \
+                "56 Sea Zone" : Territory("56 Sea Zone", 0, True), \
+                "57 Sea Zone" : Territory("57 Sea Zone", 0, True), \
+                "58 Sea Zone" : Territory("58 Sea Zone", 0, True), \
+                "59 Sea Zone" : Territory("59 Sea Zone", 0, True), \
+                "60 Sea Zone" : Territory("60 Sea Zone", 0, True), \
+                "61 Sea Zone" : Territory("61 Sea Zone", 0, True), \
+                "62 Sea Zone" : Territory("62 Sea Zone", 0, True), \
+                "63 Sea Zone" : Territory("63 Sea Zone", 0, True), \
+                "64 Sea Zone" : Territory("64 Sea Zone", 0, True), \
+                "65 Sea Zone" : Territory("65 Sea Zone", 0, True), \
+                "Afghanistan" : Territory("Afghanistan", 1, False), \
+                "Alaska" : Territory("Alaska", 2, False), \
+                "Algeria" : Territory("Algeria", 1, False), \
+                "Anglo-Egyptian Sudan" : Territory("Anglo-Egyptian Sudan", 0, False), \
+                "Angola" : Territory("Angola", 0, False), \
                 # NEUTRAL ^
-                "Anhwei" : Territory("Anhwei", 1, 0), \
-                "Archangel" : Territory("Archangel", 1, 0), \
-                "Baltic States" : Territory("Baltic States", 2, 0), \
-                "Belgian Congo" : Territory("Belgian Congo", 1, 0), \
-                "Belorussia" : Territory("Belorussia", 2, 0), \
-                "Borneo" : Territory("Borneo", 4, 0), \
-                "Brazil" : Territory("Brazil", 3, 0), \
-                "Bulgaria Romania" : Territory("Bulgaria Romania", 2, 0), \
-                "Burma" : Territory("Burma", 1, 0), \
-                "Buryatia S.S.R." : Territory("Buryatia S.S.R.", 1, 0), \
-                "Caroline Islands" : Territory("Caroline Islands", 0, 0), \
-                "Caucasus" : Territory("Caucasus", 4, 0), \
-                "Central America" : Territory("Central America", 1, 0), \
-                "Central United States" : Territory("Central United States", 6, 0), \
-                "Chile" : Territory("Chile", 0, 0), \
+                "Anhwei" : Territory("Anhwei", 1, False), \
+                "Archangel" : Territory("Archangel", 1, False), \
+                "Baltic States" : Territory("Baltic States", 2, False), \
+                "Belgian Congo" : Territory("Belgian Congo", 1, False), \
+                "Belorussia" : Territory("Belorussia", 2, False), \
+                "Borneo" : Territory("Borneo", 4, False), \
+                "Brazil" : Territory("Brazil", 3, False), \
+                "Bulgaria Romania" : Territory("Bulgaria Romania", 2, False), \
+                "Burma" : Territory("Burma", 1, False), \
+                "Buryatia S.S.R." : Territory("Buryatia S.S.R.", 1, False), \
+                "Caroline Islands" : Territory("Caroline Islands", 0, False), \
+                "Caucasus" : Territory("Caucasus", 4, False), \
+                "Central America" : Territory("Central America", 1, False), \
+                "Central United States" : Territory("Central United States", 6, False), \
+                "Chile" : Territory("Chile", 0, False), \
                 # NEUTRAL ^
-                "Colombia Equador" : Territory("Colombia Equador", 0, 0), \
+                "Colombia Equador" : Territory("Colombia Equador", 0, False), \
                 # NEUTRAL ^
-                "East Indies" : Territory("East Indies", 4, 0), \
-                "East Mexico" : Territory("East Mexico", 0, 0), \
-                "Eastern Australia" : Territory("Eastern Australia", 1, 0), \
-                "Eastern Canada" : Territory("Eastern Canada", 3, 0), \
-                "Eastern United States" : Territory("Eastern United States", 12, 0), \
-                "Egypt" : Territory("Egypt", 2, 0), \
-                "Eire" : Territory("Eire", 0, 0), \
+                "East Indies" : Territory("East Indies", 4, False), \
+                "East Mexico" : Territory("East Mexico", 0, False), \
+                "Eastern Australia" : Territory("Eastern Australia", 1, False), \
+                "Eastern Canada" : Territory("Eastern Canada", 3, False), \
+                "Eastern United States" : Territory("Eastern United States", 12, False), \
+                "Egypt" : Territory("Egypt", 2, False), \
+                "Eire" : Territory("Eire", 0, False), \
                 # NEUTRAL ^
-                "Evenki National Okrug" : Territory("Evenki National Okrug", 1, 0), \
-                "Finland" : Territory("Finland", 1, 0), \
-                "Formosa" : Territory("Formosa", 0, 0), \
-                "France" : Territory("France", 6, 0), \
-                "French Equatorial Africa" : Territory("French Equatorial Africa", 1, 0), \
-                "French Indo-China Thailand" : Territory("French Indo-China Thailand", 2, 0), \
-                "French Madagascar" : Territory("French Madagascar", 1, 0), \
-                "French West Africa" : Territory("French West Africa", 1, 0), \
-                "Germany" : Territory("Germany", 10, 0), \
-                "Gibraltar" : Territory("Gibraltar", 0, 0), \
-                "Greenland" : Territory("Greenland", 0, 0), \
-                "Hawaiian Islands" : Territory("Hawaiian Islands", 1, 0), \
-                "Himalaya" : Territory("Himalaya", 0, 0), \
+                "Evenki National Okrug" : Territory("Evenki National Okrug", 1, False), \
+                "Finland" : Territory("Finland", 1, False), \
+                "Formosa" : Territory("Formosa", 0, False), \
+                "France" : Territory("France", 6, False), \
+                "French Equatorial Africa" : Territory("French Equatorial Africa", 1, False), \
+                "French Indo-China Thailand" : Territory("French Indo-China Thailand", 2, False), \
+                "French Madagascar" : Territory("French Madagascar", 1, False), \
+                "French West Africa" : Territory("French West Africa", 1, False), \
+                "Germany" : Territory("Germany", 10, False), \
+                "Gibraltar" : Territory("Gibraltar", 0, False), \
+                "Greenland" : Territory("Greenland", 0, False), \
+                "Hawaiian Islands" : Territory("Hawaiian Islands", 1, False), \
+                "Himalaya" : Territory("Himalaya", 0, False), \
                 # NEUTRAL ^
-                "Iceland" : Territory("Iceland", 0, 0), \
-                "India" : Territory("India", 3, 0), \
-                "Italian East Africa" : Territory("Italian East Africa", 1, 0), \
-                "Italy" : Territory("Italy", 3, 0), \
-                "Iwo Jima" : Territory("Iwo Jima", 0, 0), \
-                "Japan" : Territory("Japan", 8, 0), \
-                "Karelia S.S.R." : Territory("Karelia S.S.R.", 2, 0), \
-                "Kazakh S.S.R." : Territory("Kazakh S.S.R.", 2, 0), \
-                "Kiangsu" : Territory("Kiangsu", 2, 0), \
-                "Kwangtung" : Territory("Kwangtung", 2, 0), \
-                "Libya" : Territory("Libya", 1, 0), \
-                "Malaya" : Territory("Malaya", 1, 0), \
-                "Manchuria" : Territory("Manchuria", 3, 0), \
-                "Mexico" : Territory("Mexico", 2, 0), \
-                "Midway" : Territory("Midway", 0, 0), \
-                "Mongolia" : Territory("Mongolia", 0, 0), \
+                "Iceland" : Territory("Iceland", 0, False), \
+                "India" : Territory("India", 3, False), \
+                "Italian East Africa" : Territory("Italian East Africa", 1, False), \
+                "Italy" : Territory("Italy", 3, False), \
+                "Iwo Jima" : Territory("Iwo Jima", 0, False), \
+                "Japan" : Territory("Japan", 8, False), \
+                "Karelia S.S.R." : Territory("Karelia S.S.R.", 2, False), \
+                "Kazakh S.S.R." : Territory("Kazakh S.S.R.", 2, False), \
+                "Kiangsu" : Territory("Kiangsu", 2, False), \
+                "Kwangtung" : Territory("Kwangtung", 2, False), \
+                "Libya" : Territory("Libya", 1, False), \
+                "Malaya" : Territory("Malaya", 1, False), \
+                "Manchuria" : Territory("Manchuria", 3, False), \
+                "Mexico" : Territory("Mexico", 2, False), \
+                "Midway" : Territory("Midway", 0, False), \
+                "Mongolia" : Territory("Mongolia", 0, False), \
                 # NEUTRAL ^
-                "Morocco" : Territory("Morocco", 1, 0), \
-                "Mozambique" : Territory("Mozambique", 0, 0), \
+                "Morocco" : Territory("Morocco", 1, False), \
+                "Mozambique" : Territory("Mozambique", 0, False), \
                 # NEUTRAL ^
-                "New Guinea" : Territory("New Guinea", 1, 0), \
-                "New Zealand" : Territory("New Zealand", 1, 0), \
-                "Northwestern Europe" : Territory("Northwestern Europe", 2, 0), \
-                "Norway" : Territory("Norway", 2, 0), \
-                "Novosibirsk" : Territory("Novosibirsk", 1, 0), \
-                "Okinawa" : Territory("Okinawa", 0, 0), \
-                "Persia" : Territory("Persia", 1, 0), \
-                "Peru Argentina" : Territory("Peru Argentina", 0, 0), \
+                "New Guinea" : Territory("New Guinea", 1, False), \
+                "New Zealand" : Territory("New Zealand", 1, False), \
+                "Northwestern Europe" : Territory("Northwestern Europe", 2, False), \
+                "Norway" : Territory("Norway", 2, False), \
+                "Novosibirsk" : Territory("Novosibirsk", 1, False), \
+                "Okinawa" : Territory("Okinawa", 0, False), \
+                "Persia" : Territory("Persia", 1, False), \
+                "Peru Argentina" : Territory("Peru Argentina", 0, False), \
                 # NEUTRAL ^
-                "Philippine Islands" : Territory("Philippine Islands", 3, 0), \
-                "Poland" : Territory("Poland", 2, 0), \
-                "Rhodesia" : Territory("Rhodesia", 1, 0), \
-                "Russia" : Territory("Russia", 8, 0), \
-                "Sahara" : Territory("Sahara", 0, 0), \
+                "Philippine Islands" : Territory("Philippine Islands", 3, False), \
+                "Poland" : Territory("Poland", 2, False), \
+                "Rhodesia" : Territory("Rhodesia", 1, False), \
+                "Russia" : Territory("Russia", 8, False), \
+                "Sahara" : Territory("Sahara", 0, False), \
                 # NEUTRAL ^
-                "Saudi Arabia" : Territory("Saudi Arabia", 0, 0), \
+                "Saudi Arabia" : Territory("Saudi Arabia", 0, False), \
                 # NEUTRAL ^
-                "Sinkiang" : Territory("Sinkiang", 1, 0), \
-                "Solomon Islands" : Territory("Solomon Islands", 0, 0), \
-                "Southern Europe" : Territory("Southern Europe", 2, 0), \
-                "Soviet Far East" : Territory("Soviet Far East", 1, 0), \
-                "Spain Portugal" : Territory("Spain Portugal", 0, 0), \
+                "Sinkiang" : Territory("Sinkiang", 1, False), \
+                "Solomon Islands" : Territory("Solomon Islands", 0, False), \
+                "Southern Europe" : Territory("Southern Europe", 2, False), \
+                "Soviet Far East" : Territory("Soviet Far East", 1, False), \
+                "Spain Portugal" : Territory("Spain Portugal", 0, False), \
                 # NEUTRAL ^
-                "Sweden" : Territory("Sweden", 0, 0), \
+                "Sweden" : Territory("Sweden", 0, False), \
                 # NEUTRAL ^
-                "Switzerland" : Territory("Switzerland", 0, 0), \
+                "Switzerland" : Territory("Switzerland", 0, False), \
                 # NEUTRAL ^
-                "Szechwan" : Territory("Szechwan", 1, 0), \
-                "Trans-Jordan" : Territory("Trans-Jordan", 1, 0), \
-                "Turkey" : Territory("Turkey", 0, 0), \
+                "Szechwan" : Territory("Szechwan", 1, False), \
+                "Trans-Jordan" : Territory("Trans-Jordan", 1, False), \
+                "Turkey" : Territory("Turkey", 0, False), \
                 # NEUTRAL ^
-                "Ukraine S.S.R." : Territory("Ukraine S.S.R.", 2, 0), \
-                "Union of South Africa" : Territory("Union of South Africa", 2, 0), \
-                "United Kingdom" : Territory("United Kingdom", 8, 0), \
-                "Venezuela" : Territory("Venezuela", 0, 0), \
+                "Ukraine S.S.R." : Territory("Ukraine S.S.R.", 2, False), \
+                "Union of South Africa" : Territory("Union of South Africa", 2, False), \
+                "United Kingdom" : Territory("United Kingdom", 8, False), \
+                "Venezuela" : Territory("Venezuela", 0, False), \
                 # NEUTRAL ^
-                "Vologda" : Territory("Vologda", 2, 0), \
-                "Wake Island" : Territory("Wake Island", 0, 0), \
-                "West Indies" : Territory("West Indies", 1, 0), \
-                "West Russia" : Territory("West Russia", 2, 0), \
-                "Western Australia" : Territory("Western Australia", 1, 0), \
-                "Western Canada" : Territory("Western Canada", 1, 0), \
-                "Western United States" : Territory("Western United States", 10, 0), \
-                "Yakut S.S.R." : Territory("Yakut S.S.R.", 1, 0), \
-                "Yunnan" : Territory("Yunnan", 1, 0) }
+                "Vologda" : Territory("Vologda", 2, False), \
+                "Wake Island" : Territory("Wake Island", 0, False), \
+                "West Indies" : Territory("West Indies", 1, False), \
+                "West Russia" : Territory("West Russia", 2, False), \
+                "Western Australia" : Territory("Western Australia", 1, False), \
+                "Western Canada" : Territory("Western Canada", 1, False), \
+                "Western United States" : Territory("Western United States", 10, False), \
+                "Yakut S.S.R." : Territory("Yakut S.S.R.", 1, False), \
+                "Yunnan" : Territory("Yunnan", 1, False) }
                 
                 
                 #Connections List to be used to make neighbors 
@@ -678,6 +687,27 @@ class Unit_state:
                 self.moves_used = moves_used
                 self.damaged = damage
                 
+class Turn_state:
+        """
+        Stores information on the state of the game,
+        including the round, player, and phase.
+        """
+        
+        def __init__(self, round_num, player, phase):
+                self.round_num = round_num
+                self.player = player
+                self.phase = phase
+                
+class Player:
+        """
+        object to store info for each player
+        """
+        
+        def __init__(self, name, ipc = 0, tech_tokens = 0):
+                self.name = name
+                self.ipc = ipc
+                self.tech_tokens = tech_tokens        
+                
 class Game:
         """
         IN PROGRESS. Trying to represent the game as a whole, including all static and fluid
@@ -685,11 +715,14 @@ class Game:
         Will want to be able to make changes as game progresses.
         """
                               
-        #convery unit-state numbers to units using rules.get_unit.
+        #converts unit-state numbers to units using rules.get_unit.
                               
         def __init__(self):
                 
                 rules = Rules()
+                #player 0 = russia, 1 = germany, 2 = britain, 3 = japan, 4 = us
+                # phase 0 = tech, 1 = repair, 2 = buy, 3 = combat move, 4 = combat phase, 5 = non-combat, 6 = place
+                turn_state = Turn_state(1, "Russia", 0)
                 
                 #dictionary from territory names to territory states
                 self.state_dict = {"1 Sea Zone" : Territory_State("Sea Zone", []), \
@@ -869,31 +902,62 @@ class Game:
                 "Western United States" : Territory_State("America", [Unit_state("America", 1), Unit_state("America", 1), Unit_state("America", 4), Unit_state("America", 5), Unit_state("America", 12)]), \ 
                 "Yakut S.S.R." : Territory_State("Russia", [Unit_state("Russia", 1)]),
                 "Yunnan" : Territory_State("America", [Unit_state("America", 1), Unit_state("America", 1)])  }
-
+                
+                def export_reader(self):
+                        #will read through the two exports and update the above list according to the ownership and the units within
+                        
+                        #code to generate a file. need to learn how to command my computer to open the tripleA save and export
+                        
+                        #update the turn state variable
+                        pass
+                
+                
+                
+                def controls_suez(self, turn_state):
+                        player = turn_state.player
+                        
+                        if (self.state_dict["Egypt"].owner == player) and (self.state_dict["Trans-Jordan"].owner == player):
+                                return True
+                        else:
+                                return False
+                        
+                def controls_panama(self, turn_state):
+                        player = turn_state.player
+                        
+                        if (self.state_dict["Central America"].owner == player):
+                                return True
+                        else:
+                                return False                
+                
+                def passable(self, unit_state, current_territory, goal_territory):
+                        """
+                        a function that will check if a theoretical move is valid.
+                        """
+                        
+                        unit = rules.get_unit(unit_state.type_index)
+                                            
+                        if (unit.unit_type == "land"):
+                                if (goal_territory.is_water == False) and (goal_territory.name in current_territory.neighbors)):
+                                        return True
+                                else:
+                                        return False
+                        elif (unit.unit_type == "sea"):
+                                        if (goal_territory.is_water == True) and (goal_territory.name in current_territory.neighbors)):
+                                                return True
+                                        else:
+                                                return False
+                        elif (unit.unit_type == "air"):
+                                if (goal_territory.is_water == False) and (goal_territory.name in current_territory.neighbors)):
+                                        return True                    
+                        
+                        
+                        
+                        
 
 #ADD IN TERRITORY OWNERSHIP AND ACCOUNT FOR IT IN THE PASSABLE FUNCTION
 # neutrals cant move to, and enemy must be during combat phase. Tanks end all movement if battle
 # check phase
-#check if neighbor sea zones have ships that are not subs or trans
-
-def passable(unit, current_territory, goal_territory):
-        """
-        a function that will check if a theoretical move is valid.
-        """
-                            
-        if (unit.unit_type == "land"):
-                if (goal_territory.is_water == 0 and (goal_territory.name in current_territory.neighbors)):
-                        return True
-                else:
-                        return False
-        elif (unit.unit_type == "sea"):
-                if (goal_territory.is_water == 1 and (goal_territory.name in current_territory.neighbors)):
-                        return True
-                else:
-                        return False
-        elif (unit.unit_type == "air"):
-                if (goal_territory.is_water == 0 and (goal_territory.name in current_territory.neighbors)):
-                        return True                
+#check if neighbor sea zones have ships that are not subs or trans            
         
 
 
@@ -916,3 +980,145 @@ def passable(unit, current_territory, goal_territory):
 # Is_bordering_enemy
 
 # Is_threatened by enemy
+
+
+def is_pomona_url (url):
+    """
+    checks if the url is a pomona link
+    """
+    
+    return "pomona.edu" in url
+
+def is_full_url (url):
+    """
+    checks if a url is a full link by determining if it has 'http'. Just checks
+    for containnment. 
+    """
+    
+    return "http" in url
+
+def get_all_urls (url):
+    """
+    takes a url and finds all urls in the url after converitng to a string.
+    Looks only at a href links. Returns a list of urls on this page.
+    """
+    
+    try:
+        context = ssl._create_unverified_context()
+        page = urlopen(url, context=context)
+        page = page.read().decode('ISO-8859-1') #now page is a string
+    
+        urls = []
+
+        begin_index = page.find('"', page.find("a href"))
+        
+        while begin_index != -1:
+            end_index = page.find('"', begin_index + 8)  
+            #goes past the first " that starts the url. a href=" is 8 long
+            if is_full_url(page[begin_index:end_index]):
+                urls.append(page[(begin_index + 1):end_index])
+
+            begin_index = page.find('"', page.find("a href", end_index))
+        
+        return urls
+
+    except:
+        return []
+    """
+    except urllib.error.HTTPError as e:
+        raise ("the page you requested does not exist")    
+    
+    except urllib.error.URLError:
+        raise ("The server does not exist")     
+    """
+    ## this didnt work for some reason, so I used the very blanet except
+    # gave me the error encoutered enother exception in the exception.
+
+def filter_pomona_urls (url_list):
+    """
+    returns a new list containing only pomona urls
+    """
+    #return filter(is_pomona_url, url_list)
+    new_list = []
+    
+    for url in url_list:
+        if is_pomona_url(url):
+            new_list.append(url)
+            
+    return new_list
+
+def crawl_pomona (start_url, to_visit, max_crawl):
+    """
+    Crawls through the pomona website, and returns a list of all possible links
+    that can be visited from the link start_url. Max_crawl cuts it off after 
+    that number of links have been crawled. To_visit is a queue.
+    """
+    
+    to_visit.add(start_url)
+    visited = []
+    
+    return crawl_helper(to_visit, max_crawl, visited)
+
+def crawl_helper (to_visit, max_crawl, visited):
+    """
+    recursive loop that helps crawl_pomona
+    """
+    #print(max_crawl)
+    
+    if to_visit.is_empty() or max_crawl[0] == 0:
+        return visited    
+    
+    else:
+        next_url = to_visit.remove()
+        
+        if next_url in visited:
+            crawl_helper(to_visit, max_crawl, visited)
+            
+        else: 
+            visited.append(next_url)
+            time.sleep(0.1)
+            print("Crawling: " + next_url)
+        
+            urls = get_all_urls(next_url)
+            urls = filter_pomona_urls(urls)
+        
+            for url in urls:
+                to_visit.add(url)  #it will start from the first link
+    
+            max_crawl[0] -= 1
+            crawl_helper(to_visit, max_crawl, visited)
+        
+        return visited
+        
+def write_pomona_urls (start_url, to_visit, max_crawl, filename):
+    """
+    Crawls pomona webpages and writes all the links onto a file called filename.
+    """
+   
+    file = open(filename, "w")
+    #DO NOT PUT THE NAME OF SOMETHING ALREADY EXISTANT
+    
+    links = crawl_pomona(start_url, to_visit, max_crawl)
+    
+    for link in links:
+        file.write(link)
+        file.write("\n")
+    
+    file.close()
+  
+#uncomment for experiement
+
+#write_pomona_urls ("https://www.pomona.edu/", Stack(), [100], \
+               #   "HURDURIMAHORSE_STACK.csv") 
+
+write_pomona_urls ("https://www.pomona.edu/", Queue(), [12], \
+                   "HURDURIMAHORSE_QUEUE.csv") 
+
+   
+"""
+DFS gives me a long list that, obviously, goes very deep first. It quickly 
+becomes basically irrelevent calander links. 
+Breath first search is definitely a better option here. DFS gave me tons and
+tons of calander data that just went on and on for literally years. BFS gives
+more pertinant links if you only have space for 100.
+"""
