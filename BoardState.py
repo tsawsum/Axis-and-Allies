@@ -82,7 +82,7 @@ class Rules:
                 "17 Sea Zone" : Territory("17 Sea Zone", 0, True), \
                 "18 Sea Zone" : Territory("18 Sea Zone", 0, True), \
                 "19 Sea Zone" : Territory("19 Sea Zone", 0, True), \
-                "20 Sea one" : Territory("20 Sea Zone", 0, True), \
+                "20 Sea Zone" : Territory("20 Sea Zone", 0, True), \
                 "21 Sea Zone" : Territory("21 Sea Zone", 0, True), \
                 "22 Sea Zone" : Territory("22 Sea Zone", 0, True), \
                 "23 Sea Zone" : Territory("23 Sea Zone", 0, True), \
@@ -646,13 +646,19 @@ class Rules:
                 ("Trans-Jordan", "Turkey"), \
                 ("Ukraine S.S.R.", "West Russia"), \
                 ("Western Canada", "Western United States")]
-                
+
+                """
+                # This was inefficient and bad lmao
                 for key in self.board:
                         for item in self.connections: 
                                 if (key == item[0]):
                                         self.board[key].neighbors.append(item[1])
                                 if (key == item[1]):
                                         self.board[key].neighbors.append(item[0])
+                """
+                for item in self.connections:
+                        self.board[item[0]].neighbors.append(item[1])
+                        self.board[item[1]].neighbors.append(item[0])
                 
                 
                 self.units = [Unit("infantry", "land", 3, 1, 2, 1), Unit("artillary", "land", 4, 1, 2, 1), \
@@ -666,7 +672,7 @@ class Rules:
         def get_unit(self, index):
                 return self.units[index]
                 
-class Territory_state:
+class Territory_State:
         """
         Object representing all fluid information about a territory
         """
@@ -726,29 +732,29 @@ class Game:
                 
                 #dictionary from territory names to territory states
                 self.state_dict = {"1 Sea Zone" : Territory_State("Sea Zone", []), \
-                "2 Sea Zone" : Territory_State("Sea Zone", []), \ 
+                "2 Sea Zone" : Territory_State("Sea Zone", []), \
                 "3 Sea Zone" : Territory_State("Sea Zone", []), \
-                "4 Sea Zone" : Territory_State("Sea Zone", [Unit_state("Russia", 7)]), \ 
+                "4 Sea Zone" : Territory_State("Sea Zone", [Unit_state("Russia", 7)]), \
                 "5 Sea Zone" : Territory_State("Sea Zone", [Unit_state("Germany", 6), Unit_state("Germany", 7), Unit_state("Germany", 9)]), \
-                "6 Sea Zone" : Territory_State("Sea Zone", [Unit_state("Britain", 6), Unit_state("Britain", 8), Unit_state("Britain", 11)]), \ 
+                "6 Sea Zone" : Territory_State("Sea Zone", [Unit_state("Britain", 6), Unit_state("Britain", 8), Unit_state("Britain", 11)]), \
                 "7 Sea Zone" : Territory_State("Sea Zone", []), \
                 "8 Sea Zone" : Territory_State("Sea Zone", []), \
-                "9 Sea Zone" : Territory_State("Sea Zone", [Unit_state("Germany", 7), Unit_state("Germany", 7)]), \ 
-                "10 Sea Zone" : Territory_State("Sea Zone", [Unit_state("Britain", 6), Unit_state("Britain", 8)]), \ 
-                "11 Sea Zone" : Territory_State("Sea Zone", [Unit_state("America", 6), Unit_state("America", 6), Unit_state("America", 8)]), \ 
+                "9 Sea Zone" : Territory_State("Sea Zone", [Unit_state("Germany", 7), Unit_state("Germany", 7)]), \
+                "10 Sea Zone" : Territory_State("Sea Zone", [Unit_state("Britain", 6), Unit_state("Britain", 8)]), \
+                "11 Sea Zone" : Territory_State("Sea Zone", [Unit_state("America", 6), Unit_state("America", 6), Unit_state("America", 8)]), \
                 "12 Sea Zone" : Territory_State("Sea Zone", []), \
-                "13 Sea Zone" : Territory_State("Sea Zone", [Unit_state("Britain", 9)]), \ 
+                "13 Sea Zone" : Territory_State("Sea Zone", [Unit_state("Britain", 9)]), \
                 "14 Sea Zone" : Territory_State("Sea Zone", []), \
-                "15 Sea Zone" : Territory_State("Sea Zone", [Unit_state("Germany", 6), Unit_state("Germany", 11)]), \ 
-                "16 Sea Zone" : Territory_State("Sea Zone", []), \ 
-                "17 Sea Zone" : Territory_State("Sea Zone", [Unit_state("Britain", 8)]), \ 
-                "18 Sea Zone" : Territory_State("Sea Zone", []), \ 
-                "19 Sea Zone" : Territory_State("Sea Zone", [Unit_state("America", 9)]), \ 
+                "15 Sea Zone" : Territory_State("Sea Zone", [Unit_state("Germany", 6), Unit_state("Germany", 11)]), \
+                "16 Sea Zone" : Territory_State("Sea Zone", []), \
+                "17 Sea Zone" : Territory_State("Sea Zone", [Unit_state("Britain", 8)]), \
+                "18 Sea Zone" : Territory_State("Sea Zone", []), \
+                "19 Sea Zone" : Territory_State("Sea Zone", [Unit_state("America", 9)]), \
                 "20 Sea one" : Territory_State("Sea Zone", []), \
                 "21 Sea Zone" : Territory_State("Sea Zone", []), \
-                "22 Sea Zone" : Territory_State("Sea Zone", []), \ 
-                "23 Sea Zone" : Territory_State("Sea Zone", []), \ 
-                "24 Sea Zone" : Territory_State("Sea Zone", []), \ 
+                "22 Sea Zone" : Territory_State("Sea Zone", []), \
+                "23 Sea Zone" : Territory_State("Sea Zone", []), \
+                "24 Sea Zone" : Territory_State("Sea Zone", []), \
                 "25 Sea Zone" : Territory_State("Sea Zone", []), \
                 "26 Sea Zone" : Territory_State("Sea Zone", []), \
                 "27 Sea Zone" : Territory_State("Sea Zone", []), \
@@ -756,21 +762,21 @@ class Game:
                 "29 Sea Zone" : Territory_State("Sea Zone", []), \
                 "30 Sea Zone" : Territory_State("Sea Zone", []), \
                 "31 Sea Zone" : Territory_State("Sea Zone", []), \
-                "32 Sea Zone" : Territory_State("Sea Zone", []), \ 
-                "33 Sea Zone" : Territory_State("Sea Zone", []), \ 
+                "32 Sea Zone" : Territory_State("Sea Zone", []), \
+                "33 Sea Zone" : Territory_State("Sea Zone", []), \
                 "34 Sea Zone" : Territory_State("Sea Zone", []), \
-                "35 Sea Zone" : Territory_State("Sea Zone", [Unit_state("Britain", 6), Unit_state("Britain", 9), Unit_state("Britain", 10), Unit_state("Britain", 12)]), \ 
+                "35 Sea Zone" : Territory_State("Sea Zone", [Unit_state("Britain", 6), Unit_state("Britain", 9), Unit_state("Britain", 10), Unit_state("Britain", 12)]), \
                 "36 Sea Zone" : Territory_State("Sea Zone", []), \
-                "37 Sea Zone" : Territory_State("Sea Zone", [Unit_state("Japan", 10), Unit_state("Japan", 11), Unit_state("Japan", 12), Unit_state("Japan", 12)]), \ 
+                "37 Sea Zone" : Territory_State("Sea Zone", [Unit_state("Japan", 10), Unit_state("Japan", 11), Unit_state("Japan", 12), Unit_state("Japan", 12)]), \
                 "38 Sea Zone" : Territory_State("Sea Zone", [Unit_state("Britain", 6), Unit_state("Britain", 7), Unit_state("Britain", 9)]), \
                 "39 Sea Zone" : Territory_State("Sea Zone", []), \
-                "40 Sea Zone" : Territory_State("Sea Zone", []), \ 
-                "41 Sea Zone" : Territory_State("Sea Zone", []), \ 
+                "40 Sea Zone" : Territory_State("Sea Zone", []), \
+                "41 Sea Zone" : Territory_State("Sea Zone", []), \
                 "42 Sea Zone" : Territory_State("Sea Zone", []), \
                 "43 Sea Zone" : Territory_State("Sea Zone", []), \
                 "44 Sea Zone" : Territory_State("Sea Zone", [Unit_state("Japan", 7)]), \
                 "45 Sea Zone" : Territory_State("Sea Zone", []), \
-                "46 Sea Zone" : Territory_State("Sea Zone", []), \ 
+                "46 Sea Zone" : Territory_State("Sea Zone", []), \
                 "47 Sea Zone" : Territory_State("Sea Zone", []), \
                 "48 Sea Zone" : Territory_State("Sea Zone", []), \
                 "49 Sea Zone" : Territory_State("Sea Zone", []), \
@@ -788,7 +794,7 @@ class Game:
                 "61 Sea Zone" : Territory_State("Sea Zone", [Unit_state("Japan", 6), Unit_state("Japan", 8)]), \
                 "62 Sea Zone" : Territory_State("Sea Zone", []), \
                 "63 Sea Zone" : Territory_State("Sea Zone", []), \
-                "64 Sea Zone" : Territory_State("Sea Zone", []), \ 
+                "64 Sea Zone" : Territory_State("Sea Zone", []), \
                 "65 Sea Zone" : Territory_State("Sea Zone", []), \
                 "Afghanistan" : Territory_State("Neutral", []), \
                 # Neutral ^
@@ -815,7 +821,7 @@ class Game:
                 # NEUTRAL ^
                 "Colombia Equador" : Territory_State("Neutral", []), \
                 # NEUTRAL ^
-                "East Indies" : Territory_State("Britain", [Unit_state("Japan", 1), Unit_state("Japan", 1)]), \ 
+                "East Indies" : Territory_State("Britain", [Unit_state("Japan", 1), Unit_state("Japan", 1)]), \
                 "East Mexico" : Territory_State("America", []), \
                 "Eastern Australia" : Territory_State("Britain", [Unit_state("Britain", 1), Unit_state("Britain", 1)]), \
                 "Eastern Canada" : Territory_State("Britain", [Unit_state("Britain", 3)]), \
@@ -823,7 +829,7 @@ class Game:
                 "Egypt" : Territory_State("Britain", [Unit_state("Britain", 1), Unit_state("Britain", 2), Unit_state("Britain", 3), Unit_state("Britain", 12)]), \
                 "Eire" : Territory_State("Neutral", []), \
                 # NEUTRAL ^
-                "Evenki National Okrug" : Territory_State("Russia", [Unit_state("Russia", 1), Unit_state("Russia", 1)]), \ 
+                "Evenki National Okrug" : Territory_State("Russia", [Unit_state("Russia", 1), Unit_state("Russia", 1)]), \
                 "Finland" : Territory_State("Germany", [Unit_state("Germany", 1), Unit_state("Germany", 1), Unit_state("Germany", 1)]), \
                 "Formosa" : Territory_State("Japan", []), \
                 "France" : Territory_State("Germany", [Unit_state("Germany", 1), Unit_state("Germany", 3), Unit_state("Germany", 3), Unit_state("Germany", 4)]), \
@@ -847,7 +853,7 @@ class Game:
                 "Kazakh S.S.R." : Territory_State("Russia", [Unit_state("Russia", 1)]), \
                 "Kiangsu" : Territory_State("Japan", [Unit_state("Japan", 1), Unit_state("Japan", 1), Unit_state("Japan", 1), Unit_state("Japan", 1)]), \
                 "Kwangtung" : Territory_State("Japan", [Unit_state("Japan", 1), Unit_state("Japan", 2)]), \
-                "Libya" : Territory_State("Germany", [Unit_state("Germany", 1), Unit_state("Germany", 3)]), \ 
+                "Libya" : Territory_State("Germany", [Unit_state("Germany", 1), Unit_state("Germany", 3)]), \
                 "Malaya" : Territory_State("Britain", [Unit_state("Japan", 1)]), \
                 "Manchuria" : Territory_State("Japan", [Unit_state("Japan", 1), Unit_state("Japan", 1), Unit_state("Japan", 1), Unit_state("Japan", 12)]), \
                 "Mexico" : Territory_State("America", []), \
@@ -899,7 +905,7 @@ class Game:
                 "West Russia" : Territory_State("Germany", [Unit_state("Germany", 1), Unit_state("Germany", 1), Unit_state("Germany", 1), Unit_state("Germany", 2), Unit_state("Germany", 3)]), \
                 "Western Australia" : Territory_State("Britain", [Unit_state("Britain", 1)]), \
                 "Western Canada" : Territory_State("Britain", [Unit_state("Britain", 1)]), \
-                "Western United States" : Territory_State("America", [Unit_state("America", 1), Unit_state("America", 1), Unit_state("America", 4), Unit_state("America", 5), Unit_state("America", 12)]), \ 
+                "Western United States" : Territory_State("America", [Unit_state("America", 1), Unit_state("America", 1), Unit_state("America", 4), Unit_state("America", 5), Unit_state("America", 12)]), \
                 "Yakut S.S.R." : Territory_State("Russia", [Unit_state("Russia", 1)]),
                 "Yunnan" : Territory_State("America", [Unit_state("America", 1), Unit_state("America", 1)])  }
                 
@@ -937,17 +943,17 @@ class Game:
                         unit = rules.get_unit(unit_state.type_index)
                                             
                         if (unit.unit_type == "land"):
-                                if (goal_territory.is_water == False) and (goal_territory.name in current_territory.neighbors)):
+                                if (goal_territory.is_water == False) and (goal_territory.name in current_territory.neighbors):
                                         return True
                                 else:
                                         return False
                         elif (unit.unit_type == "sea"):
-                                        if (goal_territory.is_water == True) and (goal_territory.name in current_territory.neighbors)):
+                                        if (goal_territory.is_water == True) and (goal_territory.name in current_territory.neighbors):
                                                 return True
                                         else:
                                                 return False
                         elif (unit.unit_type == "air"):
-                                if (goal_territory.is_water == False) and (goal_territory.name in current_territory.neighbors)):
+                                if (goal_territory.is_water == False) and (goal_territory.name in current_territory.neighbors):
                                         return True                    
                         
                         
@@ -1111,8 +1117,8 @@ def write_pomona_urls (start_url, to_visit, max_crawl, filename):
 #write_pomona_urls ("https://www.pomona.edu/", Stack(), [100], \
                #   "HURDURIMAHORSE_STACK.csv") 
 
-write_pomona_urls ("https://www.pomona.edu/", Queue(), [12], \
-                   "HURDURIMAHORSE_QUEUE.csv") 
+#write_pomona_urls ("https://www.pomona.edu/", Queue(), [12], \
+               #   "HURDURIMAHORSE_QUEUE.csv")
 
    
 """
