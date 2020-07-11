@@ -725,10 +725,10 @@ class Game:
                               
         def __init__(self):
                 
-                rules = Rules()
+                self.rules = Rules()
                 #player 0 = russia, 1 = germany, 2 = britain, 3 = japan, 4 = us
                 # phase 0 = tech, 1 = repair, 2 = buy, 3 = combat move, 4 = combat phase, 5 = non-combat, 6 = place
-                turn_state = Turn_state(1, "Russia", 0)
+                self.turn_state = Turn_state(1, "Russia", 0)
                 
                 #dictionary from territory names to territory states
                 self.state_dict = {"1 Sea Zone" : Territory_State("Sea Zone", []), \
@@ -909,55 +909,39 @@ class Game:
                 "Yakut S.S.R." : Territory_State("Russia", [Unit_state("Russia", 1)]),
                 "Yunnan" : Territory_State("America", [Unit_state("America", 1), Unit_state("America", 1)])  }
                 
-                def export_reader(self):
-                        #will read through the two exports and update the above list according to the ownership and the units within
+        def export_reader(self):
+                #will read through the two exports and update the above list according to the ownership and the units within
                         
-                        #code to generate a file. need to learn how to command my computer to open the tripleA save and export
+                #code to generate a file. need to learn how to command my computer to open the tripleA save and export
                         
-                        #update the turn state variable
-                        pass
+                #update the turn state variable
+                pass
                 
                 
                 
-                def controls_suez(self, turn_state):
-                        player = turn_state.player
+        def controls_suez(self, turn_state):
+                player = turn_state.player
+
+                return (self.state_dict["Egypt"].owner == player) and (self.state_dict["Trans-Jordan"].owner == player)
                         
-                        if (self.state_dict["Egypt"].owner == player) and (self.state_dict["Trans-Jordan"].owner == player):
-                                return True
-                        else:
-                                return False
-                        
-                def controls_panama(self, turn_state):
-                        player = turn_state.player
-                        
-                        if (self.state_dict["Central America"].owner == player):
-                                return True
-                        else:
-                                return False                
+        def controls_panama(self, turn_state):
+                player = turn_state.player
+
+                return self.state_dict["Central America"].owner == player
                 
-                def passable(self, unit_state, current_territory, goal_territory):
-                        """
-                        a function that will check if a theoretical move is valid.
-                        """
-                        
-                        unit = rules.get_unit(unit_state.type_index)
+        def passable(self, unit_state, current_territory, goal_territory):
+                """
+                a function that will check if a theoretical move is valid.
+                """
+
+                unit = self.rules.get_unit(unit_state.type_index)
                                             
-                        if (unit.unit_type == "land"):
-                                if (goal_territory.is_water == False) and (goal_territory.name in current_territory.neighbors):
-                                        return True
-                                else:
-                                        return False
-                        elif (unit.unit_type == "sea"):
-                                        if (goal_territory.is_water == True) and (goal_territory.name in current_territory.neighbors):
-                                                return True
-                                        else:
-                                                return False
-                        elif (unit.unit_type == "air"):
-                                if (goal_territory.is_water == False) and (goal_territory.name in current_territory.neighbors):
-                                        return True                    
-                        
-                        
-                        
+                if unit.unit_type == "land":
+                        return (not goal_territory.is_water) and (goal_territory.name in current_territory.neighbors)
+                elif unit.unit_type == "sea":
+                        return (goal_territory.is_water) and (goal_territory.name in current_territory.neighbors)
+                elif unit.unit_type == "air":
+                        return (not goal_territory.is_water) and (goal_territory.name in current_territory.neighbors)
                         
 
 #ADD IN TERRITORY OWNERSHIP AND ACCOUNT FOR IT IN THE PASSABLE FUNCTION
