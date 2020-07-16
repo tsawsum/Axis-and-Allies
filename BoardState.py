@@ -6,6 +6,7 @@ import urllib
 import urllib
 import ssl
 import time
+import xml.etree.cElementTree as ET
 
 
 # Make array representing board state
@@ -907,11 +908,47 @@ class Game:
                 "Yunnan" : Territory_State("America", [Unit_state("America", 1), Unit_state("America", 1)])  }
                 
         def export_reader(self):
-                #will read through the two exports and update the above list according to the ownership and the units within
-                        
-                #code to generate a file. need to learn how to command my computer to open the tripleA save and export
-                        
-                #update the turn state variable
+                # Read xml
+                # TODO: Get xml from save and export
+                filename = "C:/Users/Brett/Desktop/xml_2020_07_16_World War II v5 1942 SE TR_round_1.xml"
+                root = ET.parse(filename).getroot()
+                territories = root.find("initialize").find("ownerInitialize").findall("territoryOwner")
+                units = root.find("initialize").find("unitInitialize").findall("unitPlacement")
+                resources = root.find("initialize").find("resourceInitialize").findall("resourceGiven")
+
+                rename = {"Americans": "America", "British": "Britain", "Germans": "Germany", "Japanese": "Japan", "Russians": "Russia",
+                          "infantry": 0, "artillery": 1, "armour": 2, "fighter": 11, "bomber": 12, "transport": 5, "submarine": 6, "destroyer": 7,
+                          "cruiser": 8, "carrier": 9, "battleship": 10, "aaGun": 3, "factory": 4}
+
+                # Set territory owners
+                for elem in territories:
+                        territory = elem.get("territory")
+                        owner = rename[elem.get("owner")]
+                        self.state_dict[territory].owner = owner
+
+                # Destroy existing units
+                for territory in self.state_dict.values():
+                        territory.unit_state_list.clear()
+                # Set units
+                for elem in units:
+                        unit_type = rename[elem.get("unitType")]
+                        territory = elem.get("territory")
+                        quantity = int(elem.get("quantity"))
+                        owner = rename[elem.get("owner")]
+                        for _ in range(quantity):
+                                self.state_dict[territory].unit_state_list.append(Unit_state(owner, unit_type))
+
+                # Get Production Units
+                for elem in resources:
+                        owner = rename[elem.get("player")]
+                        quantity = int(elem.get("quantity"))
+                        # TODO: Currently nowhere to keep track of PUs
+
+                # will read through the two exports and update the above list according to the ownership and the units within
+
+                # code to generate a file. need to learn how to command my computer to open the tripleA save and export
+
+                # update the turn state variable
                 pass
                 
                 
