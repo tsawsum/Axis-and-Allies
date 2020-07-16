@@ -46,7 +46,7 @@ class Unit:
                 self.movement = movement
                 
                 self.is_transport = transport
-                # FIGURE OUT HOW TO REPRESENT FULL TRANSPORTS. IS THE UNIT DIRECTLY ATTACHED?
+                # TODO: FIGURE OUT HOW TO REPRESENT FULL TRANSPORTS AND CARRIERS. IS THE UNIT DIRECTLY ATTACHED?
                 self.is_carrier = carrier
         
         
@@ -656,7 +656,7 @@ class Rules:
                               Unit("factory", "land", 15, 0, 0, 0), Unit("transport", "sea", 7, 0, 0, 2, True), \
                               Unit("sub", "sea", 6, 2, 1, 2), Unit("destroyer", "sea", 8, 2, 2, 2), \
                               Unit("cruiser", "sea", 12, 3, 3, 2), Unit("carrier", "sea", 14, 1, 2, False, True), \
-                              Unit("battleship", "sea", 20, 2, 1, 2), Unit("fighter", "10", 10, 3, 4, 4), \
+                              Unit("battleship", "sea", 20, 2, 1, 2), Unit("fighter", "air", 10, 3, 4, 4), \
                               Unit("bomber", "air", 12, 4, 1, 6)]
 
                 self.teams = {"America": "Allies",
@@ -946,16 +946,16 @@ class Game:
                 # Non-combat movement
                 if self.turn_state.phase == 5:
                         # Can't move into enemy territory
-                        if goal_territory_state.owner != "Sea Zone" and self.rules.teams[goal_territory_state.owner] != self.rules.teams[
-                                unit_state.owner]:
+                        if goal_territory_state.owner != "Sea Zone" and \
+                           self.rules.teams[goal_territory_state.owner] != self.rules.teams[unit_state.owner]:
                                 return -1
                         # Can't move into territories with enemy units
                         for other_unit_state in goal_territory_state.unit_state_list:
-                                if other_unit_state.owner != self.rules.teams[unit_state.owner]:
+                                if self.rules.teams[other_unit_state.owner] != self.rules.teams[unit_state.owner]:
                                         return -1
 
                 # Breadth-First Search to find shortest path
-                path = self.bfs(unit_state, current_territory.name, goal_territory.name)
+                path = self.bfs(unit_state, current_territory.name, goal_territory.name, unit.movement - unit_state.moves_used)
                 if not path:
                         return -1
 
@@ -964,7 +964,7 @@ class Game:
                         # Check for enemy units/destroyers
                         enemy_units, enemy_destroyer = False, False
                         for other_unit_state in goal_territory.unit_state_list:
-                                if other_unit_state.owner != self.rules.teams[unit_state.owner]:
+                                if self.rules.teams[other_unit_state.owner] != self.rules.teams[unit_state.owner]:
                                         enemy_units = True
                                         if self.rules.get_unit(other_unit_state.type_index).name == "destroyer":
                                                 enemy_destroyer = True
@@ -972,48 +972,45 @@ class Game:
                         if enemy_units:
                                 # Exception for subs
                                 if not (unit.name == "sub" and not enemy_destroyer):
-                                        return unit.movement
+                                        return unit.movement - unit_state.moves_used
 
-                # Land and sea units can move here
-                if unit.unit_type != "air":
-                        return len(path)
+                # Check if air units can return (only necessary if combat move)
+                if unit.unit_type == 'air' and self.turn_state.phase == 3:
+                        # TODO: Carriers can move to pick up fighters
+                        return_path = self.bfs(unit_state, goal_territory.name, None, unit.movement - (len(path) - 1))
+                        if not return_path:
+                                return -1
 
-                # Planes must be able to land
-                # TODO: plane return function
-                # TODO: check for AA guns
-                # TODO: Need to check for remaining movement in non-combat phase, instead of total movement
+                # We want number of edges, not number of nodes, so subtract 1
+                return len(path) - 1
 
-                return len(path)
-
-        def bfs(self, unit_state, root, target):
+        def bfs(self, unit_state, root, target, max_dist):
                 """
                 a function that uses breadth-first search to find the shortest path between two nodes, within the movement limit of the unit
+                if target is None, then search for available landing spot for plane
                 """
                 # Simultaneously keep track of parent nodes and visited nodes
                 parents = {root: None}
                 # FIFO queue to determine order to check nodes, as well as distance to reach them
                 queue = [(root, 0)]
-                # Stop search once unit's max movement distance is reached
-                max_dist = self.rules.get_unit(unit_state.type_index).movement
 
                 while queue:
                         # Dequeue node and check every neighbor
                         current, dist = queue.pop(0)
                         for neighbor in self.rules.board[current].neighbors:
-                                # If target is found, and can be moved to, return the path to get there
-                                if neighbor == target:
-                                        if self.passable(unit_state, current, neighbor, True):
-                                                # Could just return distance, but path is useful for debugging
-                                                path = [neighbor]
-                                                while path[-1] != root:
-                                                        path.append(parents[path[-1]])
-                                                return path
-                                # Only check neighbor if target could possibly be in movement range
-                                elif dist + 1 < max_dist:
-                                        # Check if neighbor has already been visited, and if it can be moved through
+                                # Must be within movement range
+                                if dist < max_dist:
+                                        # Check if current neighbor is the target
+                                        if not target or neighbor == target:
+                                                if self.passable(unit_state, current, neighbor, True):
+                                                        # Could just return distance, but path may be useful for debugging
+                                                        path = [neighbor, current]
+                                                        while path[-1] != root:
+                                                                path.append(parents[path[-1]])
+                                                        return path
+                                        # If not valid target, check if it can be moved through, and hasn't yet been visited
                                         if neighbor not in parents.keys():
                                                 if self.passable(unit_state, current, neighbor):
-                                                        # Add neighbor to visited nodes, and add it to queue
                                                         parents[neighbor] = current
                                                         queue.append((neighbor, dist + 1))
 
@@ -1023,15 +1020,15 @@ class Game:
         def passable(self, unit_state, current_territory_name, goal_territory_name, final_move=False):
                 """
                 a function that will check if a unit can move over this territory.
-                Used by calc_movement function, use that instead
+                Used by calc_movement function
                 """
 
                 unit = self.rules.get_unit(unit_state.type_index)
                 territory_state = self.state_dict[goal_territory_name]
 
-                # Land units can't move through water, and planes can't finish turn in water
+                # Land units can't move through water. Planes handled later
                 if self.rules.board[goal_territory_name].is_water:
-                        if unit.unit_type == "land" or (unit.unit_type == "air" and final_move):
+                        if unit.unit_type == "land":
                                 return False
                 # Sea units can't move on land
                 elif unit.unit_type == "sea":
@@ -1041,7 +1038,6 @@ class Game:
                 if territory_state.owner == "Neutral":
                         return False
 
-                # TODO: Are these the right sea zones?
                 # Check Suez canal
                 if (current_territory_name == "17 Sea Zone" and goal_territory_name == "34 Sea Zone") or \
                         (current_territory_name == "34 Sea Zone" and goal_territory_name == "17 Sea Zone"):
@@ -1054,41 +1050,69 @@ class Game:
                         if not self.controls_panama():
                                 return False
 
-                # Non-combat movement
-                if self.turn_state.phase == 5:
-                        # Can't move into enemy territory
-                        if territory_state.owner != "Sea Zone" and self.rules.teams[territory_state.owner] != self.rules.teams[unit_state.owner]:
-                                return False
-                        # Can't move into territories with enemy units
-                        for other_unit_state in territory_state.unit_state_list:
-                                if other_unit_state.owner != self.rules.teams[unit_state.owner]:
+                # Plane movement
+                if unit.unit_type == "air":
+                        # Can move anywhere (except neutrals, handled above)
+                        # But must end non-combat turn on friendly territory (not captured this turn) or on friendly carrier (fighters only)
+                        if self.turn_state.phase == 5 and final_move:
+                                # Can't land in water, unless fighter + carrier
+                                if territory_state.owner == "Sea Zone":
+                                        if unit_state.name == "bomber":
+                                                return False
+                                        elif unit_state.name == "fighter":
+                                                has_carrier = False
+                                                # Check every unit in territory
+                                                for other_unit_state in territory_state.unit_state_list:
+                                                        if self.rules.teams[other_unit_state.owner] == self.rules.teams[unit_state.owner] and \
+                                                                self.rules.get_unit(other_unit_state.type_index).is_carrier:
+                                                                # TODO: How to check if carrier is full
+                                                                has_carrier = True
+                                                                break
+                                                if not has_carrier:
+                                                        return False
+                                # Can't land in enemy territory
+                                # TODO: How to check if territory was captured this turn
+                                elif self.rules.teams[territory_state.owner] != self.rules.teams[unit_state.owner]:
                                         return False
-                # Combat movement
-                elif self.turn_state.phase == 3:
-                        # AA guns can't move in combat phase
-                        if unit.name == "aa":
-                                return False
-
-                        # Land/sea units must stop moving if there are enemy units (with exception for subs)
-                        # But this only matters if this is not the unit's final move
-                        if not final_move:
-                                # Check for enemy units/destroyers
-                                enemy_units, enemy_destroyer = False, False
+                # Non-plane movement
+                else:
+                        # Non-combat movement
+                        if self.turn_state.phase == 5:
+                                # Can't move into enemy territory
+                                if territory_state.owner != "Sea Zone" and self.rules.teams[territory_state.owner] != self.rules.teams[
+                                        unit_state.owner]:
+                                        return False
+                                # Can't move into territories with enemy units
                                 for other_unit_state in territory_state.unit_state_list:
-                                        if other_unit_state.owner != self.rules.teams[unit_state.owner]:
-                                                enemy_units = True
-                                                if self.rules.get_unit(other_unit_state.type_index).name == "destroyer":
-                                                        enemy_destroyer = True
+                                        if self.rules.teams[other_unit_state.owner] != self.rules.teams[unit_state.owner]:
+                                                return False
+                        # Combat movement
+                        elif self.turn_state.phase == 3:
+                                # AA guns can't move in combat phase
+                                if unit.name == "aa":
+                                        return False
 
                                 # Land/sea units must stop moving if there are enemy units (with exception for subs)
-                                if enemy_units:
-                                        if not (unit.name == "sub" and not enemy_destroyer):
-                                                return False
+                                # But this only matters if this is not the unit's final move
+                                if not final_move:
+                                        # Check for enemy units/destroyers
+                                        enemy_units, enemy_destroyer = False, False
+                                        for other_unit_state in territory_state.unit_state_list:
+                                                if self.rules.teams[other_unit_state.owner] != self.rules.teams[unit_state.owner]:
+                                                        enemy_units = True
+                                                        if self.rules.get_unit(other_unit_state.type_index).name == "destroyer":
+                                                                enemy_destroyer = True
+
+                                        # Land/sea units must stop moving if there are enemy units (with exception for subs)
+                                        if enemy_units:
+                                                if not (unit.name == "sub" and not enemy_destroyer):
+                                                        return False
 
                 # Otherwise, can move here
                 return True
                         
 
+# TODO: AA guns can shoot planes
 #ADD IN TERRITORY OWNERSHIP AND ACCOUNT FOR IT IN THE PASSABLE FUNCTION
 # neutrals cant move to, and enemy must be during combat phase. Tanks end all movement if battle
 # check phase
