@@ -1,11 +1,11 @@
-from stackqueue import *
-from urllib.request import urlopen
-from urllib.error import HTTPError
-from urllib.error import URLError
-import urllib
-import urllib
-import ssl
-import time
+# from stackqueue import *
+# from urllib.request import urlopen
+# from urllib.error import HTTPError
+# from urllib.error import URLError
+# import urllib
+# import urllib
+# import ssl
+# import time
 import xml.etree.cElementTree as ET
 
 
@@ -35,8 +35,9 @@ class Unit:
         # movement ability
         # attack defense
         # transport capacity
+        #arbitrarily high default weight so most units cannot be transported
 
-        def __init__(self, unit_name, unit_type, cost, attack, defense, movement, transport = False, carrier = False):
+        def __init__(self, unit_name, unit_type, cost, attack, defense, movement, transport_weight = 100, carrier_weight = 100, transport_capacity = 0, carrier_capacity = 0):
                 self.name = unit_name
                 
                 self.unit_type = unit_type
@@ -46,9 +47,10 @@ class Unit:
                 self.defense = defense
                 self.movement = movement
                 
-                self.is_transport = transport
-                # TODO: FIGURE OUT HOW TO REPRESENT FULL TRANSPORTS AND CARRIERS. IS THE UNIT DIRECTLY ATTACHED?
-                self.is_carrier = carrier
+                self.transport_weight = transport_weight
+                self.transport_capacity = transport_capacity
+                self.carrier_weight = carrier_weight
+                self.carrier_capacity = carrier_capacity
         
         
 class Rules:
@@ -652,12 +654,14 @@ class Rules:
                         self.board[item[0]].neighbors.append(item[1])
                         self.board[item[1]].neighbors.append(item[0])
 
-                self.units = [Unit("infantry", "land", 3, 1, 2, 1), Unit("artillery", "land", 4, 1, 2, 1), \
-                              Unit("tank", "land", 6, 1, 2, 1), Unit("aa", "land", 6, 0, 0, 1), \
-                              Unit("factory", "land", 15, 0, 0, 0), Unit("transport", "sea", 7, 0, 0, 2, True), \
+                #unit_name, unit_type, cost, attack, defense, movement, transport_weight = 100, carrier_weight = 100, transport_capacity = 0, carrier_capacity = 0):
+                
+                self.units = [Unit("infantry", "land", 3, 1, 2, 1, 2), Unit("artillery", "land", 4, 1, 2, 1, 3), \
+                              Unit("tank", "land", 6, 1, 2, 1, 3), Unit("aa", "land", 6, 0, 0, 1, 3), \
+                              Unit("factory", "land", 15, 0, 0, 0), Unit("transport", "sea", 7, 0, 0, 2, 100, 100, 5), \
                               Unit("sub", "sea", 6, 2, 1, 2), Unit("destroyer", "sea", 8, 2, 2, 2), \
-                              Unit("cruiser", "sea", 12, 3, 3, 2), Unit("carrier", "sea", 14, 1, 2, False, True), \
-                              Unit("battleship", "sea", 20, 2, 1, 2), Unit("fighter", "air", 10, 3, 4, 4), \
+                              Unit("cruiser", "sea", 12, 3, 3, 2), Unit("carrier", "sea", 14, 1, 2, 100, 100, 0, 10), \
+                              Unit("battleship", "sea", 20, 2, 1, 2), Unit("fighter", "air", 10, 3, 4, 4, 100, 5), \
                               Unit("bomber", "air", 12, 4, 1, 6)]
 
                 self.teams = {"America": "Allies",
@@ -685,11 +689,12 @@ class Unit_state:
         Provides fluid information for units
         """
         
-        def __init__(self, owner, type_number, moves_used = 0, damage = 0):
+        def __init__(self, owner, type_number, attached_units = [], moves_used = 0, damage = 0):
                 self.owner = owner
                 self.type_index = type_number
                 self.moves_used = moves_used
                 self.damaged = damage
+                self.attached_units = attached_units
                 
 class Turn_state:
         """
@@ -929,6 +934,7 @@ class Game:
                 # Destroy existing units
                 for territory in self.state_dict.values():
                         territory.unit_state_list.clear()
+                        
                 # Set units
                 for elem in units:
                         unit_type = rename[elem.get("unitType")]
@@ -1009,6 +1015,7 @@ class Game:
                         if enemy_units:
                                 # Exception for subs
                                 if not (unit.name == "sub" and not enemy_destroyer):
+                                        #retuns not the distance, but the max amout of moves the unit has.
                                         return unit.movement - unit_state.moves_used
 
                 # Check if air units can return (only necessary if combat move)
@@ -1067,6 +1074,7 @@ class Game:
                 if self.rules.board[goal_territory_name].is_water:
                         if unit.unit_type == "land":
                                 return False
+                        
                 # Sea units can't move on land
                 elif unit.unit_type == "sea":
                         return False
