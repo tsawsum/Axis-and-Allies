@@ -2,8 +2,7 @@
 Basic Axis and Allies AI
 
 Todo list:
-- Export reader
-- Figure out how to represent full transports and carriers. Is the unit directly attached?
-- Check if a carrier can move to pick up a fighter
-- Check if carrier is full when searching for fighter landing spots
-- Don't allow planes to land in territories captured on the same turn
+- If a sub enters combat, it needs to use up all remaining movement. But the program can't differentiate between a sub attacking vs staying submerged when it ends its combat turn in enemy territories. It currently assumes that if a sub ends in enemy units on a combat turn, then it attacks (and that it would move during non-combat otherwise)
+- Can submarines end their turn in enemy units? Currently the program assumes that they can
+- Transported units currently cannot unload/move
+- Multiple fighters can plan a return path to the same carrier, potentially going over its capacity and forcing a fighter to die. This is basically unfixable, and the same bug exists in the game's source code. Also, carriers must move before fighters during non-combat turns, because the program assumes this in order to simplify calculations
