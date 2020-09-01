@@ -5,7 +5,6 @@ import urllib.request
 import os
 import re
 
-
 def forum_spider(max_pages, folder):
     page = 1
     count = 0
@@ -68,6 +67,7 @@ def save_finder(item_url, folder):
             os.makedirs(folder)
         for i in range(len(savegame_urls)):
             try:
+                #This does not verify on a mac because its dumb.
                 urllib.request.urlretrieve(savegame_urls[i], folder + str(i) + '.tsvg')
             except:
                 pass
