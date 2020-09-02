@@ -999,9 +999,22 @@ class Game:
         unit = self.rules.get_unit(unit_state.type_index)
         goal_territory_state = self.state_dict[goal_territory.name]
 
-        # Sea units can only move to sea, and land and air units can only move to land
-        if goal_territory.is_water != (unit.unit_type == "sea"):
-            return -1
+        # Sea units can only move to sea, and land can only move to land
+        # Unless land units move to an adjacent transport
+        if goal_territory.is_water:
+            if unit.unit_type == "land":
+                if unit_state.moves_used > 0 or goal_territory.name not in self.rules.board[current_territory.name].neighbors:
+                    return -1
+                for other_unit_state in goal_territory_state.unit_state_list:
+                    # Check for allied transports
+                    if other_unit_state.type_index == 5 and self.rules.teams[other_unit_state.owner] == self.rules.teams[unit_state.owner]:
+                        # Check if the transport has space
+                        if len(other_unit_state.attached_units) == 0 or (len(other_unit_state.attached_units) == 1 and (unit_state.type_index == 0 or other_unit_state.attached_units[0].type_index == 0)):
+                            return unit.movement
+                return -1
+        else:
+            if unit.unit_type == 'sea':
+                return -1
 
         # Can't move into neutral territories
         if goal_territory_state.owner == "Neutral":
@@ -1018,9 +1031,18 @@ class Game:
                     if not (unit_state.name == 'sub' and other_unit_state.name != 'destroyer'):
                         return -1
 
-        # Transported units can't move (to be fixed later)
+        # Transported units can only move to adjacent land
         if unit_state.attached_to:
-            return -1
+            # Must move to land, with all of their movement, and to an adjacent space
+            if goal_territory.is_water or unit_state.moves_used > 0 or goal_territory.name not in self.rules.board[current_territory.name].neighbors:
+                return -1
+            # If it is the non-combat move phase, and there are enemy units, it can't move
+            if self.turn_state.phase == 5:
+                for other_unit_state in goal_territory.unit_state_list:
+                    if self.rules.teams[other_unit_state.owner] != self.rules.teams[unit_state.owner]:
+                        return -1
+            # Otherwise, it can move there
+            return unit.movement
 
         # Breadth-First Search to find shortest path
         path = self.bfs(unit_state, current_territory.name, goal_territory.name, unit.movement - unit_state.moves_used)
@@ -1236,14 +1258,17 @@ class Game:
 #  But the program can't differentiate between a sub attacking vs staying submerged when it ends its combat turn in enemy territories
 #  It currently assumes that if a sub ends in enemy units on a combat turn, then it attacks (and that it would move during non-combat otherwise)
 
-# TODO: Can submarines end their turn in enemy units? Currently the program assumes that they can
-
-# TODO: Transported units currently cannot unload/move
+# TODO: Currently factories are considered enemy units for purposes of moving into territories on non combat turns and other things
 
 # TODO: Lots of things with carriers + fighters
 #  Multiple fighters can plan a return path to the same carrier, potentially going over its capacity and forcing a fighter to die
 #  This is basically unfixable, and the same bug exists in the game's source code
 #  Carriers must move before fighters during non-combat turns, because the program assumes this in order to simplify calculations
+
+# Implement combat (retreats, naval invasion, aa guns, battle simulator)
+# purchase units?
+# implement phases
+# heuristic algorithm? NN? minimax
 
 # ADD IN TERRITORY OWNERSHIP AND ACCOUNT FOR IT IN THE PASSABLE FUNCTION
 
