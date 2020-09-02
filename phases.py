@@ -5,6 +5,7 @@ import math
 class Build:
     def __init__(self, game): # game.turn_state, etc.
         self.game = game
+        game.turn_state.phase = 2
         self.ipc = self.game.turn_state.player.ipc
 
         self.prioritize_surface_navy = 0
@@ -79,6 +80,7 @@ class Battles:
         self.player = game.turn_state.player
         self.team = game.rules.teams[player]
         self.game = game
+        game.turn_state.phase = 4
 
         self.enemy_team = game.rules.teams[player]
         while (self.enemy_team == game.rules.teams[player]):
@@ -221,6 +223,7 @@ class Non_Combat:
 
 class Place:
     def __init__(self, game, placements):
+        game.turn_state.phase = 6
         self.placements = placements
         self.game = game
 
@@ -230,7 +233,22 @@ class Place:
 
 class Cleanup:
     def __init__(self, game):
-        self.game = game
 
-    # reset factory ownership
-    # murder planes. collect money. untap ships. reset movement.
+        game.turn_state.phase = 7
+
+        for territory_key in game.state_dict:
+            for unit_state in game.state_dict[territory_key].unit_state_list:
+                if (unit_state.type_index == 5) and (game.state_dict[territory_key].owner != unit_state.owner):
+                    unit_state.owner = game.state_dict[territory_key].owner   # reset factory ownership
+
+                unit_state.moves_used = 0
+                if unit_state.type_index != 5: #this is irrelevant because bombing directly affects IPCs. Allows change
+                    unit_state.damage = 0
+                unit_state.moved_from = []
+
+            if game.state_dict[territory_key].owner == player:
+                game.turn_state.player.ipc += game.rules.board[territory_key].ipc  #updates ipc
+
+        if player == "America":
+            game.turn_state.round_num += 1
+        game.turn_state.player = game.rules.turn_order[player]  #sets player to the next player
