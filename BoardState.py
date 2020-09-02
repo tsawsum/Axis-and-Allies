@@ -713,8 +713,8 @@ class Game:
 
         self.rules = Rules()
         # player 0 = russia, 1 = germany, 2 = britain, 3 = japan, 4 = us
-        # phase 0 = tech, 1 = repair, 2 = buy, 3 = combat move, 4 = combat phase, 5 = non-combat, 6 = place
-        self.turn_state = TurnState(1, "Russia", 0)
+        # phase 0 = tech, 1 = repair, 2 = buy, 3 = combat move, 4 = combat phase, 5 = non-combat, 6 = place, 7 = cleanup6
+        self.turn_state = TurnState(1, "Russia", 2)
 
         # dictionary from territory names to territory states
         self.state_dict = {"1 Sea Zone": TerritoryState("Sea Zone", []),
