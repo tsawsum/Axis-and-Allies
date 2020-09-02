@@ -667,13 +667,14 @@ class UnitState:
     Provides fluid information for units
     """
 
-    def __init__(self, owner, type_number, attached_units=[], attached_to=None, moves_used=0, damage=0):
+    def __init__(self, owner, type_number, attached_units=[], attached_to=None, moves_used=0, damage=0, moved_from=[]):
         self.owner = owner
         self.type_index = type_number
         self.moves_used = moves_used
         self.damaged = damage
         self.attached_units = attached_units
         self.attached_to = attached_to
+        self.moved_from = moved_from
 
 
 class TurnState:
