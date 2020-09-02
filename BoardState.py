@@ -643,6 +643,8 @@ class Rules:
                       "Germany": "Axis",
                       "Japan":   "Axis",
                       "Neutral": "Neutral"}
+        
+        self.turn_order = ["Russia", "Germany", "Britain", "Japan", "America"]
 
     def get_unit(self, index):
         return self.units[index]
