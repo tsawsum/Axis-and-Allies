@@ -2,7 +2,7 @@ import subprocess
 import os
 
 
-# Make sure converter.jar is in the same directory as this SavegamesToXml.py
+# Make sure converterX.X.jar are in the same directory as this SavegamesToXml.py
 if __name__ == '__main__':
     # Parameters
     input_directory = 'path/to/directory/with/savegames'
@@ -24,4 +24,10 @@ if __name__ == '__main__':
 
     # Run the java program to convert savegames to xml files
     for arg1, arg2 in filepaths:
-        subprocess.call(['java', '-jar', 'converter.jar', arg1, arg2])
+        try:
+            subprocess.check_output(['java', '-jar', 'converter1.9.jar', arg1, arg2])
+        except subprocess.CalledProcessError:
+            try:
+                subprocess.check_output(['java', '-jar', 'converter2.1.jar', arg1, arg2])
+            except subprocess.CalledProcessError:
+                print('Version number must match either 2.1 or 1.9 (' + arg1 + ')')
