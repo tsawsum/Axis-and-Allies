@@ -8,13 +8,33 @@ class Build:
         game.turn_state.phase = 2
         self.ipc = self.game.turn_state.player.ipc
 
-        self.prioritize_surface_navy = 0
-        self.prioritize_transports = 0  #this should also purchase transportable units if needed
-        self.prioritize_subs = 0
-        self.prioritize_air = 0
-        self.prioritize_land_defense = 0
-        self.prioritize_land_creeping_offense = 0
-        self.prioritize_land_blitz = 0
+        self.prioritization_list = []
+        self.prioritization_list.append(['battleship', 0])     #1
+        self.prioritization_list.append(['factory', 0])        #2
+        self.prioritization_list.append(['carrier', 0])        #3
+        self.prioritization_list.append(['cruiser', 0])        #4
+        self.prioritization_list.append(['bomber', 0])         #5
+        self.prioritization_list.append(['carrier_fighter', 0]) #same here
+        self.prioritization_list.append(['fighter', 0])        #7
+        self.prioritization_list.append(['destroyer', 0])      #8
+        self.prioritization_list.append(['transport', 0])      #9
+        self.prioritization_list.append(['transportable_units', 0]) #only positive if no adjacent units
+        self.prioritization_list.append(['sub', 0])            #11
+        self.prioritization_list.append(['tank', 0])           #12
+        self.prioritization_list.append(['aa', 0])             #13
+        self.prioritization_list.append(['artillery', 0])      #14
+        self.prioritization_list.append(['infantry', 0])       #15
+
+        #sea
+        self.sea_defense_sum = self.prioritization_list[1][1] + self.prioritization_list[2][1] \
+            + self.prioritization_list[3][1] + self.prioritization_list[7][1] + self.prioritization_list[8][1]
+        self.sea_sum = self.sea_defense_sum + self.prioritization_list[4][1] + self.prioritization_list[5][1] \
+            + self.prioritization_list[6][1]
+
+        #land
+        self.land_defense_sum = self.prioritization_list[9][1] + self.prioritization_list[11][1] \
+            + self.prioritization_list[12][1] + self.prioritization_list[13][1] + self.prioritization_list[14][1]
+        self.land_sum = self.land_defense_sum + self.prioritization_list[10][1]
 
         self.factories = {}
         for territory_key in self.game.state_dict:
@@ -27,6 +47,15 @@ class Build:
         self.latent_defensive_requirements = []
 
     def build_strategy(self):  #called by the AI
+
+
+        if self.immediate_defensive_requirements != []:
+            self.immediate_defensive_requirements.sort(reverse=True, key=lambda x:game.rules.board[x].ipc)
+            for territory_name in self.immediate_defensive_requirements:
+                pass
+
+        #TODO GEORGE. Start doing these if statements!
+
         #TODO 1. make sure your defensive requirements are met if possible. If land prioritization is active
         #           utilize specific units if possible. Set low prioritiy if you want to build only tanks in SA
         #     2. If not possible with land prioritization, replace special units with infantry.
@@ -45,7 +74,9 @@ class Build:
         pass
 
     def prioritizer(self, prioritization, strength):
-        self.prioritization = strength
+        for list in self.prioritization_list:
+            if list[0] == prioritization:
+                list[1] = strength
 
     #TODO Utilize combat move attack decision module to determine which factories/ key neighbors are under threat
     # This will need to be called within build_strategy after adding the theoritical units to see if still under threat.
@@ -62,17 +93,26 @@ class Build:
         self.game.state_dict[territory_name].append(self.game.rules.get_unit(unit_index))
         self.ipc = self.ipc - self.game.rules.get_unit(unit_index).cost
 
+class Battle_calculator:
+    #MAKE A COPY OF STUFF BEFORE YOU USE THIS BC THE BATTLE STUFF ACTUALLY MAKES CHANGES
+    #account for land units on transpots in ipc swing
+    # tool for the AI to determine how a battle WOULD turn out without actually changing the GameState
+        def __init__(self, unit_state_list, territory_value):
+            self.unit_state_list = unit_state_list
+            self.ipc_swing = 0
+            self.embattled_territory_value = territory_value
+            self.victory_chance = 0  #consider both amalgamation and victory chance alone
+            self.tie_chance = 0
+
+            self.net_ipc_swing = self.ipc_swing + (self.embattled_territory_value * self.victory_chance)
+
+        def battle_sim(self):
+            # does the battle
+            pass
 
 class Combat_Move:
     def __init__(self, game):
         pass
-
-    def battle_calculator(self):
-    #MAKE A COPY OF STUFF BEFORE YOU USE THIS BC THE BATTLE STUFF ACTUALLY MAKES CHANGES
-    #account for land units on transpots in ipc swing
-    # tool for the AI to determine how a battle WOULD turn out without actually changing the GameState
-        pass
-
 
 class Battles:
     def __init__(self, game):
@@ -81,6 +121,10 @@ class Battles:
         self.team = game.rules.teams[player]
         self.game = game
         game.turn_state.phase = 4
+
+        self.retreating = False
+        self.kamikaze = False
+        #TODO Make this work
 
         self.enemy_team = game.rules.teams[player]
         while (self.enemy_team == game.rules.teams[player]):
@@ -99,11 +143,12 @@ class Battles:
 
             if embattled (unit_state_list):
                 #if two different team's units are in a territory at the end of combat move
-                unit_state_list = battler(unit_state_list)  #resets unit_state_list to be equal to the remaining units
+
+                unit_state_list = battler(unit_state_list, self.game.rules.board[territory_key].ipc)  #resets unit_state_list to be equal to the remaining units
             else:
                 pass
 
-    def battler(self, unit_state_list):
+    def battler(self, unit_state_list, territory_value):
     # inputs units (unit_states) originally in embattled territory and returns remaining units
 
         while embattled(unit_state_list):
@@ -126,6 +171,16 @@ class Battles:
             casualty_selector(self.team, unit_state_list, attack, friendly_units_killed)
             casualty_selector(self.enemy_team, unit_state_list, defense, enemy_units_killed)
             #these modify unit_state_list
+
+            # Unexpected retreat decision
+            self.battle_calculator = Battle_calculator(unit_state_list, territory_value)
+            if (self.battle_calculator.net_ipc_swing <= 0) and not self.kamikaze:  #this might not want to always be 0. Could let the AI decide?
+                retreating == True
+
+            #TODO BRETTTT. AMPHIBIOUS REEEEEEEEEEEEEEEEEE
+            if self.retreating:
+                self.retreating = False
+                break
 
         return unit_state_list
 
