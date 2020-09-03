@@ -3,12 +3,15 @@ import random
 import math
 
 class Build:
-    def __init__(self, game): # game.turn_state, etc.
+    def __init__(self, game, endangered_name_list): # game.turn_state, etc.
         self.game = game
+        self.player = self.game.turn_state.player
+        self.endangered_name_list = endangered_name_list
         game.turn_state.phase = 2
         self.ipc = self.game.turn_state.player.ipc
 
         self.prioritization_list = []
+        self.prioritization_list.append(['tech_token', 0])     #never use this one
         self.prioritization_list.append(['battleship', 0])     #1
         self.prioritization_list.append(['factory', 0])        #2
         self.prioritization_list.append(['carrier', 0])        #3
@@ -26,15 +29,50 @@ class Build:
         self.prioritization_list.append(['infantry', 0])       #15
 
         #sea
-        self.sea_defense_sum = self.prioritization_list[1][1] + self.prioritization_list[2][1] \
-            + self.prioritization_list[3][1] + self.prioritization_list[7][1] + self.prioritization_list[8][1]
-        self.sea_sum = self.sea_defense_sum + self.prioritization_list[4][1] + self.prioritization_list[5][1] \
-            + self.prioritization_list[6][1]
+        self.sea_defense_sum = self.prioritization_list[1][1] + self.prioritization_list[3][1] \
+            + self.prioritization_list[4][1] + self.prioritization_list[6][1] + self.prioritization_list[8][1]
+        self.sea_sum = self.sea_defense_sum + self.prioritization_list[9][1] + self.prioritization_list[10][1] \
+            + self.prioritization_list[11][1]
 
-        #land
-        self.land_defense_sum = self.prioritization_list[9][1] + self.prioritization_list[11][1] \
-            + self.prioritization_list[12][1] + self.prioritization_list[13][1] + self.prioritization_list[14][1]
-        self.land_sum = self.land_defense_sum + self.prioritization_list[10][1]
+        #land. These may prove vistigial
+        self.land_defense_sum = self.prioritization_list[12][1] + self.prioritization_list[13][1] \
+            + self.prioritization_list[14][1] + self.prioritization_list[15][1] + self.prioritization_list[7][1]
+        self.land_sum = self.land_defense_sum + self.prioritization_list[2][1] + self.prioritization_list[5][1]
+
+        self.priority_sum = self.land_sum + self.sea_sum
+
+        self.purchased_unit_state_list = []
+        # initial purchasing
+        for unit_priority in self.prioritization_list:
+            priority_ratio = unit_priority[1]/self.priority_sum
+            allotted_ipc = priority_ratio * self.ipc
+
+            cost = -1
+
+            if unit_priority[0] == 'carrier_fighter':
+                cost = 10
+                num_purchased = round(allotted_ipc/cost)
+                for i in range(num_purchased):
+                    self.purchased_unit_state_list.append(UnitState(self.player, 11))
+                    self.ipc -= cost
+
+            elif unit_priority[0] == 'transportable_units':
+                cost = 7
+                num_purchased = round(allotted_ipc/cost)
+                for i in range(num_purchased):
+                    self.purchased_unit_state_list.append(UnitState(self.player, 0))
+                    self.purchased_unit_state_list.append(UnitState(self.player, 1))
+                    self.ipc -= cost
+
+            else:
+                for unit in self.game.rules.units:
+                    if unit.name == unit_priority[0]:
+                        cost = unit.cost
+                        num_purchased = round(allotted_ipc/cost)
+                        for i in range(num_purchased):
+                            self.purchased_unit_state_list.append(UnitState(self.player, self.game.rules.units.index(unit))
+                            self.ipc = self.ipc - cost
+                        #TODO WHY does this give an error?
 
         self.factories = {}
         for territory_key in self.game.state_dict:
@@ -43,18 +81,19 @@ class Build:
                     self.factories[territory_key] = self.game.rules.board[territory_key].ipc #name keys to ipc value
         # factories now has a dict of names having factories and their IPC values (max build capacity)
 
-        self.immediate_defensive_requirements = []
-        self.latent_defensive_requirements = []
+        set_defensive_requirements(endangered_name_list)
 
     def build_strategy(self):  #called by the AI
 
 
-        if self.immediate_defensive_requirements != []:
+        if self.immediate_defensive_requirements != []:     #this will always be land
             self.immediate_defensive_requirements.sort(reverse=True, key=lambda x:game.rules.board[x].ipc)
             for territory_name in self.immediate_defensive_requirements:
-                pass
 
-        #TODO GEORGE. Start doing these if statements!
+
+                self.land_defense_sum = self.prioritization_list[9][1] + self.prioritization_list[11][1] \
+            + self.prioritization_list[12][1] + self.prioritization_list[13][1] + self.prioritization_list[14][1]
+
 
         #TODO 1. make sure your defensive requirements are met if possible. If land prioritization is active
         #           utilize specific units if possible. Set low prioritiy if you want to build only tanks in SA
@@ -201,8 +240,6 @@ class CombatMove:
                                 break
         return True
 
-
-# TODO GEORGE: When a territory is captured, make sure to set "territory_state.just_captured = True" (so planes know they can't land there)
 class Battles:
     def __init__(self, game):
         self.territory_states = game.state_dict
@@ -224,9 +261,9 @@ class Battles:
                     pass
         # sets enemy team to opposite team.
 
-        for territory_key in territory_states:
-            territory_states[territory_key] = territory_state
-            territory_state.unit_state_list = unit_state_list
+        for territory_key in self.territory_states:
+            territory_state = self.territory_states[territory_key]
+            unit_state_list = territory_state.unit_state_list
 
             #TODO Account for submarine submerge option
 
@@ -234,6 +271,10 @@ class Battles:
                 #if two different team's units are in a territory at the end of combat move
 
                 unit_state_list = battler(unit_state_list, self.game.rules.board[territory_key].ipc)  #resets unit_state_list to be equal to the remaining units
+                for unit_state in unit_state_list:
+                    if (unit_state.owner == self.player):  #factories are technically enemy
+                        territory_state.owner = self.player
+                        territory_state.just_captured = True
             else:
                 pass
 
@@ -275,7 +316,7 @@ class Battles:
 
     def embattled(self, unit_state_list):
         for unit_state in unit_state_list:
-            if self.game.rules.teams[unit_state.owner] != self.team:
+        if (self.game.rules.teams[unit_state.owner] != self.team) and (unit_state.type_index != 5):
                 return True
         else:
             return False
@@ -438,8 +479,9 @@ class Place:
         self.game = game
 
     def place(self):
-        for territory_name in self.placements:
-            self.game.state_dict[territory_name].unit_state_list.append(placements[territory_name])
+        for territory_key in self.placements:
+            for unit_state in placements[territory_key]:
+                self.game.state_dict[territory_key].unit_state_list.append(unit_state)
 
 
 class Cleanup:
