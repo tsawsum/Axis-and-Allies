@@ -52,27 +52,32 @@ class Build:
             if unit_priority[0] == 'carrier_fighter':
                 cost = 10
                 num_purchased = round(allotted_ipc/cost)
-                for i in range(num_purchased):
-                    self.purchased_unit_state_list.append(UnitState(self.player, 11))
-                    self.ipc -= cost
+                if num_purchased >= 1:
+                    for i in range(num_purchased):
+                        if (self.ipc - cost) >= 0:
+                            self.purchased_unit_state_list.append(UnitState(self.player, 11))
+                            self.ipc -= cost
 
             elif unit_priority[0] == 'transportable_units':
                 cost = 7
                 num_purchased = round(allotted_ipc/cost)
-                for i in range(num_purchased):
-                    self.purchased_unit_state_list.append(UnitState(self.player, 0))
-                    self.purchased_unit_state_list.append(UnitState(self.player, 1))
-                    self.ipc -= cost
+                if num_purchased >= 1:
+                    for i in range(num_purchased):
+                        if (self.ipc - cost) >= 0:
+                            self.purchased_unit_state_list.append(UnitState(self.player, 0))
+                            self.purchased_unit_state_list.append(UnitState(self.player, 1))
+                            self.ipc -= cost
 
             else:
                 for unit in self.game.rules.units:
                     if unit.name == unit_priority[0]:
                         cost = unit.cost
                         num_purchased = round(allotted_ipc/cost)
-                        for i in range(num_purchased):
-                            self.purchased_unit_state_list.append(UnitState(self.player, self.game.rules.units.index(unit))
-                            self.ipc = self.ipc - cost
-                        #TODO WHY does this give an error?
+                        if num_purchased >= 1:
+                            for i in range(num_purchased):
+                                if (self.ipc - cost) >= 0:
+                                    self.purchased_unit_state_list.append(UnitState(self.player, self.game.rules.units.index(unit)))
+                                    self.ipc = self.ipc - cost
 
         self.factories = {}
         for territory_key in self.game.state_dict:
@@ -316,7 +321,7 @@ class Battles:
 
     def embattled(self, unit_state_list):
         for unit_state in unit_state_list:
-        if (self.game.rules.teams[unit_state.owner] != self.team) and (unit_state.type_index != 5):
+            if (self.game.rules.teams[unit_state.owner] != self.team) and (unit_state.type_index != 5):
                 return True
         else:
             return False
