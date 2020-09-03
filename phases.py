@@ -110,10 +110,99 @@ class Battle_calculator:
             # does the battle
             pass
 
-class Combat_Move:
-    def __init__(self, game):
-        pass
 
+# TODO: Plane retreating is different from normal retreating
+class CombatMove:
+    def __init__(self, game, aa_flyover=True):
+        self.game = game
+        self.aa_flyover = aa_flyover
+
+    def can_move(self, unit_state, current_territory, goal_territory):
+        return self.game.calc_movement(unit_state, current_territory, goal_territory)[0] >= 0
+
+    def move_unit(self, unit_state, current_territory, goal_territory, bombing=False, bombarding=False):
+        dist, path = self.game.calc_movement(unit_state, current_territory, goal_territory)
+        if dist == -1:
+            return False
+        current_territory_state, goal_territory_state = self.game.state_dict[current_territory.name], self.game.state_dict[goal_territory.name]
+        current_territory_state.unit_state_list.remove(unit_state)
+        unit = self.game.rules.get_unit(unit_state.type_index)
+
+        # AA guns
+        if self.aa_flyover and unit.unit_type == 'air':
+            # Check for aa guns in each territory
+            for ter_name in path:
+                territory_state = self.game.state_dict[ter_name]
+                for other_unit_state in territory_state.unit_state_list:
+                    if other_unit_state.type_index == 3 and self.game.rules.teams[other_unit_state.owner] != self.game.rules.teams[unit_state.owner]:
+                        # Can only shoot 3 times
+                        if other_unit_state.shots_taken < 3:
+                            other_unit_state.shots_taken += 1
+                            if random.randint(1, 6) == 1:
+                                return True
+
+        # Bombing factories
+        if bombing and unit.name == 'bomber':
+            for other_unit_state in goal_territory_state:
+                if other_unit_state.type_index == 4 and other_unit_state.shots_taken < 3:
+                    self.players[unit_state.owner].ipc -= random.randint(1, 6)
+                    other_unit_state.shots_taken += 1
+                    if random.randint(1, 6) == 1:
+                        return True
+
+        # Update unit
+        goal_territory_state.unit_state_list.append(unit_state)
+        unit_state.moves_used += dist
+        unit_state.moved_from = path
+        if unit_state.attached_to:
+            unit_state.attached_to.attached_units.remove(unit_state)
+            unit_state.attached_to = None
+            # Bombarding
+            if bombarding:
+                # Check if there are enemy units to bombard
+                enemy_units = False
+                for other_unit_state in goal_territory_state:
+                    if other_unit_state.type_index != 4 and self.game.rules.teams[other_unit_state.owner] != self.game.rules.teams[unit_state.owner]:
+                        enemy_units = True
+                        break
+                if enemy_units:
+                    # Check for battleships to bombard with
+                    for other_unit_state in current_territory_state:
+                        if other_unit_state.type_index == 10 and self.game.rules.teams[other_unit_state.owner] == self.game.rules.teams[unit_state.owner]:
+                            if not other_unit_state.shots_taken:
+                                other_unit_state.shots_taken += 1
+                                unit_state.moves_used = unit.movement
+                                # TODO: Can battleships bombard if they have already moved?
+                                if random.randint(1, 6) <= 4:
+                                    pass  # TODO: Enemy needs to choose casualty in goal_territory
+        if goal_territory.is_water and unit.unit_type == 'land':
+            # Attach to transport
+            if unit.name == 'infantry':
+                # Look for open infantry spots
+                for other_unit_state in goal_territory_state:
+                    if other_unit_state.type_index == 5:
+                        if len(other_unit_state.attached_units) == 0 or \
+                                (len(other_unit_state.attached_units) == 1 and other_unit_state.attached_units[0].type_index != 0):
+                            unit_state.attached_to = other_unit_state
+                            other_unit_state.attached_units.append(unit_state)
+                            break
+            # Look for any available spot
+            if not unit_state.attached_to:
+                for other_unit_state in goal_territory_state:
+                    if other_unit_state.type_index == 5:
+                        if len(other_unit_state.attached_units) == 0:
+                            unit_state.attached_to = other_unit_state
+                            other_unit_state.attached_units.append(unit_state)
+                            break
+                        elif len(other_unit_state.attached_units) == 1:
+                            if unit.name == 'infantry' or other_unit_state.type_index == 0:
+                                unit_state.attached_to = other_unit_state
+                                other_unit_state.attached_units.append(unit_state)
+                                break
+        return True
+
+
+# TODO GEORGE: When a territory is captured, make sure to set "territory_state.just_captured = True" (so planes know they can't land there)
 class Battles:
     def __init__(self, game):
         self.territory_states = game.state_dict
@@ -273,8 +362,74 @@ class Battles:
             if (friendly_units == []) and (saving_list == []):
                 break
 
-class Non_Combat:
-    pass
+
+class NonCombatMove:
+    def __init__(self, game, aa_flyover):
+        self.game = game
+        self.aa_flyover = aa_flyover
+
+    def can_move(self, unit_state, current_territory, goal_territory):
+        return self.game.calc_movement(unit_state, current_territory, goal_territory)[0] >= 0
+
+    def move_unit(self, unit_state, current_territory, goal_territory):
+        dist, path = self.game.calc_movement(unit_state, current_territory, goal_territory)
+        if dist == -1:
+            return False
+        current_territory_state, goal_territory_state = self.game.state_dict[current_territory.name], self.game.state_dict[goal_territory.name]
+        current_territory_state.unit_state_list.remove(unit_state)
+        for other_unit_state in unit_state.attached_units:
+            current_territory_state.unit_state_list.remove(other_unit_state)
+        unit = self.game.rules.get_unit(unit_state.type_index)
+
+        # AA guns
+        if self.aa_flyover and unit.unit_type == 'air':
+            # Check for aa guns in each territory
+            for ter_name in path:
+                if ter_name not in unit_state.moved_from:
+                    territory_state = self.game.state_dict[ter_name]
+                    for other_unit_state in territory_state.unit_state_list:
+                        if other_unit_state.type_index == 3 and self.game.rules.teams[other_unit_state.owner] != self.game.rules.teams[unit_state.owner]:
+                            # Can only shoot 3 times
+                            if other_unit_state.shots_taken < 3:
+                                other_unit_state.shots_taken += 1
+                                if random.randint(1, 6) == 1:
+                                    return True
+
+        # Update unit
+        goal_territory_state.unit_state_list.append(unit_state)
+        for other_unit_state in unit_state.attached_units:
+            goal_territory_state.unit_state_list.append(other_unit_state)
+        unit_state.moves_used += dist
+        unit_state.moved_from = path
+        if unit_state.attached_to:
+            unit_state.attached_to.attached_units.remove(unit_state)
+            unit_state.attached_to = None
+        if goal_territory.is_water and unit.unit_type == 'land':
+            # Attach to transport
+            if unit.name == 'infantry':
+                # Look for open infantry spots
+                for other_unit_state in goal_territory_state:
+                    if other_unit_state.type_index == 5:
+                        if len(other_unit_state.attached_units) == 0 or \
+                                (len(other_unit_state.attached_units) == 1 and other_unit_state.attached_units[0].type_index != 0):
+                            unit_state.attached_to = other_unit_state
+                            other_unit_state.attached_units.append(unit_state)
+                            break
+            # Look for any available spot
+            if not unit_state.attached_to:
+                for other_unit_state in goal_territory_state:
+                    if other_unit_state.type_index == 5:
+                        if len(other_unit_state.attached_units) == 0:
+                            unit_state.attached_to = other_unit_state
+                            other_unit_state.attached_units.append(unit_state)
+                            break
+                        elif len(other_unit_state.attached_units) == 1:
+                            if unit.name == 'infantry' or other_unit_state.type_index == 0:
+                                unit_state.attached_to = other_unit_state
+                                other_unit_state.attached_units.append(unit_state)
+                                break
+        return True
+
 
 class Place:
     def __init__(self, game, placements):
@@ -285,6 +440,7 @@ class Place:
     def place(self):
         for territory_name in self.placements:
             self.game.state_dict[territory_name].unit_state_list.append(placements[territory_name])
+
 
 class Cleanup:
     def __init__(self, game):
