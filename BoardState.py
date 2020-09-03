@@ -643,6 +643,12 @@ class Rules:
                       "Germany": "Axis",
                       "Japan":   "Axis",
                       "Neutral": "Neutral"}
+        
+        self.turn_order = {"Russia": "Germany", 
+                           "Germany": "Britain", 
+                           "Britain": "Japan", 
+                           "Japan": "America", 
+                           "America": "Russia"}
 
     def get_unit(self, index):
         return self.units[index]
@@ -667,13 +673,14 @@ class UnitState:
     Provides fluid information for units
     """
 
-    def __init__(self, owner, type_number, attached_units=[], attached_to=None, moves_used=0, damage=0):
+    def __init__(self, owner, type_number, attached_units=[], attached_to=None, moves_used=0, damage=0, moved_from=[]):
         self.owner = owner
         self.type_index = type_number
         self.moves_used = moves_used
         self.damaged = damage
         self.attached_units = attached_units
         self.attached_to = attached_to
+        self.moved_from = moved_from
 
 
 class TurnState:
@@ -712,8 +719,8 @@ class Game:
 
         self.rules = Rules()
         # player 0 = russia, 1 = germany, 2 = britain, 3 = japan, 4 = us
-        # phase 0 = tech, 1 = repair, 2 = buy, 3 = combat move, 4 = combat phase, 5 = non-combat, 6 = place
-        self.turn_state = TurnState(1, "Russia", 0)
+        # phase 0 = tech, 1 = repair, 2 = buy, 3 = combat move, 4 = combat phase, 5 = non-combat, 6 = place, 7 = cleanup6
+        self.turn_state = TurnState(1, "Russia", 2)
 
         # dictionary from territory names to territory states
         self.state_dict = {"1 Sea Zone": TerritoryState("Sea Zone", []),
