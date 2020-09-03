@@ -673,7 +673,7 @@ class UnitState:
     Provides fluid information for units
     """
 
-    def __init__(self, owner, type_number, attached_units=[], attached_to=None, moves_used=0, damage=0, moved_from=[]):
+    def __init__(self, owner, type_number, attached_units=[], attached_to=None, moves_used=0, damage=0, moved_from=[], shots_taken=0):
         self.owner = owner
         self.type_index = type_number
         self.moves_used = moves_used
@@ -681,6 +681,7 @@ class UnitState:
         self.attached_units = attached_units
         self.attached_to = attached_to
         self.moved_from = moved_from
+        self.shots_taken = shots_taken
 
 
 class TurnState:
@@ -721,6 +722,11 @@ class Game:
         # player 0 = russia, 1 = germany, 2 = britain, 3 = japan, 4 = us
         # phase 0 = tech, 1 = repair, 2 = buy, 3 = combat move, 4 = combat phase, 5 = non-combat, 6 = place, 7 = cleanup6
         self.turn_state = TurnState(1, "Russia", 2)
+        self.players = {"America": Player('America'),
+                        "Britain": Player('Britain'),
+                        "Russia":  Player('Russia'),
+                        "Germany": Player('Germany'),
+                        "Japan":   Player('Japan')}
 
         # dictionary from territory names to territory states
         self.state_dict = {"1 Sea Zone": TerritoryState("Sea Zone", []),
@@ -946,7 +952,7 @@ class Game:
         # Set resources
         country_names = {"Americans": "America", "British": "Britain", "Germans": "Germany", "Japanese": "Japan", "Russians": "Russia", "Neutral": "Neutral"}
         for elem in players:
-            player = Player(country_names[elem.get("name")])
+            player = self.players[country_names[elem.get("name")]]
             for resource in elem.findall("resource"):
                 if resource.get("name") == "PUs":
                     player.ipc = int(resource.get("quantity"))
@@ -999,62 +1005,71 @@ class Game:
 
     def calc_movement(self, unit_state, current_territory, goal_territory):
         """
-        a function that will check if a theoretical move is valid, and returns the movement required to move there. Returns -1 if impossible
+        a function that will check if a theoretical move is valid, and returns the movement required to move there, as well as the path taken.
+        Returns -1 if impossible
         This replaces the old "passable" function
         """
         # Check if it would be possible to move to goal territory at all before doing BFS
         unit = self.rules.get_unit(unit_state.type_index)
         goal_territory_state = self.state_dict[goal_territory.name]
 
+        # Can't move if no movement left
+        if unit_state.moves_used == unit.movement:
+            return -1, list()
+
         # Sea units can only move to sea, and land can only move to land
         # Unless land units move to an adjacent transport
         if goal_territory.is_water:
             if unit.unit_type == "land":
                 if unit_state.moves_used > 0 or goal_territory.name not in self.rules.board[current_territory.name].neighbors:
-                    return -1
+                    return -1, list()
                 for other_unit_state in goal_territory_state.unit_state_list:
                     # Check for allied transports
                     if other_unit_state.type_index == 5 and self.rules.teams[other_unit_state.owner] == self.rules.teams[unit_state.owner]:
                         # Check if the transport has space
                         if len(other_unit_state.attached_units) == 0 or (len(other_unit_state.attached_units) == 1 and (unit_state.type_index == 0 or other_unit_state.attached_units[0].type_index == 0)):
                             return unit.movement
-                return -1
+                return -1, list()
         else:
             if unit.unit_type == 'sea':
-                return -1
+                return -1, list()
 
         # Can't move into neutral territories
         if goal_territory_state.owner == "Neutral":
-            return -1
+            return -1, list()
 
         # Non-combat movement
         if self.turn_state.phase == 5:
             # Can't move into enemy territory
             if goal_territory_state.owner != "Sea Zone" and self.rules.teams[goal_territory_state.owner] != self.rules.teams[unit_state.owner]:
-                return -1
+                return -1, list()
             # Can't move into territories with enemy units, unless sub
             for other_unit_state in goal_territory_state.unit_state_list:
                 if self.rules.teams[other_unit_state.owner] != self.rules.teams[unit_state.owner]:
                     if not (unit_state.name == 'sub' and other_unit_state.name != 'destroyer'):
-                        return -1
+                        return -1, list()
+        # AA guns can't move in combat turns
+        elif self.turn_state.phase == 3:
+            if unit.name == 'aa':
+                return -1, list()
 
         # Transported units can only move to adjacent land
         if unit_state.attached_to:
             # Must move to land, with all of their movement, and to an adjacent space
             if goal_territory.is_water or unit_state.moves_used > 0 or goal_territory.name not in self.rules.board[current_territory.name].neighbors:
-                return -1
+                return -1, list()
             # If it is the non-combat move phase, and there are enemy units, it can't move
             if self.turn_state.phase == 5:
                 for other_unit_state in goal_territory.unit_state_list:
                     if self.rules.teams[other_unit_state.owner] != self.rules.teams[unit_state.owner]:
-                        return -1
+                        return -1, list()
             # Otherwise, it can move there
-            return unit.movement
+            return unit.movement, [current_territory.name, goal_territory.name]
 
         # Breadth-First Search to find shortest path
         path = self.bfs(unit_state, current_territory.name, goal_territory.name, unit.movement - unit_state.moves_used)
         if not path:
-            return -1
+            return -1, list()
 
         # Land/sea units can't move after combat, so use all remaining movement
         if self.turn_state.phase == 3:
@@ -1065,7 +1080,7 @@ class Game:
                     enemy_units = True
 
             if enemy_units:
-                return unit.movement - unit_state.moves_used
+                return unit.movement - unit_state.moves_used, path
 
         # Check if air units can return (only necessary if combat move)
         if unit.unit_type == 'air' and self.turn_state.phase == 3:
@@ -1118,10 +1133,10 @@ class Game:
             else:
                 return_path = self.bfs(unit_state, goal_territory.name, None, unit.movement - (len(path) - 1))
             if not return_path:
-                return -1
+                return -1, list()
 
         # We want number of edges, not number of nodes, so subtract 1
-        return len(path) - 1
+        return len(path) - 1, path
 
     def bfs(self, unit_state, root, target, max_dist, carrier_spots=None):
         """
@@ -1248,9 +1263,10 @@ class Game:
                     enemy_units, enemy_destroyer = False, False
                     for other_unit_state in territory_state.unit_state_list:
                         if self.rules.teams[other_unit_state.owner] != self.rules.teams[unit_state.owner]:
-                            enemy_units = True
-                            if self.rules.get_unit(other_unit_state.type_index).name == "destroyer":
-                                enemy_destroyer = True
+                            if self.rules.get_unit(other_unit_state.type_index).name != 'factory':
+                                enemy_units = True
+                                if self.rules.get_unit(other_unit_state.type_index).name == 'destroyer':
+                                    enemy_destroyer = True
 
                     # Land/sea units must stop moving if there are enemy units (with exception for subs)
                     if enemy_units:
