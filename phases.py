@@ -303,8 +303,8 @@ class Battles:
             friendly_units_killed = hit_roller(total_friendly_power % 6) + math.floor(total_friendly_power / 6)
             enemy_units_killed = hit_roller(total_enemy_power % 6) + math.floor(total_enemy_power / 6)
 
-            casualty_selector(self.team, unit_state_list, attack, friendly_units_killed)
-            casualty_selector(self.enemy_team, unit_state_list, defense, enemy_units_killed)
+            casualty_selector(self.team, unit_state_list, 'attack', friendly_units_killed)
+            casualty_selector(self.enemy_team, unit_state_list, 'defense', enemy_units_killed)
             #these modify unit_state_list
 
             # Unexpected retreat decision
