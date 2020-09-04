@@ -117,7 +117,7 @@ class Battle_calculator:
             pass
 
 
-# TODO: Plane retreating is different from normal retreating
+# TODO: Plane retreating is different from normal retreating <- Why for combat move instead of Battle class
 class CombatMove:
     def __init__(self, game, aa_flyover=True):
         self.game = game
@@ -263,8 +263,8 @@ class Battles:
                     else:
                         total_enemy_power += self.game.rules.units[unit_state.type_index].defense
 
-            friendly_units_killed = self.hit_roller(total_friendly_power % 6) + math.floor(total_friendly_power / 6)
-            enemy_units_killed = self.hit_roller(total_enemy_power % 6) + math.floor(total_enemy_power / 6)
+            friendly_units_killed = self.hit_roller(total_enemy_power % 6) + math.floor(total_enemy_power / 6)#Why are friendly units killed by friendly power
+            enemy_units_killed = self.hit_roller(total_friendly_power % 6) + math.floor(total_friendly_power / 6)
 
             self.casualty_selector(self.team, unit_state_list, 'attack', friendly_units_killed)
             self.casualty_selector(self.enemy_team, unit_state_list, 'defense', enemy_units_killed)
@@ -276,10 +276,11 @@ class Battles:
                 retreating = True
 
             #TODO BRETTTT. AMPHIBIOUS REEEEEEEEEEEEEEEEEE
-            if self.retreating:
+            if self.retreating: 
                 self.retreating = False
                 break
-
+        #How does this move units out of the territory back to another?
+        #Todo remove units to the territory they came from 
         return unit_state_list
 
     def embattled(self, unit_state_list):
