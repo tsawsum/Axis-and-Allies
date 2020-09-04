@@ -6,7 +6,6 @@ class Build:
     def __init__(self, game, endangered_name_list): # game.turn_state, etc.
         self.game = game
         self.player = self.game.turn_state.player
-        self.endangered_name_list = endangered_name_list
         game.turn_state.phase = 2
         self.ipc = self.game.turn_state.player.ipc
 
@@ -42,7 +41,7 @@ class Build:
         self.priority_sum = self.land_sum + self.sea_sum
 
         self.purchased_unit_state_list = []
-        # initial purchasing
+        # purchasing
         for unit_priority in self.prioritization_list:
             priority_ratio = unit_priority[1]/self.priority_sum
             allotted_ipc = priority_ratio * self.ipc
@@ -78,6 +77,9 @@ class Build:
                                 if (self.ipc - cost) >= 0:
                                     self.purchased_unit_state_list.append(BoardState.UnitState(self.player, self.game.rules.units.index(unit)))
                                     self.ipc = self.ipc - cost
+        while self.ipc >= 3:
+            self.purchased_unit_state_list.append(BoardState.UnitState(self.player, 0))
+            self.ipc -= 3
 
         self.factories = {}
         for territory_key in self.game.state_dict:
@@ -88,50 +90,10 @@ class Build:
 
         self.set_defensive_requirements(endangered_name_list)
 
-    def build_strategy(self):  #called by the AI
-
-
-        if self.immediate_defensive_requirements != []:     #this will always be land
-            self.immediate_defensive_requirements.sort(reverse=True, key=lambda x:self.game.rules.board[x].ipc)
-            for territory_name in self.immediate_defensive_requirements:
-
-
-                self.land_defense_sum = self.prioritization_list[9][1] + self.prioritization_list[11][1] \
-            + self.prioritization_list[12][1] + self.prioritization_list[13][1] + self.prioritization_list[14][1]
-
-
-        #TODO 1. make sure your defensive requirements are met if possible. If land prioritization is active
-        #           utilize specific units if possible. Set low prioritiy if you want to build only tanks in SA
-        #     2. If not possible with land prioritization, replace special units with infantry.
-        #     3. If still not possible, buy the max amount of infantry and prioritize based on territory ipc value
-        #     4. If sea territory must be held, repeat above process with carriers as fallback defense if planes in
-        #           range, otherwise cruisers.
-        #     5. Order active prioritizations from highest to lowest
-        #     6. Allocate IPC according to the ratio of prioritizations. For example, prioritize_subs = 2
-        #           prioritize_air = 1, try to build about twice as much value in subs as air. Generally,
-        #           certain countries will have a slight value (say 1) for long term needed builds like extra infantry
-        #     6.5. Check if more units than build slots. If so, dont build all of the above step.
-        #     7. Check remaining IPC and buy extra units if space. If not, upgrade units as long as they were not purchased
-        #           due to the transports prioritization (bc then they may not fit)
-
-        # This whole time, these purchased units should be added to a theortical dict called "placements" (name to unit list)
-        pass
-
     def prioritizer(self, prioritization, strength):
         for list in self.prioritization_list:
             if list[0] == prioritization:
                 list[1] = strength
-
-    #TODO Utilize combat move attack decision module to determine which factories/ key neighbors are under threat
-    # This will need to be called within build_strategy after adding the theoritical units to see if still under threat.
-    def set_defensive_requirements(self, endangered_name_list):
-        for territory_name in endangered_name_list:
-            if (territory_name in self.factories):
-                self.immediate_defensive_requirements.append(territory_name)
-
-            for territory_key in self.factories:
-                if territory_name == self.game.rules.connections[territory_key]:
-                    self.latent_defensive_requirements.append(territory_key)
 
     def build_unit(self, territory_name, unit_index): #called by the AI
         self.game.state_dict[territory_name].append(self.game.rules.get_unit(unit_index))
@@ -411,6 +373,7 @@ class Battles:
 
 
 class NonCombatMove:
+#TODO have a simple extra AA gun move prioritizer. If the builds makes one have the NC move it to a good place.
     def __init__(self, game, aa_flyover):
         self.game = game
         self.aa_flyover = aa_flyover
@@ -479,10 +442,130 @@ class NonCombatMove:
 
 
 class Place:
-    def __init__(self, game, placements):
+    def __init__(self, game, endangered_name_list, purchased_unit_state_list):
         game.turn_state.phase = 6
-        self.placements = placements
+        self.placements = {}
         self.game = game
+        self.endangered_name_list = endangered_name_list
+        self.purchased_unit_state_list = purchased_unit_state_list
+
+    #TODO Utilize combat move attack decision module to determine which factories/ key neighbors are under threat
+    # This will need to be called within build_strategy after adding the theoritical units to see if still under threat.
+    def set_defensive_requirements(self, endangered_name_list):
+        for territory_name in endangered_name_list:
+            if (territory_name in self.factories):
+                self.immediate_defensive_requirements.append(territory_name)
+
+            for territory_key in self.factories:
+                if territory_name == self.game.rules.connections[territory_key]:
+                    self.latent_defensive_requirements.append(territory_key)
+
+    #TODO How to build factories?
+    def build_strategy(self):  #called by the AI
+
+        if self.immediate_defensive_requirements != []:     #this will always be land
+            self.immediate_defensive_requirements.sort(reverse=True, key=lambda x:self.game.rules.board[x].ipc)
+            for territory_name in self.immediate_defensive_requirements:
+
+                max_build = self.game.rules.board[territory_name].ipc
+                theoretical_append = []
+                can_be_saved = True
+
+                #check if can be saved
+                for unit_state in self.purchased_unit_state_list:
+                    if len(theoretical_append) < max_build:
+                        if unit_state.type_index == 11:  #fighter
+                            theoretical_append.append(unit_state)
+                        if unit_state.type_index == 2:   #tank
+                            theoretical_append.append(unit_state)
+                        if unit_state.type_index == 1 or unit_state.type_index == 0: #inf or art
+                            theoretical_append.append(unit_state)
+                        if unit_state.type_index == 3: #aa
+                            theoretical_append.append(unit_state)
+                #TODO impliment capitals. Make is_capital work, and make it so that money isnt collected, and make
+                # all money taken by capturer. and make plaers with no money not be able to build.
+                #TODO make the below line make sense. Dont actually append units but do the is_vunerable calculation as if you did
+                if is_vulnerable(territory_name + theoretical_append):
+                    if is_capital:  #protect capital at all costs
+                        for unit_state in theoretical_append:
+                            self.purchased_unit_state_list.remove(unit_state)
+                            self.placements[territory_name] = unit_state
+                        theoretical_append = []
+                    else: #abandon if cant possibly hold.
+                        theoretical_append = []
+                        can_be_saved = False
+
+                #TODO Update is_vulnerable. Right now im assuming its a bool and this loop is infinite.
+                if can_be_saved == True:
+                    #TODO Make the pathfinder proximity reader work. Should only count adjacent enmny land tertiries
+                    if is_front_line(territory_name):
+                        for unit_state in self.purchased_unit_state_list:
+                            if is_vulnerable(territory_name + theoretical_append):  #TODO ima just use is_vulnerable all over the place
+                                if (unit_state.type_index == 1) \
+                                and (len(theoretical_append + theoretical_append) < math.floor(max_build/2)): #artillery
+                                    theoretical_append.append(unit_state)
+                        for unit_state in self.purchased_unit_state_list:
+                            if is_vulnerable(territory_name + theoretical_append):
+                                if (unit_state.type_index == 0) \
+                                and len(theoretical_append) < max_build: #fills the rest of the space with infantry
+                                    theoretical_append.append(unit_state)
+                        for unit_state in self.purchased_unit_state_list:
+                            if get_unit(unit_state.type_index).unit_type != "sea" \
+                            and (unit_state.type_index != 1) and (unit_state.type_index == 0) \
+                            and is_vulnerable(territory_name + theoretical_append):
+                                if len(theoretical_append) < max_build:
+                                    theoretical_append.append(unit_state)
+                #TODO What to do if the territory is still unholdible after putting basic units in. upgrade to tanks? how?
+                        if is_vulnerable(territory_name + theoretical_append):
+                            theoretical_append = []
+                            can_be_saved = False
+                #fills frontline territories with infantry and artillery first, then with other land units.
+
+                    else:
+                        for unit_state in self.purchased_unit_state_list:
+                            if get_unit(unit_state.type_index).unit_type != "sea" \
+                            and is_vulnerable(territory_name + theoretical_append):
+                                theoretical_append.append(unit_state)
+
+                #puts the theoretical units into the placements and removes them from purchased_unit_state_list
+                for unit_state in theoretical_append:
+                     self.purchased_unit_state_list.remove(unit_state)
+                     self.placements[territory_name] = unit_state
+                theoretical_append = []
+            #This concludes immediate_defensive_requirements
+
+        elif self.latent_defensive_requirements!= []:
+            for territory_name in self.latent_defensive_requirements!= []:
+            
+                theoretical_append = []
+                if self.game.state_dict[territory_name].owner == "Sea Zone":
+                    for unit_state in self.purchased_unit_state_list:
+                        if get_unit(unit_state.type_index).unit_type == "sea" \
+                        :
+                        #TODO Figure a way to keep track of how many units build in factory. Look at neighbors.
+                        # probs look at all neighbors with factories and look at placements... or assign a factory size to factory
+                            theoretical_append.append(unit_state)
+                            pass
+                else:
+                    pass
+                    
+
+        #TODO 1. make sure your defensive requirements are met if possible. If land prioritization is active
+        #           utilize specific units if possible. Set low prioritiy if you want to build only tanks in SA
+        #     2. If not possible with land prioritization, replace special units with infantry.
+        #     3. If still not possible, buy the max amount of infantry and prioritize based on territory ipc value
+        #     4. If sea territory must be held, repeat above process with carriers as fallback defense if planes in
+        #           range, otherwise cruisers.
+        #     5. Order active prioritizations from highest to lowest
+        #     6. Allocate IPC according to the ratio of prioritizations. For example, prioritize_subs = 2
+        #           prioritize_air = 1, try to build about twice as much value in subs as air. Generally,
+        #           certain countries will have a slight value (say 1) for long term needed builds like extra infantry
+        #     6.5. Check if more units than build slots. If so, dont build all of the above step.
+        #     7. Check remaining IPC and buy extra units if space. If not, upgrade units as long as they were not purchased
+        #           due to the transports prioritization (bc then they may not fit)
+
+        # This whole time, these purchased units should be added to a theortical dict called "placements" (name to unit list)
+        pass
 
     def place(self):
         for territory_key in self.placements:
