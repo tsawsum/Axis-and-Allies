@@ -263,13 +263,16 @@ class Battles:
             #TODO Account for AA gun shots
 
             for unit_state in unit_state_list:
+               is_offense = false
                     if self.game.rules.teams[unit_state.owner] == self.team:
                         #assume offense for current player
+                        is_offense = true
                         total_friendly_power += self.game.rules.units[unit_state.type_index].attack  #I think this path works...
+                        #This only defines one of the two powers, never both
                     else:
                         total_enemy_power += self.game.rules.units[unit_state.type_index].defense
 
-            friendly_units_killed = self.hit_roller(total_enemy_power % 6) + math.floor(total_enemy_power / 6)#Why are friendly units killed by friendly power
+            friendly_units_killed = self.hit_roller(total_enemy_power % 6) + math.floor(total_enemy_power / 6)
             enemy_units_killed = self.hit_roller(total_friendly_power % 6) + math.floor(total_friendly_power / 6)
 
             self.casualty_selector(self.team, unit_state_list, 'attack', friendly_units_killed)
@@ -288,6 +291,12 @@ class Battles:
                 #TODO fix recapturing territories swapping owners
         #How does this move units out of the territory back to another?
         #Todo remove units to the territory they came from
+        #if (self.game.rules.board[territory_key].is_capital != no):
+           # if (is_offense = true):
+                
+         #   self.game.rules.teams[unit_state.owner].ipc = 0
+            
+         #   se
         return unit_state_list
 
     def embattled(self, unit_state_list):
