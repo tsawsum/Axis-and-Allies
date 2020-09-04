@@ -121,8 +121,9 @@ class Battle_calculator:
 
 #TODO: James Hawkes' tactical battle strategy: First attack capitals. Otherwise calculate the "IPC value" of
 #   the territory which is the total unit value of the enemy units plus twice the territory value.
-#   then calculate "defense score" which is the total defensive power + (average_power) * the total number of units
+#   then calculate "defense score" which is the total defensive power + (average_power_of_both_sides) * the total number of units
 #           + (standard deviation * (0.5 + number_of_units)/4.5)
+# approx both sides averaeg by (opponent average * 1/2) + 1
 #   then determine the ratio: and pick like the top 5 to battle calculate
 class CombatMove:
     def __init__(self, game, aa_flyover=True):
@@ -213,7 +214,7 @@ class CombatMove:
                                 break
         return True
 
-
+#TODO BRETT. Impliment territories going back to original owner if they haev capitals
 class Battles:
     def __init__(self, game):
         self.territory_states = game.state_dict
@@ -263,14 +264,14 @@ class Battles:
             #TODO Account for AA gun shots
 
             for unit_state in unit_state_list:
-               is_offense = false
-                    if self.game.rules.teams[unit_state.owner] == self.team:
-                        #assume offense for current player
-                        is_offense = true
-                        total_friendly_power += self.game.rules.units[unit_state.type_index].attack  #I think this path works...
-                        #This only defines one of the two powers, never both
-                    else:
-                        total_enemy_power += self.game.rules.units[unit_state.type_index].defense
+               is_offense = False
+               if self.game.rules.teams[unit_state.owner] == self.team:
+                    #assume offense for current player
+                    is_offense = True
+                    total_friendly_power += self.game.rules.units[unit_state.type_index].attack  #I think this path works...
+                    #This only defines one of the two powers, never both
+               else:
+                    total_enemy_power += self.game.rules.units[unit_state.type_index].defense
 
             friendly_units_killed = self.hit_roller(total_enemy_power % 6) + math.floor(total_enemy_power / 6)
             enemy_units_killed = self.hit_roller(total_friendly_power % 6) + math.floor(total_friendly_power / 6)
@@ -293,9 +294,9 @@ class Battles:
         #Todo remove units to the territory they came from
         #if (self.game.rules.board[territory_key].is_capital != no):
            # if (is_offense = true):
-                
+
          #   self.game.rules.teams[unit_state.owner].ipc = 0
-            
+
          #   se
         return unit_state_list
 
@@ -477,6 +478,43 @@ class Place:
                 if territory_name == self.game.rules.connections[territory_key]:
                     self.latent_defensive_requirements.append(territory_key)
 
+    def update_vulnerable_builds(self, territory_name, theoretical_append, purchased_unit_state_list):
+        #TODO BRETT. is_vulnerable needs to work here.
+        i = 0
+        while is_vulnerable(territory_name + theoretical_append):
+            i += 1
+            if i == 1:
+                for unit_state in theoretical_append:
+                    if unit_state.type_index == 1 or unit_state.type_index == 0: #replaces art/inf w/tanks
+                        for purchased_unit_state in self.purchased_unit_state_list:
+                            if purchased_unit_state.type_index == 2:  #Tanks
+                                theoretical_append.append(purchased_unit_state)
+                                theoretical_append.remove(unit_state)
+
+            phase1_fighter_count = 0
+            if i == 2:
+                for unit_state in theoretical_append:
+                    if unit_state.type_index != 2: #replaces everything but tanks with fighters
+                        for purchased_unit_state in self.purchased_unit_state_list:
+                            if purchased_unit_state.type_index == 11:  #fighters
+                                phase1_fighter_count += 1
+                                theoretical_append.append(purchased_unit_state)
+                                theoretical_append.remove(unit_state)
+
+            phase2_fighter_count = 0
+            if i == 3:
+                for unit_state in theoretical_append:
+                    if unit_state.type_index != 11: #replaces everything with fighters
+                        for purchased_unit_state in self.purchased_unit_state_list:
+                            if purchased_unit_state.type_index == 11:
+                                phase2_fighter_count += 1
+                                if phase2_fighter_count >= phase1_fighter_count: #prevents duplicates
+                                    theoretical_append.append(purchased_unit_state)
+                                    theoretical_append.remove(unit_state)
+
+            if i == 4:
+                break #just in case. If this happens something is broken
+
     #TODO How to build factories?
     def build_strategy(self):  #called by the AI
 
@@ -564,7 +602,7 @@ class Place:
                                                 if phase2_fighter_count >= phase1_fighter_count: #prevents duplicates
                                                     theoretical_append.append(purchased_unit_state)
                                                     theoretical_append.remove(unit_state)
-                            
+
                             if i == 4:
                                 break #just in case. If this happens something is broken
 
