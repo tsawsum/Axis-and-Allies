@@ -3,12 +3,14 @@ import random
 import math
 
 class Build:
-    def __init__(self, game): # game.turn_state, etc.
+    def __init__(self, game, endangered_name_list): # game.turn_state, etc.
         self.game = game
+        self.player = self.game.turn_state.player
         game.turn_state.phase = 2
         self.ipc = self.game.turn_state.player.ipc
 
         self.prioritization_list = []
+        self.prioritization_list.append(['tech_token', 0])     #never use this one
         self.prioritization_list.append(['battleship', 0])     #1
         self.prioritization_list.append(['factory', 0])        #2
         self.prioritization_list.append(['carrier', 0])        #3
@@ -26,15 +28,58 @@ class Build:
         self.prioritization_list.append(['infantry', 0])       #15
 
         #sea
-        self.sea_defense_sum = self.prioritization_list[1][1] + self.prioritization_list[2][1] \
-            + self.prioritization_list[3][1] + self.prioritization_list[7][1] + self.prioritization_list[8][1]
-        self.sea_sum = self.sea_defense_sum + self.prioritization_list[4][1] + self.prioritization_list[5][1] \
-            + self.prioritization_list[6][1]
+        self.sea_defense_sum = self.prioritization_list[1][1] + self.prioritization_list[3][1] \
+            + self.prioritization_list[4][1] + self.prioritization_list[6][1] + self.prioritization_list[8][1]
+        self.sea_sum = self.sea_defense_sum + self.prioritization_list[9][1] + self.prioritization_list[10][1] \
+            + self.prioritization_list[11][1]
 
-        #land
-        self.land_defense_sum = self.prioritization_list[9][1] + self.prioritization_list[11][1] \
-            + self.prioritization_list[12][1] + self.prioritization_list[13][1] + self.prioritization_list[14][1]
-        self.land_sum = self.land_defense_sum + self.prioritization_list[10][1]
+        #land. These may prove vistigial
+        self.land_defense_sum = self.prioritization_list[12][1] + self.prioritization_list[13][1] \
+            + self.prioritization_list[14][1] + self.prioritization_list[15][1] + self.prioritization_list[7][1]
+        self.land_sum = self.land_defense_sum + self.prioritization_list[2][1] + self.prioritization_list[5][1]
+
+        self.priority_sum = self.land_sum + self.sea_sum
+
+        self.purchased_unit_state_list = []
+        # purchasing
+        for unit_priority in self.prioritization_list:
+            priority_ratio = unit_priority[1]/self.priority_sum
+            allotted_ipc = priority_ratio * self.ipc
+
+            cost = -1
+
+            if unit_priority[0] == 'carrier_fighter':
+                cost = 10
+                num_purchased = round(allotted_ipc/cost)
+                if num_purchased >= 1:
+                    for i in range(num_purchased):
+                        if (self.ipc - cost) >= 0:
+                            self.purchased_unit_state_list.append(BoardState.UnitState(self.player, 11))
+                            self.ipc -= cost
+
+            elif unit_priority[0] == 'transportable_units':
+                cost = 7
+                num_purchased = round(allotted_ipc/cost)
+                if num_purchased >= 1:
+                    for i in range(num_purchased):
+                        if (self.ipc - cost) >= 0:
+                            self.purchased_unit_state_list.append(BoardState.UnitState(self.player, 0))
+                            self.purchased_unit_state_list.append(BoardState.UnitState(self.player, 1))
+                            self.ipc -= cost
+
+            else:
+                for unit in self.game.rules.units:
+                    if unit.name == unit_priority[0]:
+                        cost = unit.cost
+                        num_purchased = round(allotted_ipc/cost)
+                        if num_purchased >= 1:
+                            for i in range(num_purchased):
+                                if (self.ipc - cost) >= 0:
+                                    self.purchased_unit_state_list.append(BoardState.UnitState(self.player, self.game.rules.units.index(unit)))
+                                    self.ipc = self.ipc - cost
+        while self.ipc >= 3:
+            self.purchased_unit_state_list.append(BoardState.UnitState(self.player, 0))
+            self.ipc -= 3
 
         self.factories = {}
         for territory_key in self.game.state_dict:
@@ -43,51 +88,12 @@ class Build:
                     self.factories[territory_key] = self.game.rules.board[territory_key].ipc #name keys to ipc value
         # factories now has a dict of names having factories and their IPC values (max build capacity)
 
-        self.immediate_defensive_requirements = []
-        self.latent_defensive_requirements = []
-
-    def build_strategy(self):  #called by the AI
-
-
-        if self.immediate_defensive_requirements != []:
-            self.immediate_defensive_requirements.sort(reverse=True, key=lambda x:game.rules.board[x].ipc)
-            for territory_name in self.immediate_defensive_requirements:
-                pass
-
-        #TODO GEORGE. Start doing these if statements!
-
-        #TODO 1. make sure your defensive requirements are met if possible. If land prioritization is active
-        #           utilize specific units if possible. Set low prioritiy if you want to build only tanks in SA
-        #     2. If not possible with land prioritization, replace special units with infantry.
-        #     3. If still not possible, buy the max amount of infantry and prioritize based on territory ipc value
-        #     4. If sea territory must be held, repeat above process with carriers as fallback defense if planes in
-        #           range, otherwise cruisers.
-        #     5. Order active prioritizations from highest to lowest
-        #     6. Allocate IPC according to the ratio of prioritizations. For example, prioritize_subs = 2
-        #           prioritize_air = 1, try to build about twice as much value in subs as air. Generally,
-        #           certain countries will have a slight value (say 1) for long term needed builds like extra infantry
-        #     6.5. Check if more units than build slots. If so, dont build all of the above step.
-        #     7. Check remaining IPC and buy extra units if space. If not, upgrade units as long as they were not purchased
-        #           due to the transports prioritization (bc then they may not fit)
-
-        # This whole time, these purchased units should be added to a theortical dict called "placements" (name to unit list)
-        pass
+        self.set_defensive_requirements(endangered_name_list)
 
     def prioritizer(self, prioritization, strength):
         for list in self.prioritization_list:
             if list[0] == prioritization:
                 list[1] = strength
-
-    #TODO Utilize combat move attack decision module to determine which factories/ key neighbors are under threat
-    # This will need to be called within build_strategy after adding the theoritical units to see if still under threat.
-    def set_defensive_requirements(self, endangered_name_list):
-        for territory_name in endangered_name_list:
-            if (territory_name in factories):
-                self.immediate_defensive_requirements.append(territory_name)
-
-            for territory_key in factories:
-                if territory_name == self.game.rules.connections[territory_key]:
-                    self.latent_defensive_requirements.append(territory_key)
 
     def build_unit(self, territory_name, unit_index): #called by the AI
         self.game.state_dict[territory_name].append(self.game.rules.get_unit(unit_index))
@@ -111,7 +117,14 @@ class Battle_calculator:
             pass
 
 
-# TODO: Plane retreating is different from normal retreating
+# TODO: Plane retreating is different from normal retreating <- Why for combat move instead of Battle class
+
+#TODO: James Hawkes' tactical battle strategy: First attack capitals. Otherwise calculate the "IPC value" of
+#   the territory which is the total unit value of the enemy units plus twice the territory value.
+#   then calculate "defense score" which is the total defensive power + (average_power_of_both_sides) * the total number of units
+#           + (standard deviation * (0.5 + number_of_units)/4.5)
+# approx both sides averaeg by (opponent average * 1/2) + 1
+#   then determine the ratio: and pick like the top 5 to battle calculate
 class CombatMove:
     def __init__(self, game, aa_flyover=True):
         self.game = game
@@ -201,13 +214,12 @@ class CombatMove:
                                 break
         return True
 
-
-# TODO GEORGE: When a territory is captured, make sure to set "territory_state.just_captured = True" (so planes know they can't land there)
+#TODO BRETT. Impliment territories going back to original owner if they haev capitals
 class Battles:
     def __init__(self, game):
         self.territory_states = game.state_dict
         self.player = game.turn_state.player
-        self.team = game.rules.teams[player]
+        self.team = game.rules.teams[self.player]
         self.game = game
         game.turn_state.phase = 4
 
@@ -215,8 +227,8 @@ class Battles:
         self.kamikaze = False
         #TODO Make this work
 
-        self.enemy_team = game.rules.teams[player]
-        while (self.enemy_team == game.rules.teams[player]):
+        self.enemy_team = game.rules.teams[self.player]
+        while (self.enemy_team == game.rules.teams[self.player]):
             for country in self.game.rules.teams:
                 if country != "Neutral":
                     self.enemy_team = game.rules.teams[country]
@@ -224,23 +236,27 @@ class Battles:
                     pass
         # sets enemy team to opposite team.
 
-        for territory_key in territory_states:
-            territory_states[territory_key] = territory_state
-            territory_state.unit_state_list = unit_state_list
+        for territory_key in self.territory_states:
+            territory_state = self.territory_states[territory_key]
+            unit_state_list = territory_state.unit_state_list
 
             #TODO Account for submarine submerge option
 
-            if embattled (unit_state_list):
+            if self.embattled(unit_state_list):
                 #if two different team's units are in a territory at the end of combat move
 
-                unit_state_list = battler(unit_state_list, self.game.rules.board[territory_key].ipc)  #resets unit_state_list to be equal to the remaining units
+                unit_state_list = self.battler(unit_state_list, self.game.rules.board[territory_key].ipc)  #resets unit_state_list to be equal to the remaining units
+                for unit_state in unit_state_list:
+                    if (unit_state.owner == self.player):  #factories are technically enemy
+                        territory_state.owner = self.player
+                        territory_state.just_captured = True
             else:
                 pass
 
     def battler(self, unit_state_list, territory_value):
     # inputs units (unit_states) originally in embattled territory and returns remaining units
 
-        while embattled(unit_state_list):
+        while self.embattled(unit_state_list):
 
             total_friendly_power = 0
             total_enemy_power = 0
@@ -248,34 +264,45 @@ class Battles:
             #TODO Account for AA gun shots
 
             for unit_state in unit_state_list:
-                    if self.game.rules.teams[unit_state.owner] == self.team:
-                        #assume offense for current player
-                        total_friendly_power += self.game.rules.units[unit_state.type_index].attack  #I think this path works...
-                    else:
-                        total_enemy_power += self.game.rules.units[unit_state.type_index].defense
+               is_offense = False
+               if self.game.rules.teams[unit_state.owner] == self.team:
+                    #assume offense for current player
+                    is_offense = True
+                    total_friendly_power += self.game.rules.units[unit_state.type_index].attack  #I think this path works...
+                    #This only defines one of the two powers, never both
+               else:
+                    total_enemy_power += self.game.rules.units[unit_state.type_index].defense
 
-            friendly_units_killed = hit_roller(total_friendly_power % 6) + math.floor(total_friendly_power / 6)
-            enemy_units_killed = hit_roller(total_enemy_power % 6) + math.floor(total_enemy_power / 6)
+            friendly_units_killed = self.hit_roller(total_enemy_power % 6) + math.floor(total_enemy_power / 6)
+            enemy_units_killed = self.hit_roller(total_friendly_power % 6) + math.floor(total_friendly_power / 6)
 
-            casualty_selector(self.team, unit_state_list, attack, friendly_units_killed)
-            casualty_selector(self.enemy_team, unit_state_list, defense, enemy_units_killed)
+            self.casualty_selector(self.team, unit_state_list, 'attack', friendly_units_killed)
+            self.casualty_selector(self.enemy_team, unit_state_list, 'defense', enemy_units_killed)
             #these modify unit_state_list
 
             # Unexpected retreat decision
             self.battle_calculator = Battle_calculator(unit_state_list, territory_value)
             if (self.battle_calculator.net_ipc_swing <= 0) and not self.kamikaze:  #this might not want to always be 0. Could let the AI decide?
-                retreating == True
+                retreating = True
 
             #TODO BRETTTT. AMPHIBIOUS REEEEEEEEEEEEEEEEEE
             if self.retreating:
                 self.retreating = False
                 break
+                #TODO fix recapturing territories swapping owners
+        #How does this move units out of the territory back to another?
+        #Todo remove units to the territory they came from
+        #if (self.game.rules.board[territory_key].is_capital != no):
+           # if (is_offense = true):
 
+         #   self.game.rules.teams[unit_state.owner].ipc = 0
+
+         #   se
         return unit_state_list
 
     def embattled(self, unit_state_list):
         for unit_state in unit_state_list:
-            if self.game.rules.teams[unit_state.owner] != self.team:
+            if (self.game.rules.teams[unit_state.owner] != self.team) and (unit_state.type_index != 5):
                 return True
         else:
             return False
@@ -364,6 +391,7 @@ class Battles:
 
 
 class NonCombatMove:
+#TODO have a simple extra AA gun move prioritizer. If the builds makes one have the NC move it to a good place.
     def __init__(self, game, aa_flyover):
         self.game = game
         self.aa_flyover = aa_flyover
@@ -432,14 +460,204 @@ class NonCombatMove:
 
 
 class Place:
-    def __init__(self, game, placements):
+    def __init__(self, game, endangered_name_list, purchased_unit_state_list):
         game.turn_state.phase = 6
-        self.placements = placements
+        self.placements = {}
         self.game = game
+        self.endangered_name_list = endangered_name_list
+        self.purchased_unit_state_list = purchased_unit_state_list
+
+    #TODO Utilize combat move attack decision module to determine which factories/ key neighbors are under threat
+    # This will need to be called within build_strategy after adding the theoritical units to see if still under threat.
+    def set_defensive_requirements(self, endangered_name_list):
+        for territory_name in endangered_name_list:
+            if (territory_name in self.factories):
+                self.immediate_defensive_requirements.append(territory_name)
+
+            for territory_key in self.factories:
+                if territory_name == self.game.rules.connections[territory_key]:
+                    self.latent_defensive_requirements.append(territory_key)
+
+    def update_vulnerable_builds(self, territory_name, theoretical_append, purchased_unit_state_list):
+        #TODO BRETT. is_vulnerable needs to work here.
+        i = 0
+        while is_vulnerable(territory_name + theoretical_append):
+            i += 1
+            if i == 1:
+                for unit_state in theoretical_append:
+                    if unit_state.type_index == 1 or unit_state.type_index == 0: #replaces art/inf w/tanks
+                        for purchased_unit_state in self.purchased_unit_state_list:
+                            if purchased_unit_state.type_index == 2:  #Tanks
+                                theoretical_append.append(purchased_unit_state)
+                                theoretical_append.remove(unit_state)
+
+            phase1_fighter_count = 0
+            if i == 2:
+                for unit_state in theoretical_append:
+                    if unit_state.type_index != 2: #replaces everything but tanks with fighters
+                        for purchased_unit_state in self.purchased_unit_state_list:
+                            if purchased_unit_state.type_index == 11:  #fighters
+                                phase1_fighter_count += 1
+                                theoretical_append.append(purchased_unit_state)
+                                theoretical_append.remove(unit_state)
+
+            phase2_fighter_count = 0
+            if i == 3:
+                for unit_state in theoretical_append:
+                    if unit_state.type_index != 11: #replaces everything with fighters
+                        for purchased_unit_state in self.purchased_unit_state_list:
+                            if purchased_unit_state.type_index == 11:
+                                phase2_fighter_count += 1
+                                if phase2_fighter_count >= phase1_fighter_count: #prevents duplicates
+                                    theoretical_append.append(purchased_unit_state)
+                                    theoretical_append.remove(unit_state)
+
+            if i == 4:
+                break #just in case. If this happens something is broken
+
+    #TODO How to build factories?
+    def build_strategy(self):  #called by the AI
+
+        if self.immediate_defensive_requirements != []:     #this will always be land
+            self.immediate_defensive_requirements.sort(reverse=True, key=lambda x:self.game.rules.board[x].ipc)
+            for territory_name in self.immediate_defensive_requirements:
+
+                max_build = self.game.rules.board[territory_name].ipc
+                theoretical_append = []
+                can_be_saved = True
+
+                #check if can be saved
+                for unit_state in self.purchased_unit_state_list:
+                    if len(theoretical_append) < max_build:
+                        if unit_state.type_index == 11:  #fighter
+                            theoretical_append.append(unit_state)
+                        if unit_state.type_index == 2:   #tank
+                            theoretical_append.append(unit_state)
+                        if unit_state.type_index == 1 or unit_state.type_index == 0: #inf or art
+                            theoretical_append.append(unit_state)
+                        if unit_state.type_index == 3: #aa
+                            theoretical_append.append(unit_state)
+                #TODO impliment capitals. Make is_capital work, and make it so that money isnt collected, and make
+                # all money taken by capturer. and make plaers with no money not be able to build.
+                #TODO make the below line make sense. Dont actually append units but do the is_vunerable calculation as if you did
+                if is_vulnerable(territory_name + theoretical_append):
+                    if is_capital:  #protect capital at all costs
+                        for unit_state in theoretical_append:
+                            self.purchased_unit_state_list.remove(unit_state)
+                            self.placements[territory_name] = unit_state
+                        theoretical_append = []
+                    else: #abandon if cant possibly hold.
+                        theoretical_append = []
+                        can_be_saved = False
+
+                #TODO Update is_vulnerable. Right now im assuming its a bool and this loop is infinite.
+                if can_be_saved == True:
+                    #TODO Make the pathfinder proximity reader work. Should only count adjacent enmny land tertiries
+                    if is_front_line(territory_name):
+                        for unit_state in self.purchased_unit_state_list:
+                            if is_vulnerable(territory_name + theoretical_append):  #TODO ima just use is_vulnerable all over the place
+                                if (unit_state.type_index == 1) \
+                                and (len(theoretical_append + theoretical_append) < math.floor(max_build/2)): #artillery
+                                    theoretical_append.append(unit_state)
+                        for unit_state in self.purchased_unit_state_list:
+                            if is_vulnerable(territory_name + theoretical_append):
+                                if (unit_state.type_index == 0) \
+                                and len(theoretical_append) < max_build: #fills the rest of the space with infantry
+                                    theoretical_append.append(unit_state)
+                        for unit_state in self.purchased_unit_state_list:
+                            if get_unit(unit_state.type_index).unit_type != "sea" \
+                            and (unit_state.type_index != 1) and (unit_state.type_index != 0) \
+                            and is_vulnerable(territory_name + theoretical_append):
+                                if len(theoretical_append) < max_build:
+                                    theoretical_append.append(unit_state)
+
+                        i = 0
+                        while is_vulnerable(territory_name + theoretical_append):
+                            i += 1
+                            if i == 1:
+                                for unit_state in theoretical_append:
+                                    if unit_state.type_index == 1 or unit_state.type_index == 0: #replaces art/inf w/tanks
+                                        for purchased_unit_state in self.purchased_unit_state_list:
+                                            if purchased_unit_state.type_index == 2:  #Tanks
+                                                theoretical_append.append(purchased_unit_state)
+                                                theoretical_append.remove(unit_state)
+
+                            phase1_fighter_count = 0
+                            if i == 2:
+                                for unit_state in theoretical_append:
+                                    if unit_state.type_index != 2: #replaces everything but tanks with fighters
+                                        for purchased_unit_state in self.purchased_unit_state_list:
+                                            if purchased_unit_state.type_index == 11:  #fighters
+                                                phase1_fighter_count += 1
+                                                theoretical_append.append(purchased_unit_state)
+                                                theoretical_append.remove(unit_state)
+
+                            phase2_fighter_count = 0
+                            if i == 3:
+                                for unit_state in theoretical_append:
+                                    if unit_state.type_index != 11: #replaces everything with fighters
+                                        for purchased_unit_state in self.purchased_unit_state_list:
+                                            if purchased_unit_state.type_index == 11:
+                                                phase2_fighter_count += 1
+                                                if phase2_fighter_count >= phase1_fighter_count: #prevents duplicates
+                                                    theoretical_append.append(purchased_unit_state)
+                                                    theoretical_append.remove(unit_state)
+
+                            if i == 4:
+                                break #just in case. If this happens something is broken
+
+                #fills frontline territories with infantry and artillery first, then with other land units.
+
+                    else:
+                        for unit_state in self.purchased_unit_state_list:
+                            if get_unit(unit_state.type_index).unit_type != "sea" \
+                            and is_vulnerable(territory_name + theoretical_append):
+                                theoretical_append.append(unit_state)
+
+                #puts the theoretical units into the placements and removes them from purchased_unit_state_list
+                for unit_state in theoretical_append:
+                     self.purchased_unit_state_list.remove(unit_state)
+                     self.placements[territory_name] = unit_state
+                theoretical_append = []
+            #This concludes immediate_defensive_requirements
+
+        elif self.latent_defensive_requirements!= []:
+            for territory_name in self.latent_defensive_requirements!= []:
+
+                theoretical_append = []
+                if self.game.state_dict[territory_name].owner == "Sea Zone":
+                    for unit_state in self.purchased_unit_state_list:
+                        if get_unit(unit_state.type_index).unit_type == "sea" \
+                        :
+                        #TODO Figure a way to keep track of how many units build in factory. Look at neighbors.
+                        # probs look at all neighbors with factories and look at placements... or assign a factory size to factory
+                            theoretical_append.append(unit_state)
+                            pass
+                else:
+                    pass
+
+
+        #TODO 1. make sure your defensive requirements are met if possible. If land prioritization is active
+        #           utilize specific units if possible. Set low prioritiy if you want to build only tanks in SA
+        #     2. If not possible with land prioritization, replace special units with infantry.
+        #     3. If still not possible, buy the max amount of infantry and prioritize based on territory ipc value
+        #     4. If sea territory must be held, repeat above process with carriers as fallback defense if planes in
+        #           range, otherwise cruisers.
+        #     5. Order active prioritizations from highest to lowest
+        #     6. Allocate IPC according to the ratio of prioritizations. For example, prioritize_subs = 2
+        #           prioritize_air = 1, try to build about twice as much value in subs as air. Generally,
+        #           certain countries will have a slight value (say 1) for long term needed builds like extra infantry
+        #     6.5. Check if more units than build slots. If so, dont build all of the above step.
+        #     7. Check remaining IPC and buy extra units if space. If not, upgrade units as long as they were not purchased
+        #           due to the transports prioritization (bc then they may not fit)
+
+        # This whole time, these purchased units should be added to a theortical dict called "placements" (name to unit list)
+        pass
 
     def place(self):
-        for territory_name in self.placements:
-            self.game.state_dict[territory_name].unit_state_list.append(placements[territory_name])
+        for territory_key in self.placements:
+            for unit_state in self.placements[territory_key]:
+                self.game.state_dict[territory_key].unit_state_list.append(unit_state)
 
 
 class Cleanup:
@@ -457,9 +675,9 @@ class Cleanup:
                     unit_state.damage = 0
                 unit_state.moved_from = []
 
-            if game.state_dict[territory_key].owner == player:
+            if game.state_dict[territory_key].owner == game.turn_state.player:
                 game.turn_state.player.ipc += game.rules.board[territory_key].ipc  #updates ipc
 
-        if player == "America":
+        if  game.turn_state.player == "America":
             game.turn_state.round_num += 1
-        game.turn_state.player = game.rules.turn_order[player]  #sets player to the next player
+        game.turn_state.player = game.rules.turn_order[ game.turn_state.player]  #sets player to the next player
