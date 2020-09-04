@@ -662,6 +662,7 @@ class TerritoryState:
     def __init__(self, territory_owner, unit_list=None, just_captured=False):
         self.owner = territory_owner
         self.just_captured = just_captured
+        self.built_units = 0
 
         self.unit_state_list = list()
         if unit_list:
