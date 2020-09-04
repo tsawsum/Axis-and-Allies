@@ -279,6 +279,7 @@ class Battles:
             if self.retreating: 
                 self.retreating = False
                 break
+                #TODO fix recapturing territories swapping owners 
         #How does this move units out of the territory back to another?
         #Todo remove units to the territory they came from 
         return unit_state_list
