@@ -118,6 +118,12 @@ class Battle_calculator:
 
 
 # TODO: Plane retreating is different from normal retreating <- Why for combat move instead of Battle class
+
+#TODO: James Hawkes' tactical battle strategy: First attack capitals. Otherwise calculate the "IPC value" of
+#   the territory which is the total unit value of the enemy units plus twice the territory value.
+#   then calculate "defense score" which is the total defensive power + (average_power) * the total number of units
+#           + (standard deviation * (0.5 + number_of_units)/4.5)
+#   then determine the ratio: and pick like the top 5 to battle calculate
 class CombatMove:
     def __init__(self, game, aa_flyover=True):
         self.game = game
@@ -276,12 +282,12 @@ class Battles:
                 retreating = True
 
             #TODO BRETTTT. AMPHIBIOUS REEEEEEEEEEEEEEEEEE
-            if self.retreating: 
+            if self.retreating:
                 self.retreating = False
                 break
-                #TODO fix recapturing territories swapping owners 
+                #TODO fix recapturing territories swapping owners
         #How does this move units out of the territory back to another?
-        #Todo remove units to the territory they came from 
+        #Todo remove units to the territory they came from
         return unit_state_list
 
     def embattled(self, unit_state_list):
@@ -513,14 +519,46 @@ class Place:
                                     theoretical_append.append(unit_state)
                         for unit_state in self.purchased_unit_state_list:
                             if get_unit(unit_state.type_index).unit_type != "sea" \
-                            and (unit_state.type_index != 1) and (unit_state.type_index == 0) \
+                            and (unit_state.type_index != 1) and (unit_state.type_index != 0) \
                             and is_vulnerable(territory_name + theoretical_append):
                                 if len(theoretical_append) < max_build:
                                     theoretical_append.append(unit_state)
-                #TODO What to do if the territory is still unholdible after putting basic units in. upgrade to tanks? how?
-                        if is_vulnerable(territory_name + theoretical_append):
-                            theoretical_append = []
-                            can_be_saved = False
+
+                        i = 0
+                        while is_vulnerable(territory_name + theoretical_append):
+                            i += 1
+                            if i == 1:
+                                for unit_state in theoretical_append:
+                                    if unit_state.type_index == 1 or unit_state.type_index == 0: #replaces art/inf w/tanks
+                                        for purchased_unit_state in self.purchased_unit_state_list:
+                                            if purchased_unit_state.type_index == 2:  #Tanks
+                                                theoretical_append.append(purchased_unit_state)
+                                                theoretical_append.remove(unit_state)
+
+                            phase1_fighter_count = 0
+                            if i == 2:
+                                for unit_state in theoretical_append:
+                                    if unit_state.type_index != 2: #replaces everything but tanks with fighters
+                                        for purchased_unit_state in self.purchased_unit_state_list:
+                                            if purchased_unit_state.type_index == 11:  #fighters
+                                                phase1_fighter_count += 1
+                                                theoretical_append.append(purchased_unit_state)
+                                                theoretical_append.remove(unit_state)
+
+                            phase2_fighter_count = 0
+                            if i == 3:
+                                for unit_state in theoretical_append:
+                                    if unit_state.type_index != 11: #replaces everything with fighters
+                                        for purchased_unit_state in self.purchased_unit_state_list:
+                                            if purchased_unit_state.type_index == 11:
+                                                phase2_fighter_count += 1
+                                                if phase2_fighter_count >= phase1_fighter_count: #prevents duplicates
+                                                    theoretical_append.append(purchased_unit_state)
+                                                    theoretical_append.remove(unit_state)
+                            
+                            if i == 4:
+                                break #just in case. If this happens something is broken
+
                 #fills frontline territories with infantry and artillery first, then with other land units.
 
                     else:
@@ -538,7 +576,7 @@ class Place:
 
         elif self.latent_defensive_requirements!= []:
             for territory_name in self.latent_defensive_requirements!= []:
-            
+
                 theoretical_append = []
                 if self.game.state_dict[territory_name].owner == "Sea Zone":
                     for unit_state in self.purchased_unit_state_list:
@@ -550,7 +588,7 @@ class Place:
                             pass
                 else:
                     pass
-                    
+
 
         #TODO 1. make sure your defensive requirements are met if possible. If land prioritization is active
         #           utilize specific units if possible. Set low prioritiy if you want to build only tanks in SA
