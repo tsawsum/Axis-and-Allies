@@ -295,10 +295,12 @@ class Battles:
         #Todo remove units to the territory they came from
         #if (self.game.rules.board[territory_key].is_capital != no):
            # if (is_offense = true):
-
+            #self.team.ipc = self.team.ipc + self.game.rules.teams[unit_state.owner].ipc
          #   self.game.rules.teams[unit_state.owner].ipc = 0
-
-         #   se
+        
+            #else:
+            #self.game.rules.teams[unit_state.owner].ipc = self.game.rules.teams[unit_state.owner].ipc + self.team.ipc 
+            #self.team.ipc = 0
         return unit_state_list
 
     def embattled(self, unit_state_list):
