@@ -13,8 +13,8 @@ class Vulnerability:
     def get_attackable_territories(self, unit_state, territory_name):
         unit = self.game.rules.get_unit(unit_state.type_index)
 
-        # AA guns can't attack
-        if unit.name == 'aa':
+        # AA guns can't attack, and ignore transported units for now
+        if unit.name == 'aa' or unit_state.attached_to:
             return list()
 
         # Get amount of available movement (planes get one less because they need to land)
@@ -33,7 +33,13 @@ class Vulnerability:
                 next_dist_idx = len(within_range)
 
         # Use calc_movement to see which of these territories can be attacked
-        return [territory for territory in within_range if self.game.calc_movement(unit_state, territory_name, territory, phase=3) >= 0]
+        attackable = [territory for territory in within_range if self.game.calc_movement(unit_state, territory_name, territory, phase=3) >= 0]
+
+        # Check if transported units can attack somewhere
+        if unit_state.attached_units:
+            pass
+        else:
+            return attackable
 
     def update(self):
         keys = ['America', 'Britain', 'Russia', 'Germany', 'Japan', 'Axis', 'Allies']
@@ -41,11 +47,17 @@ class Vulnerability:
         for territory_name in self.territories.keys():
             for unit_state in self.game.state_dict[territory_name].unit_state_list:
                 player = unit_state.owner
-                if unit_state.type_index != 4:  # Ignore factories
+                if unit_state.type_index == 5:  # Transports (and their attached units) are different
+                    units = [self.game.rules.get_unit(transported_unit.type_index) for transported_unit in unit_state.attached_units]
+                    if units:
+                        for ter in self.get_attackable_territories(unit_state, territory_name):
+                            self.territories[ter][player] += units
+                elif unit_state.type_index != 4:  # Ignore factories
                     unit = self.game.rules.get_unit(unit_state.type_index)
                     for ter in self.get_attackable_territories(unit_state, territory_name):
                         self.territories[ter][player].append(unit)
-                    self.territories[territory_name][self.game.rules.teams[player]].append(unit)
+                    if not unit_state.attached_to:
+                        self.territories[territory_name][self.game.rules.teams[player]].append(unit)
 
     def battle_formula(self, attack_units=None, defense_units=None):
         # James' Formula:
@@ -62,19 +74,18 @@ class Vulnerability:
         return attack_value / defense_value
 
     def is_vulnerable(self, territory_name, theoretical_append=list(), attacker='', defender='', risk_tolerance=0):
-        # TODO Brett: Transport move + unload
         if defender in self.game.rules.teams.keys():
             defender = self.game.rules.teams[defender]
         elif not defender:
             if not attacker:
                 defender = self.game.rules.teams[self.game.turn_state.player]
             else:
-                defender = 'Allies' if self.game.rules.teams[attacker] == 'Axis' else 'Axis'
+                defender = self.game.rules.enemy_team(player=attacker)
 
         if attacker:
             attackers = [attacker]
         else:
-            attacker_team = 'Allies' if defender == 'Axis' else 'Axis'
+            attacker_team = self.game.rules.enemy_team(team=defender)
             attackers = [player for player, team in self.game.rules.teams.items() if team == attacker_team]
 
         attacking_units = [self.territories[territory_name][attacking_player] for attacking_player in attackers]
@@ -201,7 +212,7 @@ class BattleCalculator:
 #           + (standard deviation * (0.5 + number_of_units)/4.5)
 #  approx both sides averaeg by (opponent average * 1/2) + 1
 #   then determine the ratio: and pick like the top 5 to battle calculate
-#  Make sure to both prioritize taking facotry territories and to not include them in the above calculation
+#  Make sure to both prioritize taking factory territories and to not include them in the above calculation
 class CombatMove:
     def __init__(self, game, aa_flyover=True):
         self.game = game
@@ -257,14 +268,15 @@ class CombatMove:
                         break
                 if enemy_units:
                     # Check for battleships to bombard with
-                    for other_unit_state in current_territory_state:
+                    for other_unit_state in current_territory_state.unit_state_list:
                         if other_unit_state.type_index == 10 and \
                                 self.game.rules.teams[other_unit_state.owner] == self.game.rules.teams[unit_state.owner]:
                             if not other_unit_state.shots_taken:
                                 other_unit_state.shots_taken += 1
                                 unit_state.moves_used = unit.movement
                                 if random.randint(1, 6) <= 4:
-                                    pass  # TODO Brett: Enemy needs to choose casualty in goal_territory
+                                    Battles(self.game, True).casualty_selector(self.game.rules.enemy_team(player=unit_state.owner),
+                                                                               goal_territory_state.unit_state_list, 'defense', 1)
         if goal_territory.is_water and unit.unit_type == 'land':
             # Attach to transport
             if unit.name == 'infantry':
@@ -293,11 +305,16 @@ class CombatMove:
 
 
 class Battles:
-    def __init__(self, game):
+    def __init__(self, game, just_casualty_selector=False):
+        self.game = game
+
+        # Avoid initializing entire class just to use the casualty selector lol
+        if just_casualty_selector:
+            return
+
         self.territory_states = game.state_dict
         self.player = game.turn_state.player
         self.team = game.rules.teams[self.player]
-        self.game = game
         game.turn_state.phase = 4
 
         self.retreating = False
@@ -305,14 +322,7 @@ class Battles:
         self.battle_calculator = None
         # TODO George: Make this work
 
-        self.enemy_team = game.rules.teams[self.player]
-        while self.enemy_team == game.rules.teams[self.player]:
-            for country in self.game.rules.teams:
-                if country != "Neutral":
-                    self.enemy_team = game.rules.teams[country]
-                else:
-                    pass
-        # sets enemy team to opposite team.
+        self.enemy_team = self.game.rules.enemy_team(player=self.player)
 
         for territory_key in self.territory_states:
             territory_state = self.territory_states[territory_key]
@@ -624,7 +634,7 @@ class Place:
         vulnerability_reader = not vulnerability_reader_active or self.vulnerability.is_vulnerable(territory_name, theoretical_append)
 
         is_frontline = False
-        enemy_team = 'Axis' if self.game.rules.teams[self.game.state_dict[territory_name].owner] == 'Allies' else 'Allies'
+        enemy_team = self.game.rules.enemy_team(player=self.game.state_dict[territory_name].owner)
         for neighbor in self.game.rules.board[territory_name].neighbors:
             if self.game.rules.teams[self.game.state_dict[neighbor].owner] == enemy_team:
                 is_frontline = True

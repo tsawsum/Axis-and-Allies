@@ -657,6 +657,9 @@ class Rules:
     def get_unit(self, index):
         return self.units[index]
 
+    def enemy_team(self, player='', team=''):
+        return 'Allies' if self.teams[player] == 'Axis' or team == 'Axis' else 'Axis'
+
 
 class TerritoryState:
     """
