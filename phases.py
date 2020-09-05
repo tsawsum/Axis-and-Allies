@@ -323,7 +323,17 @@ class Battles:
                         if unit_state in unit_state_list:
                             unit_state_list.remove(unit_state)
                 break
-
+        
+        # TODO fix recapturing territories swapping owners
+        # How does this move units out of the territory back to another?
+        # Todo remove units to the territory they came from
+        # if (self.game.rules.board[territory_key].is_capital != no):
+            # if (is_offense = true):
+                # self.team.ipc = self.team.ipc + self.game.rules.teams[unit_state.owner].ipc
+                # self.game.rules.teams[unit_state.owner].ipc = 0
+            # else:
+                # self.game.rules.teams[unit_state.owner].ipc = self.game.rules.teams[unit_state.owner].ipc + self.team.ipc 
+                # self.team.ipc = 0
         return unit_state_list
 
     def embattled(self, unit_state_list):
