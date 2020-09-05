@@ -61,7 +61,8 @@ class Vulnerability:
 
         return attack_value / defense_value
 
-    def is_vulnerable(self, territory_name, theoretical_append=list(), attacker='', defender=''):
+    def is_vulnerable(self, territory_name, theoretical_append=list(), attacker='', defender='', risk_tolerance=0):
+        # TODO Brett: Transport move + unload
         if defender in self.game.rules.teams.keys():
             defender = self.game.rules.teams[defender]
         elif not defender:
@@ -83,8 +84,7 @@ class Vulnerability:
         values = [self.battle_formula(attack_units, defending_units) for attack_units in attacking_units]
         worst_case = max(values)
 
-        # TODO: What's the threshold for being vulnerable in James' formula?
-        return worst_case > 1
+        return worst_case > 1 - risk_tolerance
 
 
 class Build:
@@ -194,9 +194,8 @@ class BattleCalculator:
         pass
 
 
-# TODO: Plane retreating is different from normal retreating <- Why for combat move instead of Battle class
 # one extra attack per artillery/infantry pair
-# TODO: James Hawkes' tactical battle strategy: First attack capitals. Otherwise calculate the "IPC value" of
+# TODO Brett: James Hawkes' tactical battle strategy: First attack capitals. Otherwise calculate the "IPC value" of
 #   the territory which is the total unit value of the enemy units plus twice the territory value.
 #   then calculate "defense score" which is the total defensive power + (average_power_of_both_sides) * the total number of units
 #           + (standard deviation * (0.5 + number_of_units)/4.5)
@@ -265,7 +264,7 @@ class CombatMove:
                                 other_unit_state.shots_taken += 1
                                 unit_state.moves_used = unit.movement
                                 if random.randint(1, 6) <= 4:
-                                    pass  # TODO: Enemy needs to choose casualty in goal_territory
+                                    pass  # TODO Brett: Enemy needs to choose casualty in goal_territory
         if goal_territory.is_water and unit.unit_type == 'land':
             # Attach to transport
             if unit.name == 'infantry':
@@ -293,7 +292,6 @@ class CombatMove:
         return True
 
 
-# TODO BRETT. Impliment territories going back to original owner if they haev capitals
 class Battles:
     def __init__(self, game):
         self.territory_states = game.state_dict
@@ -305,7 +303,7 @@ class Battles:
         self.retreating = False
         self.kamikaze = False
         self.battle_calculator = None
-        # TODO Make this work
+        # TODO George: Make this work
 
         self.enemy_team = game.rules.teams[self.player]
         while self.enemy_team == game.rules.teams[self.player]:
@@ -320,7 +318,7 @@ class Battles:
             territory_state = self.territory_states[territory_key]
             unit_state_list = territory_state.unit_state_list
 
-            # TODO Account for submarine submerge option
+            # TODO Later: Account for submarine submerge option
 
             if self.embattled(unit_state_list):
                 # if two different team's units are in a territory at the end of combat move
@@ -341,6 +339,7 @@ class Battles:
             else:
                 pass
 
+    # TODO George: Units attached to transportss can't attack or defend (check with "if not UnitState().attached_to: "
     def battler(self, unit_state_list, territory_name):
         # inputs units (unit_states) originally in embattled territory and returns remaining units
         territory_value = self.game.rules.board[territory_name].ipc
@@ -380,21 +379,19 @@ class Battles:
                 self.retreating = True
 
             # Don't try to retreat if there's nowhere to retreat to
-            # TODO: Planes and subs might still want to leave battle even if other units stay?
+            # TODO Brett: Planes and subs might still want to leave battle even if other units stay?
             if self.retreating and retreat_options:
                 self.retreating = False
                 for unit_state in offense_units:
                     if self.rules.get_unit(unit_state.type_index).unit_type != 'air':
-                        retreat_choice = retreat_options[0]  # TODO: AI needs to choose where it should retreat to
+                        retreat_choice = retreat_options[0]  # TODO Brett: AI needs to choose where it should retreat to
                         self.game.state_dict[retreat_choice].unit_state_list.append(unit_state)
                         self.game.state_dict[territory_name].unit_state_list.remove(unit_state)
                         if unit_state in unit_state_list:
                             unit_state_list.remove(unit_state)
                 break
 
-        # TODO fix recapturing territories swapping owners
         # How does this move units out of the territory back to another?
-        # Todo remove units to the territory they came from
         # if (self.game.rules.board[territory_key].is_capital != ""):
             # if (is_offense == true):
                 # self.team.ipc = self.team.ipc + self.game.rules.teams[unit_state.owner].ipc
@@ -477,7 +474,7 @@ class Battles:
 
 
 class NonCombatMove:
-    # TODO have a simple extra AA gun move prioritizer. If the builds makes one have the NC move it to a good place.
+    # TODO George: have a simple extra AA gun move prioritizer. If the builds makes one have the NC move it to a good place.
     def __init__(self, game, aa_flyover):
         self.game = game
         self.aa_flyover = aa_flyover
@@ -551,9 +548,9 @@ class Place:
     this class is primarily a long list of If's. Actual machine learning would be wasted here, as placing units
     is a pretty linear, albeit complicated, process.
     """
-    # TODO. Somehow make the transportable_units we bought earlier place correcty. AKA next to where you put transport
+    # TODO George: Somehow make the transportable_units we bought earlier place correcty. AKA next to where you put transport
 
-    # TODO: General: Make sure we dont accidentally build duplicates of purchased units, or build too many units per
+    # TODO George: Make sure we dont accidentally build duplicates of purchased units, or build too many units per
     #  factory. Also make sure theoretical_append gets reset every time.
     def __init__(self, game, endangered_name_list, purchased_unit_state_list):
         game.turn_state.phase = 6
@@ -572,7 +569,7 @@ class Place:
                     self.factories.append(territory_name)
         # self.factories now has a list of names having factories
 
-    # TODO Utilize combat move attack decision module to determine which factories/ key neighbors are under threat
+    # TODO Brett: Utilize combat move attack decision module to determine which factories/ key neighbors are under threat
     # This will need to be called within build_strategy after adding the theoritical units to see if still under threat.
     def set_defensive_requirements(self, endangered_name_list):
         for territory_name in endangered_name_list:
@@ -582,7 +579,6 @@ class Place:
             for territory_key in self.factories:
                 if territory_name in self.game.rules.board[territory_key].neighbors:
                     self.latent_defensive_requirements.append(territory_key)
-
 
     def build_slots(self, territory_name, factory_name=""):
         # returns remaining build slots of a territory
@@ -613,8 +609,7 @@ class Place:
                     theoretical_append.append(unit_state)
                 if unit_state.type_index == 3:  # aa
                     theoretical_append.append(unit_state)
-        # TODO impliment capitals. Make is_capital work, and make it so that money isnt collected, and make
-        #  all money taken by capturer. and make plaers with no money not be able to build.
+        # TODO George: Players w/ no capital get no money
         if self.vulnerability.is_vulnerable(territory_name, theoretical_append):
             if self.game.rules.board[territory_name].is_capital:  # protect capital at all costs
                 self.theoretical_to_placements(theoretical_append, territory_name)
@@ -628,7 +623,14 @@ class Place:
 
         vulnerability_reader = not vulnerability_reader_active or self.vulnerability.is_vulnerable(territory_name, theoretical_append)
 
-        # TODO Make the pathfinder proximity reader work. Should only count adjacent enmny land tertiries
+        is_frontline = False
+        enemy_team = 'Axis' if self.game.rules.teams[self.game.state_dict[territory_name].owner] == 'Allies' else 'Allies'
+        for neighbor in self.game.rules.board[territory_name].neighbors:
+            if self.game.rules.teams[self.game.state_dict[neighbor].owner] == enemy_team:
+                is_frontline = True
+                break
+
+        # TODO George: Do what you need to with is_frontline
         build_slots = self.build_slots(territory_name)
         for unit_state in self.purchased_unit_state_list:
             if vulnerability_reader:
@@ -686,7 +688,7 @@ class Place:
                     if i == 0 and len(theoretical_append) < self.build_slots(fac_territory_name):
                         i = 1
                         theoretical_append.append(unit_state)
-                        # TODO: Have the AI organize the placements list.
+                        # TODO Later: Have the AI organize the placements list.
 
             elif unit_state.type_index == 11 \
                     and self.vulnerability.is_vulnerable(territory_name, theoretical_append):
@@ -697,7 +699,7 @@ class Place:
                 for ship_state in self.game.state_dict[territory_name].unit_state_list:
                     if ship_state.type_index == 9:
                         carrier_slots += 2
-                    if ship_state.type_index == 11: #aka already a fighter on board
+                    if ship_state.type_index == 11:  # aka already a fighter on board
                         carrier_slots -= 1
 
     def update_vulnerable_builds(self, territory_name, theoretical_append):
@@ -747,7 +749,7 @@ class Place:
 
         theoretical_append.clear()
 
-    # TODO: How to build factories?
+    # TODO George: How to build factories?
     def build_strategy(self):  # called by the AI
 
         if self.immediate_defensive_requirements:     # this will always be land
@@ -782,12 +784,12 @@ class Place:
                 if self.game.state_dict[territory_name].owner == "Sea Zone":
                     self.sea_zone_builder(theoretical_append, territory_name, adjacent_factory_list)
 
-                else: #builds max (front-line) units in factories adjacent to threatened land zones, if any
+                else:  # builds max (front-line) units in factories adjacent to threatened land zones, if any
                     self.front_line_builder(self, theoretical_append, territory_name, False)
 
                 self.theoretical_to_placements(theoretical_append, territory_name)
 
-        else: #places all the rest of the units according to the order they are in the list.
+        else:  # places all the rest of the units according to the order they are in the list.
             for territory_name in self.factories:
                 build_slots = self.build_slots(territory_name)
                 theoretical_append = []
