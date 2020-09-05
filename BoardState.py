@@ -9,12 +9,13 @@ class Territory:
     # neighbors list has the target and conditions
     # conditions could be 'edge' class which asks if its passable
 
-    def __init__(self, territory_name, ipc_value, is_seazone, is_capital="No"):
+    def __init__(self, territory_name, ipc_value, is_seazone, is_capital=False):
         self.name = territory_name
         self.neighbors = []
         self.ipc = ipc_value
         self.is_water = is_seazone
         self.is_capital = is_capital
+        self.original_owner = ''
 
 
 class Unit:
@@ -147,7 +148,7 @@ class Rules:
                       "East Mexico": Territory("East Mexico", 0, False),
                       "Eastern Australia": Territory("Eastern Australia", 1, False),
                       "Eastern Canada": Territory("Eastern Canada", 3, False),
-                      "Eastern United States": Territory("Eastern United States", 12, False, "America"),
+                      "Eastern United States": Territory("Eastern United States", 12, False, True),
                       "Egypt": Territory("Egypt", 2, False),
                       "Eire": Territory("Eire", 0, False),  # NEUTRAL
                       "Evenki National Okrug": Territory("Evenki National Okrug", 1, False),
@@ -158,7 +159,7 @@ class Rules:
                       "French Indo-China Thailand": Territory("French Indo-China Thailand", 2, False),
                       "French Madagascar": Territory("French Madagascar", 1, False),
                       "French West Africa": Territory("French West Africa", 1, False),
-                      "Germany": Territory("Germany", 10, False, "Germany"),
+                      "Germany": Territory("Germany", 10, False, True),
                       "Gibraltar": Territory("Gibraltar", 0, False),
                       "Greenland": Territory("Greenland", 0, False),
                       "Hawaiian Islands": Territory("Hawaiian Islands", 1, False),
@@ -168,7 +169,7 @@ class Rules:
                       "Italian East Africa": Territory("Italian East Africa", 1, False),
                       "Italy": Territory("Italy", 3, False),
                       "Iwo Jima": Territory("Iwo Jima", 0, False),
-                      "Japan": Territory("Japan", 8, False, "Japan"),
+                      "Japan": Territory("Japan", 8, False, True),
                       "Karelia S.S.R.": Territory("Karelia S.S.R.", 2, False),
                       "Kazakh S.S.R.": Territory("Kazakh S.S.R.", 2, False),
                       "Kiangsu": Territory("Kiangsu", 2, False),
@@ -192,7 +193,7 @@ class Rules:
                       "Philippine Islands": Territory("Philippine Islands", 3, False),
                       "Poland": Territory("Poland", 2, False),
                       "Rhodesia": Territory("Rhodesia", 1, False),
-                      "Russia": Territory("Russia", 8, False, "Russia"),
+                      "Russia": Territory("Russia", 8, False, True),
                       "Sahara": Territory("Sahara", 0, False),  # NEUTRAL
                       "Saudi Arabia": Territory("Saudi Arabia", 0, False),  # NEUTRAL
                       "Sinkiang": Territory("Sinkiang", 1, False),
@@ -207,7 +208,7 @@ class Rules:
                       "Turkey": Territory("Turkey", 0, False),  # NEUTRAL
                       "Ukraine S.S.R.": Territory("Ukraine S.S.R.", 2, False),
                       "Union of South Africa": Territory("Union of South Africa", 2, False),
-                      "United Kingdom": Territory("United Kingdom", 8, False, "Britain"),
+                      "United Kingdom": Territory("United Kingdom", 8, False, True),
                       "Venezuela": Territory("Venezuela", 0, False),  # NEUTRAL
                       "Vologda": Territory("Vologda", 2, False),
                       "Wake Island": Territory("Wake Island", 0, False),
@@ -705,10 +706,11 @@ class Player:
     object to store info for each player
     """
 
-    def __init__(self, name, ipc=0, tech_tokens=0):
+    def __init__(self, name, capital, ipc=0, tech_tokens=0):
         self.name = name
         self.ipc = ipc
         self.tech_tokens = tech_tokens
+        self.capital = capital
 
 
 class Game:
@@ -726,11 +728,11 @@ class Game:
         # player 0 = russia, 1 = germany, 2 = britain, 3 = japan, 4 = us
         # phase 0 = tech, 1 = repair, 2 = buy, 3 = combat move, 4 = combat phase, 5 = non-combat, 6 = place, 7 = cleanup6
         self.turn_state = TurnState(1, "Russia", 2)
-        self.players = {"America": Player('America'),
-                        "Britain": Player('Britain'),
-                        "Russia": Player('Russia'),
-                        "Germany": Player('Germany'),
-                        "Japan": Player('Japan')}
+        self.players = {"America": Player('America', 'Eastern United States'),
+                        "Britain": Player('Britain', 'United Kingdom'),
+                        "Russia": Player('Russia', 'Russia'),
+                        "Germany": Player('Germany', 'Germany'),
+                        "Japan": Player('Japan', 'Japan')}
 
         # dictionary from territory names to territory states
         self.state_dict = {"1 Sea Zone": TerritoryState("Sea Zone", []),
@@ -988,6 +990,10 @@ class Game:
                                                                     UnitState("America", 5), UnitState("America", 12)]),
                            "Yakut S.S.R.": TerritoryState("Russia", [UnitState("Russia", 1)]),
                            "Yunnan": TerritoryState("America", [UnitState("America", 1), UnitState("America", 1)])}
+
+        # Set original owners
+        for k, v in self.state_dict:
+            self.rules.board[k].original_owner = v.owner
 
     def export_reader(self, xml_file):
         # Read xml
@@ -1318,8 +1324,8 @@ class Game:
             # Non-combat movement
             if self.turn_state.phase == 5:
                 # Can't move into enemy territory
-                if territory_state.owner != "Sea Zone" and self.rules.teams[territory_state.owner] != self.rules.teams[
-                    unit_state.owner]:
+                if territory_state.owner != "Sea Zone" and \
+                        self.rules.teams[territory_state.owner] != self.rules.teams[unit_state.owner]:
                     return False
                 # Can't move into territories with enemy units
                 for other_unit_state in territory_state.unit_state_list:
@@ -1351,17 +1357,6 @@ class Game:
         # Otherwise, can move here
         return True
 
-
-# TODO: If a sub enters combat, it needs to use up all remaining movement
-#  But the program can't differentiate between a sub attacking vs staying submerged when it ends its combat turn in enemy territories
-#  It currently assumes that if a sub ends in enemy units on a combat turn, then it attacks (and that it would move during non-combat otherwise)
-
-# TODO: Currently factories are considered enemy units for purposes of moving into territories on non combat turns and other things
-
-# TODO: Lots of things with carriers + fighters
-#  Multiple fighters can plan a return path to the same carrier, potentially going over its capacity and forcing a fighter to die
-#  This is basically unfixable, and the same bug exists in the game's source code
-#  Carriers must move before fighters during non-combat turns, because the program assumes this in order to simplify calculations
 
 # Implement combat (retreats, naval invasion, aa guns, battle simulator)
 # purchase units?
