@@ -321,7 +321,8 @@ class Battles:
         # Todo remove units to the territory they came from
         # if (self.game.rules.board[territory_key].is_capital != ""):
             # if (is_offense == true):
-                # self.team.ipc = self.team.ipc + self.game.rules.teams[unit_state.owner].ipc
+                # self.player[offense_units[0].owner].ipc
+                # self.player[offense_units[0].owner].ipc = self.player[offense_units[0].owner].ipc + self.player[defense_units[0].owner].ipc
                 # self.game.rules.teams[unit_state.owner].ipc = 0
             # else:
                 # self.game.rules.teams[unit_state.owner].ipc = self.game.rules.teams[unit_state.owner].ipc + self.team.ipc
