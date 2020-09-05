@@ -88,14 +88,6 @@ class Build:
             self.purchased_unit_state_list.append(BoardState.UnitState(self.player, 0))
             self.ipc -= 3
 
-        self.factories = {}
-        for territory_key in self.game.state_dict:
-            for unit_state in self.game.state_dict[territory_key].unit_state_list:
-                if unit_state.type_index == 5:
-                    self.factories[territory_key] = self.game.rules.board[territory_key].ipc  # name keys to ipc value
-        # factories now has a dict of names having factories and their IPC values (max build capacity)
-
-        # TODO: Should this be in the Place class instead?
         # self.set_defensive_requirements(endangered_name_list)
 
     def prioritizer(self, prioritization, strength):
@@ -323,7 +315,7 @@ class Battles:
                         if unit_state in unit_state_list:
                             unit_state_list.remove(unit_state)
                 break
-        
+
         # TODO fix recapturing territories swapping owners
         # How does this move units out of the territory back to another?
         # Todo remove units to the territory they came from
@@ -332,7 +324,7 @@ class Battles:
                 # self.team.ipc = self.team.ipc + self.game.rules.teams[unit_state.owner].ipc
                 # self.game.rules.teams[unit_state.owner].ipc = 0
             # else:
-                # self.game.rules.teams[unit_state.owner].ipc = self.game.rules.teams[unit_state.owner].ipc + self.team.ipc 
+                # self.game.rules.teams[unit_state.owner].ipc = self.game.rules.teams[unit_state.owner].ipc + self.team.ipc
                 # self.team.ipc = 0
         return unit_state_list
 
@@ -501,8 +493,14 @@ class Place:
         self.purchased_unit_state_list = purchased_unit_state_list
         self.immediate_defensive_requirements = list()
         self.latent_defensive_requirements = list()
-        self.factories = list()
         self.vulnerability = Vulnerability(game)
+
+        self.factories = []
+        for territory_name in self.game.state_dict:
+            for unit_state in self.game.state_dict[territory_name].unit_state_list:
+                if unit_state.type_index == 4:
+                    self.factories.append(territory_name)
+        # self.factories now has a list of names having factories
 
     # TODO Utilize combat move attack decision module to determine which factories/ key neighbors are under threat
     # This will need to be called within build_strategy after adding the theoritical units to see if still under threat.
@@ -512,8 +510,9 @@ class Place:
                 self.immediate_defensive_requirements.append(territory_name)
 
             for territory_key in self.factories:
-                if territory_name == self.game.rules.connections[territory_key]:
+                if territory_name in self.game.rules.board[territory_key].neighbors:
                     self.latent_defensive_requirements.append(territory_key)
+
 
     def build_slots(self, territory_name, factory_name=""):
         # returns remaining build slots of a territory
@@ -555,35 +554,43 @@ class Place:
                 can_be_saved = False
         return can_be_saved
 
-    def front_line_builder(self, theoretical_append, territory_name):
+    def front_line_builder(self, theoretical_append, territory_name, vulnerability_reader_active=True):
         # prioritizes an even spread of infantry and artillery in frontline factories
+
+        vulnerability_reader = True
+        if vulnerability_reader_active:
+            vulnerability_reader = self.vulnerability.is_vulnerable(territory_name, theoretical_append)
 
         # TODO Make the pathfinder proximity reader work. Should only count adjacent enmny land tertiries
         build_slots = self.build_slots(territory_name)
         for unit_state in self.purchased_unit_state_list:
-            if self.vulnerability.is_vulnerable(territory_name, theoretical_append):
+            if vulnerability_reader:
                 if (unit_state.type_index == 1) \
                         and (len(theoretical_append) < math.floor(build_slots/2)):  # artillery
                     theoretical_append.append(unit_state)
         for unit_state in self.purchased_unit_state_list:
-            if self.vulnerability.is_vulnerable(territory_name, theoretical_append):
+            if vulnerability_reader:
                 if (unit_state.type_index == 0) \
                         and len(theoretical_append) < build_slots:  # fills the rest of the space with infantry
                     theoretical_append.append(unit_state)
         for unit_state in self.purchased_unit_state_list:
             if self.game.rules.get_unit(unit_state.type_index).unit_type != "sea" \
                     and (unit_state.type_index != 1) and (unit_state.type_index != 0) \
-                    and self.vulnerability.is_vulnerable(territory_name, theoretical_append):
+                    and vulnerability_reader:
                 if len(theoretical_append) < build_slots:
                     theoretical_append.append(unit_state)
 
-    def reserve_line_builder(self, theoretical_append, territory_name):
+    def reserve_line_builder(self, theoretical_append, territory_name, vulnerability_reader_active=True):
         # puts, in theoretical_append, land units in non-frontline factories
+
+        vulnerability_reader = True
+        if vulnerability_reader_active:
+            vulnerability_reader = self.vulnerability.is_vulnerable(territory_name, theoretical_append)
 
         build_slots = self.build_slots(territory_name)
         for unit_state in self.purchased_unit_state_list:
             if self.game.rules.get_unit(unit_state.type_index).unit_type != "sea" \
-                    and self.vulnerability.is_vulnerable(territory_name, theoretical_append):
+                    and vulnerability_reader:
                 if len(theoretical_append) < build_slots:
                     theoretical_append.append(unit_state)
 
@@ -600,11 +607,15 @@ class Place:
 
         return adjacent_factory_list
 
-    def sea_zone_builder(self, theoretical_append, territory_name, adjacent_factory_list):
-        # TODO. Make it place those carrier_fighters if we bought a carrier
+    def sea_zone_builder(self, theoretical_append, territory_name, adjacent_factory_list, vulnerability_reader_active=True):
+
+        vulnerability_reader = True
+        if vulnerability_reader_active:
+            vulnerability_reader = self.vulnerability.is_vulnerable(territory_name, theoretical_append)
 
         for unit_state in self.purchased_unit_state_list:
-            if self.game.rules.get_unit(unit_state.type_index).unit_type == "sea":
+            if self.game.rules.get_unit(unit_state.type_index).unit_type == "sea" \
+            and vulnerability_reader:
                 # choose the bigger factory to remove build slots from first. Sub-optimal but fine.
                 i = 0
                 adjacent_factory_list.sort(reverse=True, key=lambda x:self.game.rules.board[x].ipc)
@@ -612,7 +623,19 @@ class Place:
                     if i == 0 and len(theoretical_append) < self.build_slots(fac_territory_name):
                         i = 1
                         theoretical_append.append(unit_state)
-                        # TODO: What the fuck ships!?!?!
+                        # TODO: Have the AI organize the placements list.
+
+            elif unit_state.type_index == 11 \
+            and self.vulnerability.is_vulnerable(territory_name, theoretical_append):
+                carrier_slots = 0
+                for ship_state in theoretical_append:
+                    if ship_state.type_index == 9:
+                        carrier_slots += 2
+                for ship_state in self.game.state_dict[territory_name].unit_state_list:
+                    if ship_state.type_index == 9:
+                        carrier_slots += 2
+                    if ship_state.type_index == 11: #aka already a fighter on board
+                        carrier_slots -= 1
 
     def update_vulnerable_builds(self, territory_name, theoretical_append):
         i = 0
@@ -667,7 +690,6 @@ class Place:
         if self.immediate_defensive_requirements:     # this will always be land
             self.immediate_defensive_requirements.sort(reverse=True, key=lambda x: self.game.rules.board[x].ipc)
             for territory_name in self.immediate_defensive_requirements:
-
                 build_slots = self.build_slots(territory_name)
                 theoretical_append = []
 
@@ -676,7 +698,6 @@ class Place:
                 if can_be_saved:
                     self.front_line_builder(theoretical_append, territory_name)
                     # fills frontline territories with infantry and artillery first, then with other land units.
-                    
                     if self.vulnerability.is_vulnerable(territory_name, theoretical_append):
                         self.update_vulnerable_builds(territory_name, theoretical_append)
 
@@ -691,28 +712,29 @@ class Place:
 
         elif self.latent_defensive_requirements:
             for territory_name in self.latent_defensive_requirements:
+                build_slots = self.build_slots(territory_name)
                 theoretical_append = []
+                adjacent_factory_list = self.adjacent_factory_finder(territory_name)
+
                 if self.game.state_dict[territory_name].owner == "Sea Zone":
-                    pass
+                    self.sea_zone_builder(theoretical_append, territory_name, adjacent_factory_list)
+
+                else: #builds max (front-line) units in factories adjacent to threatened land zones, if any
+                    self.front_line_builder(self, theoretical_append, territory_name, False)
+
+                self.theoretical_to_placements(theoretical_append, territory_name)
+
+        else: #places all the rest of the units according to the order they are in the list.
+            for territory_name in factories:
+                build_slots = self.build_slots(territory_name)
+                theoretical_append = []
+
+                if self.game.state_dict[territory_name].owner == "Sea Zone":
+                    self.sea_zone_builder(theoretical_append, territory_name, adjacent_factory_list, False)
                 else:
-                    pass
+                    self.reserve_line_builder(theoretical_append, territory_name, False)
 
-        # TODO 1. make sure your defensive requirements are met if possible. If land prioritization is active
-        #           utilize specific units if possible. Set low prioritiy if you want to build only tanks in SA
-        #     2. If not possible with land prioritization, replace special units with infantry.
-        #     3. If still not possible, buy the max amount of infantry and prioritize based on territory ipc value
-        #     4. If sea territory must be held, repeat above process with carriers as fallback defense if planes in
-        #           range, otherwise cruisers.
-        #     5. Order active prioritizations from highest to lowest
-        #     6. Allocate IPC according to the ratio of prioritizations. For example, prioritize_subs = 2
-        #           prioritize_air = 1, try to build about twice as much value in subs as air. Generally,
-        #           certain countries will have a slight value (say 1) for long term needed builds like extra infantry
-        #     6.5. Check if more units than build slots. If so, dont build all of the above step.
-        #     7. Check remaining IPC and buy extra units if space. If not, upgrade units as long as they were not purchased
-        #           due to the transports prioritization (bc then they may not fit)
-
-        # This whole time, these purchased units should be added to a theortical dict called "placements" (name to unit list)
-        pass
+                self.theoretical_to_placements(theoretical_append, territory_name)
 
     def place(self):
         for territory_key in self.placements:
@@ -721,7 +743,6 @@ class Place:
 
 
 class Cleanup:
-    # TODO reset built units
     def __init__(self, game):
 
         game.turn_state.phase = 7
@@ -730,6 +751,8 @@ class Cleanup:
             for unit_state in game.state_dict[territory_key].unit_state_list:
                 if (unit_state.type_index == 5) and (game.state_dict[territory_key].owner != unit_state.owner):
                     unit_state.owner = game.state_dict[territory_key].owner   # reset factory ownership
+            for territory_state in game.state_dict[territory_key]:
+                territory_state.built_units = 0                               # reset built_units
 
                 unit_state.moves_used = 0
                 if unit_state.type_index != 5:  # this is irrelevant because bombing directly affects IPCs. Allows change
