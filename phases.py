@@ -1,14 +1,11 @@
 import BoardState
 import random
 import math
-from statistics import stdev
 
 
 class Vulnerability:
     def __init__(self, game):
         self.game = game
-        self.territories = dict()
-        self.update()
 
     def get_attackable_territories(self, unit_state, territory_name):
         unit = self.game.rules.get_unit(unit_state.type_index)
@@ -336,6 +333,12 @@ class Battles:
                             territory_state.owner = original_owner
                         else:
                             territory_state.owner = self.player
+
+                            #TODO: BRett make this is legit
+                            if self.game.rules.board[territory_key].is_capital: #if the territory is someone's capital
+                                self.game.players[self.player].ipc += \
+                                            self.game.players[self.game.rules.board[territory_key].original_owner].ipc
+                                self.game.players[self.game.rules.board[territory_key].original_owner].ipc = 0
             else:
                 pass
 
@@ -450,10 +453,16 @@ class Battles:
                     saving_list.append(friendly_units.pop(i))
 
         while casualty_count > 0:
+            # TODO: Unit().attack_or_defense does not exist
             # choose based on power. This will automatically choose AA guns first
-            lowest_power = min(self.game.rules.units[unit_state.type_index].power(attack_or_defense) for unit_state in friendly_units)
-            lowest_power_list = [unit_state for unit_state in friendly_units
-                                 if self.game.rules.units[unit_state.type_index].power(attack_or_defense) == lowest_power]
+            lowest_power = 6
+            for unit_state in friendly_units:
+                if self.game.rules.units[unit_state.type_index].attack_or_defense <= lowest_power:
+                    lowest_power = self.game.rules.units[unit_state.type_index].attack_or_defense
+            lowest_power_list = []
+            for unit_state in friendly_units:
+                if self.game.rules.units[unit_state.type_index].attack_or_defense == lowest_power:
+                    lowest_power_list.append(unit_state)
 
             # two while loops allows us to remove redundant use of lowest_power
             while lowest_power_list and casualty_count > 0:
@@ -621,7 +630,9 @@ class Place:
     def front_line_builder(self, theoretical_append, territory_name, vulnerability_reader_active=True):
         # prioritizes an even spread of infantry and artillery in frontline factories
 
-        vulnerability_reader = not vulnerability_reader_active or self.vulnerability.is_vulnerable(territory_name, theoretical_append)
+        vulnerability_reader = True
+        if vulnerability_reader_active:
+            vulnerability_reader = self.vulnerability.is_vulnerable(territory_name, theoretical_append)
 
         is_frontline = False
         enemy_team = 'Axis' if self.game.rules.teams[self.game.state_dict[territory_name].owner] == 'Allies' else 'Allies'
@@ -652,7 +663,9 @@ class Place:
     def reserve_line_builder(self, theoretical_append, territory_name, vulnerability_reader_active=True):
         # puts, in theoretical_append, land units in non-frontline factories
 
-        vulnerability_reader = not vulnerability_reader_active or self.vulnerability.is_vulnerable(territory_name, theoretical_append)
+        vulnerability_reader = True
+        if vulnerability_reader_active:
+            vulnerability_reader = self.vulnerability.is_vulnerable(territory_name, theoretical_append)
 
         build_slots = self.build_slots(territory_name)
         for unit_state in self.purchased_unit_state_list:
@@ -676,14 +689,16 @@ class Place:
 
     def sea_zone_builder(self, theoretical_append, territory_name, adjacent_factory_list, vulnerability_reader_active=True):
 
-        vulnerability_reader = not vulnerability_reader_active or self.vulnerability.is_vulnerable(territory_name, theoretical_append)
+        vulnerability_reader = True
+        if vulnerability_reader_active:
+            vulnerability_reader = self.vulnerability.is_vulnerable(territory_name, theoretical_append)
 
         for unit_state in self.purchased_unit_state_list:
             if self.game.rules.get_unit(unit_state.type_index).unit_type == "sea" \
-                    and vulnerability_reader:
+            and vulnerability_reader:
                 # choose the bigger factory to remove build slots from first. Sub-optimal but fine.
                 i = 0
-                adjacent_factory_list.sort(reverse=True, key=lambda x: self.game.rules.board[x].ipc)
+                adjacent_factory_list.sort(reverse=True, key=lambda x:self.game.rules.board[x].ipc)
                 for fac_territory_name in adjacent_factory_list:
                     if i == 0 and len(theoretical_append) < self.build_slots(fac_territory_name):
                         i = 1
@@ -691,7 +706,7 @@ class Place:
                         # TODO Later: Have the AI organize the placements list.
 
             elif unit_state.type_index == 11 \
-                    and self.vulnerability.is_vulnerable(territory_name, theoretical_append):
+            and self.vulnerability.is_vulnerable(territory_name, theoretical_append):
                 carrier_slots = 0
                 for ship_state in theoretical_append:
                     if ship_state.type_index == 9:
@@ -793,7 +808,6 @@ class Place:
             for territory_name in self.factories:
                 build_slots = self.build_slots(territory_name)
                 theoretical_append = []
-                adjacent_factory_list = self.adjacent_factory_finder(territory_name)
 
                 if self.game.state_dict[territory_name].owner == "Sea Zone":
                     self.sea_zone_builder(theoretical_append, territory_name, adjacent_factory_list, False)
