@@ -319,8 +319,8 @@ class Battles:
         # TODO fix recapturing territories swapping owners
         # How does this move units out of the territory back to another?
         # Todo remove units to the territory they came from
-        # if (self.game.rules.board[territory_key].is_capital != no):
-            # if (is_offense = true):
+        # if (self.game.rules.board[territory_key].is_capital != ""):
+            # if (is_offense == true):
                 # self.team.ipc = self.team.ipc + self.game.rules.teams[unit_state.owner].ipc
                 # self.game.rules.teams[unit_state.owner].ipc = 0
             # else:
