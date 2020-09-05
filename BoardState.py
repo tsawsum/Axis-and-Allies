@@ -992,7 +992,7 @@ class Game:
                            "Yunnan": TerritoryState("America", [UnitState("America", 1), UnitState("America", 1)])}
 
         # Set original owners
-        for k, v in self.state_dict:
+        for k, v in self.state_dict.items():
             self.rules.board[k].original_owner = v.owner
 
     def export_reader(self, xml_file):
