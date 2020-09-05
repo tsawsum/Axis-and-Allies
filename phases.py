@@ -49,12 +49,20 @@ class Vulnerability:
         #  For each side:
         #   total_power_of_this_side + (average_power_of_both_sides) * total_number_of_units
         #   + (standard_deviation * (0.5 + number_of_units)/4.5)
+        #TODO: BRett: AA guns dont count in this. They are only impactful if huge number of planes, so maybe just ignore them
         num_attackers, num_defenders = len(attack_units), len(defense_units)
         attack_powers, defense_powers = [unit.attack for unit in attack_units], [unit.defense for unit in defense_units]
         total_attack_power, total_defense_power = sum(attack_powers), sum(defense_powers)
 
-        attack_value = total_attack_power * 2 + total_defense_power + (stdev(attack_powers) * (0.5 + num_attackers) / 4.5)
-        defense_value = total_attack_power + total_defense_power * 2 + (stdev(defense_powers) * (0.5 + num_defenders) / 4.5)
+        attack_value = total_attack_power + \
+                       (num_attackers * (total_attack_power + total_defense_power)/(num_attackers + num_defenders)) + \
+                       (stdev(attack_powers) * (0.5 + num_attackers) / 4.5)
+        defense_value = total_defense_power + \
+                       (num_defenders * (total_attack_power + total_defense_power)/(num_attackers + num_defenders)) + \
+                        (stdev(defense_powers) * (0.5 + num_defenders) / 4.5)
+
+        #The approximation for 'attackability' without having to move units in would be:
+        # ((total_attack_power/num_attackers) + 1)/2 replaces (total_attack_power + total_defense_power)/(num_attackers + num_defenders))
 
         return attack_value / defense_value
 
@@ -300,7 +308,7 @@ class Battles:
         self.retreating = False
         self.kamikaze = False
         self.battle_calculator = None
-        # TODO George: Make this work
+        # TODO: Later: Have the AI decide on retreating and kamikaze values
 
         self.enemy_team = game.rules.teams[self.player]
         while self.enemy_team == game.rules.teams[self.player]:
@@ -342,7 +350,6 @@ class Battles:
             else:
                 pass
 
-    # TODO George: Units attached to transportss can't attack or defend (check with "if not UnitState().attached_to: "
     def battler(self, unit_state_list, territory_name):
         # inputs units (unit_states) originally in embattled territory and returns remaining units
         territory_value = self.game.rules.board[territory_name].ipc
@@ -353,12 +360,13 @@ class Battles:
 
             offense_units, defense_units = list(), list()
             for unit_state in unit_state_list:
-                if self.game.rules.teams[unit_state.owner] == self.team:
+                if self.game.rules.teams[unit_state.owner] == self.team \
+                and not UnitState().attached_to:
                     # assume offense for current player
                     offense_units.append(unit_state)
                     total_friendly_power += self.game.rules.units[unit_state.type_index].attack  # I think this path works...
                     # This only defines one of the two powers, never both
-                else:
+                elif not UnitState().attached_to: # Units attached to transportss can't attack or defend
                     defense_units.append(unit_state)
                     total_enemy_power += self.game.rules.units[unit_state.type_index].defense
 
@@ -483,13 +491,29 @@ class Battles:
 
 
 class NonCombatMove:
-    # TODO George: have a simple extra AA gun move prioritizer. If the builds makes one have the NC move it to a good place.
     def __init__(self, game, aa_flyover):
         self.game = game
         self.aa_flyover = aa_flyover
 
+        #TODO: Have the AI make this dict
+        self.important_territories = {}
+
     def can_move(self, unit_state, current_territory, goal_territory):
         return self.game.calc_movement(unit_state, current_territory, goal_territory)[0] >= 0
+
+    def extra_aa_needed_where(self):
+        # TODO: Hey Brett look at this! Cool! Use it if you want for moving aas.
+        #       Make sure, when implimented, that you actually use a path finder to see if an Aa could get their easily
+        # simple function that determines which 'important' of your allied territories do not have AA guns
+
+        territory_name_list = []
+
+        for territory_key in self.important_territories:
+            for territory_name in self.game.state_dict:
+                if territory_key == territory_name \
+                and self.game.rule.teams[self.game.state_dict[territory_name].owner] \
+                        == self.game.rule.teams[self.game.turn_state.player]:
+                    territory_name_list.append(territory_name)
 
     def move_unit(self, unit_state, current_territory, goal_territory):
         dist, path = self.game.calc_movement(unit_state, current_territory, goal_territory)
@@ -559,8 +583,9 @@ class Place:
     """
     # TODO George: Somehow make the transportable_units we bought earlier place correcty. AKA next to where you put transport
 
-    # TODO George: Make sure we dont accidentally build duplicates of purchased units, or build too many units per
+    # TODO Brett: Make sure we dont accidentally build duplicates of purchased units, or build too many units per
     #  factory. Also make sure theoretical_append gets reset every time.
+
     def __init__(self, game, endangered_name_list, purchased_unit_state_list):
         game.turn_state.phase = 6
         self.placements = {}
@@ -618,7 +643,6 @@ class Place:
                     theoretical_append.append(unit_state)
                 if unit_state.type_index == 3:  # aa
                     theoretical_append.append(unit_state)
-        # TODO George: Players w/ no capital get no money
         if self.vulnerability.is_vulnerable(territory_name, theoretical_append):
             if self.game.rules.board[territory_name].is_capital:  # protect capital at all costs
                 self.theoretical_to_placements(theoretical_append, territory_name)
@@ -634,14 +658,6 @@ class Place:
         if vulnerability_reader_active:
             vulnerability_reader = self.vulnerability.is_vulnerable(territory_name, theoretical_append)
 
-        is_frontline = False
-        enemy_team = 'Axis' if self.game.rules.teams[self.game.state_dict[territory_name].owner] == 'Allies' else 'Allies'
-        for neighbor in self.game.rules.board[territory_name].neighbors:
-            if self.game.rules.teams[self.game.state_dict[neighbor].owner] == enemy_team:
-                is_frontline = True
-                break
-
-        # TODO George: Do what you need to with is_frontline
         build_slots = self.build_slots(territory_name)
         for unit_state in self.purchased_unit_state_list:
             if vulnerability_reader:
@@ -775,16 +791,25 @@ class Place:
 
                 can_be_saved = self.can_be_saved(theoretical_append, territory_name)  # this is a bool, but also modifies stuff
 
-                if can_be_saved:
-                    self.front_line_builder(theoretical_append, territory_name)
-                    # fills frontline territories with infantry and artillery first, then with other land units.
-                    if self.vulnerability.is_vulnerable(territory_name, theoretical_append):
-                        self.update_vulnerable_builds(territory_name, theoretical_append)
+                is_frontline = False
+                enemy_team = 'Axis' if self.game.rules.teams[
+                                           self.game.state_dict[territory_name].owner] == 'Allies' else 'Allies'
+                for neighbor in self.game.rules.board[territory_name].neighbors:
+                    if self.game.rules.teams[self.game.state_dict[neighbor].owner] == enemy_team:
+                        is_frontline = True
+                        break
 
-                else:
-                    self.reserve_line_builder(theoretical_append, territory_name)
-                    if self.vulnerability.is_vulnerable(territory_name, theoretical_append):
-                        self.update_vulnerable_builds(territory_name, theoretical_append)
+                if can_be_saved:
+                    if is_frontline:
+                        self.front_line_builder(theoretical_append, territory_name)
+                        # fills frontline territories with infantry and artillery first, then with other land units.
+                        if self.vulnerability.is_vulnerable(territory_name, theoretical_append):
+                            self.update_vulnerable_builds(territory_name, theoretical_append)
+
+                    else:
+                        self.reserve_line_builder(theoretical_append, territory_name)
+                        if self.vulnerability.is_vulnerable(territory_name, theoretical_append):
+                            self.update_vulnerable_builds(territory_name, theoretical_append)
 
                 # puts the theoretical units into the placements and removes them from purchased_unit_state_list
                 self.theoretical_to_placements(theoretical_append, territory_name)
@@ -839,7 +864,8 @@ class Cleanup:
                     unit_state.damage = 0
                 unit_state.moved_from = []
 
-            if game.state_dict[territory_key].owner == game.turn_state.player:
+            if game.state_dict[territory_key].owner == game.turn_state.player \
+            and game.state_dict[game.players[game.turn_state.player].capital].owner == game.turn_state.player: #has cap
                 game.turn_state.player.ipc += game.rules.board[territory_key].ipc  # updates ipc
 
         if game.turn_state.player == "America":
