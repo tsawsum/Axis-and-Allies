@@ -9,7 +9,7 @@ class Territory:
     # neighbors list has the target and conditions
     # conditions could be 'edge' class which asks if its passable
 
-    def __init__(self, territory_name, ipc_value, is_seazone, is_capital=False):
+    def __init__(self, territory_name, ipc_value, is_seazone, is_capital=""):
         self.name = territory_name
         self.neighbors = []
         self.ipc = ipc_value
@@ -148,7 +148,7 @@ class Rules:
                       "East Mexico": Territory("East Mexico", 0, False),
                       "Eastern Australia": Territory("Eastern Australia", 1, False),
                       "Eastern Canada": Territory("Eastern Canada", 3, False),
-                      "Eastern United States": Territory("Eastern United States", 12, False, True),
+                      "Eastern United States": Territory("Eastern United States", 12, False, "America"),
                       "Egypt": Territory("Egypt", 2, False),
                       "Eire": Territory("Eire", 0, False),  # NEUTRAL
                       "Evenki National Okrug": Territory("Evenki National Okrug", 1, False),
@@ -159,7 +159,7 @@ class Rules:
                       "French Indo-China Thailand": Territory("French Indo-China Thailand", 2, False),
                       "French Madagascar": Territory("French Madagascar", 1, False),
                       "French West Africa": Territory("French West Africa", 1, False),
-                      "Germany": Territory("Germany", 10, False, True),
+                      "Germany": Territory("Germany", 10, False, "Germany"),
                       "Gibraltar": Territory("Gibraltar", 0, False),
                       "Greenland": Territory("Greenland", 0, False),
                       "Hawaiian Islands": Territory("Hawaiian Islands", 1, False),
@@ -169,7 +169,7 @@ class Rules:
                       "Italian East Africa": Territory("Italian East Africa", 1, False),
                       "Italy": Territory("Italy", 3, False),
                       "Iwo Jima": Territory("Iwo Jima", 0, False),
-                      "Japan": Territory("Japan", 8, False, True),
+                      "Japan": Territory("Japan", 8, False, "Japan"),
                       "Karelia S.S.R.": Territory("Karelia S.S.R.", 2, False),
                       "Kazakh S.S.R.": Territory("Kazakh S.S.R.", 2, False),
                       "Kiangsu": Territory("Kiangsu", 2, False),
@@ -193,7 +193,7 @@ class Rules:
                       "Philippine Islands": Territory("Philippine Islands", 3, False),
                       "Poland": Territory("Poland", 2, False),
                       "Rhodesia": Territory("Rhodesia", 1, False),
-                      "Russia": Territory("Russia", 8, False, True),
+                      "Russia": Territory("Russia", 8, False, "Russia"),
                       "Sahara": Territory("Sahara", 0, False),  # NEUTRAL
                       "Saudi Arabia": Territory("Saudi Arabia", 0, False),  # NEUTRAL
                       "Sinkiang": Territory("Sinkiang", 1, False),
@@ -208,7 +208,7 @@ class Rules:
                       "Turkey": Territory("Turkey", 0, False),  # NEUTRAL
                       "Ukraine S.S.R.": Territory("Ukraine S.S.R.", 2, False),
                       "Union of South Africa": Territory("Union of South Africa", 2, False),
-                      "United Kingdom": Territory("United Kingdom", 8, False, True),
+                      "United Kingdom": Territory("United Kingdom", 8, False, "Britain"),
                       "Venezuela": Territory("Venezuela", 0, False),  # NEUTRAL
                       "Vologda": Territory("Vologda", 2, False),
                       "Wake Island": Territory("Wake Island", 0, False),
