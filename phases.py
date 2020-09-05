@@ -320,13 +320,12 @@ class Battles:
         # How does this move units out of the territory back to another?
         # Todo remove units to the territory they came from
         # if (self.game.rules.board[territory_key].is_capital != ""):
-            # if (is_offense == true):
-                # self.player[offense_units[0].owner].ipc
-                # self.player[offense_units[0].owner].ipc = self.player[offense_units[0].owner].ipc + self.player[defense_units[0].owner].ipc
-                # self.game.rules.teams[unit_state.owner].ipc = 0
-            # else:
-                # self.game.rules.teams[unit_state.owner].ipc = self.game.rules.teams[unit_state.owner].ipc + self.team.ipc
-                # self.team.ipc = 0
+            
+                # self.game.players[offense_units[0].owner].ipc
+                # self.game.players[player].ipc = self.game.players[player].ipc + self.game.players[defense_units[0].owner].ipc
+                # self.game.players[defense_units[0].owner].ipc = 0
+          
+                
         return unit_state_list
 
     def embattled(self, unit_state_list):
