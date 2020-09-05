@@ -262,6 +262,12 @@ class Battles:
                             territory_state.owner = original_owner
                         else:
                             territory_state.owner = self.player
+                            
+                            #TODO: BRett make this is legit
+                            if self.game.rules.board[territory_key].is_capital: #if the territory is someone's capital
+                                self.game.players[self.player].ipc += \
+                                            self.game.players[self.game.rules.board[territory_key].original_owner].ipc
+                                self.game.players[self.game.rules.board[territory_key].original_owner].ipc = 0
             else:
                 pass
 
@@ -319,11 +325,6 @@ class Battles:
         # TODO fix recapturing territories swapping owners
         # How does this move units out of the territory back to another?
         # Todo remove units to the territory they came from
-        # if (self.game.rules.board[territory_key].is_capital != ""):
-            
-                # self.game.players[offense_units[0].owner].ipc
-                # self.game.players[player].ipc = self.game.players[player].ipc + self.game.players[defense_units[0].owner].ipc
-                # self.game.players[defense_units[0].owner].ipc = 0
           
                 
         return unit_state_list
