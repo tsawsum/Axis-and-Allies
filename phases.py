@@ -596,6 +596,9 @@ class Place:
     """
     # TODO George: Somehow make the transportable_units we bought earlier place correcty. AKA next to where you put transport
 
+    # TODO George: Make sure we don't accidentally build duplicates of purchased units, or build too many units per
+    #  factory. Also make sure theoretical_append gets reset every time.
+
     def __init__(self, game, endangered_name_list, purchased_unit_state_list):
         game.turn_state.phase = 6
         self.placements = {}
