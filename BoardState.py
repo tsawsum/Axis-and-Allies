@@ -639,8 +639,7 @@ class Rules:
                       Unit("sub", "sea", 6, 2, 1, 2), Unit("destroyer", "sea", 8, 2, 2, 2),
                       Unit("cruiser", "sea", 12, 3, 3, 2), Unit("carrier", "sea", 14, 1, 2, 100, 100, 0, 10),
                       Unit("battleship", "sea", 20, 2, 1, 2), Unit("fighter", "air", 10, 3, 4, 4, 100, 5),
-                      Unit("bomber", "air", 12, 4, 1, 6), \
-                      Unit("sea_dud", "sea", 0, 0, 0, 0, 0, 0, 0, 0), Unit("land_dud", "land", 0, 0, 0, 0, 0, 0, 0, 0),]
+                      Unit("bomber", "air", 12, 4, 1, 6)]
 
         self.teams = {"America": "Allies",
                       "Britain": "Allies",
