@@ -732,13 +732,14 @@ class Game:
         # player 0 = russia, 1 = germany, 2 = britain, 3 = japan, 4 = us
         # phase 0 = tech, 1 = repair, 2 = buy, 3 = combat move, 4 = combat phase, 5 = non-combat, 6 = place, 7 = cleanup6
         self.turn_state = TurnState(1, "Russia", 2)
-        self.players = {"America": Player('America', 'Eastern United States'),
+        self.players = {"America": Player('America', 'Eastern United States'), #Dont know why the capitals are here
                         "Britain": Player('Britain', 'United Kingdom'),
                         "Russia": Player('Russia', 'Russia'),
                         "Germany": Player('Germany', 'Germany'),
                         "Japan": Player('Japan', 'Japan')}
 
         # dictionary from territory names to territory states
+        #Below initializes unit locations?
         self.state_dict = {"1 Sea Zone": TerritoryState("Sea Zone", []),
                            "2 Sea Zone": TerritoryState("Sea Zone", []),
                            "3 Sea Zone": TerritoryState("Sea Zone", []),
@@ -1016,7 +1017,7 @@ class Game:
         player, phase = player_phase[:i], player_phase[i:]
         turn_state_indices = {"russian": 0, "german": 1, "british": 2, "japanese": 3, "american": 4,
                               "Tech": 0, "Purchase": 2, "CombatMove": 3, "Battle": 3, "NonCombatMove": 5, "Place": 6,
-                              "TechActivation": 6, "EndTurn": 6}
+                              "TechActivation": 6, "EndTurn": 6} #Why are there several things attatched to each number
         self.turn_state = TurnState(int(turn.get("round")), turn_state_indices[player], turn_state_indices[phase])
 
         # Set resources
