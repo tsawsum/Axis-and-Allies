@@ -47,6 +47,8 @@ class Vulnerability:
         self.territories[territory_name][self.game.rules.teams[unit_state.owner]].append(self.game.rules.get_unit(unit_state.type_index))
 
     def update(self):
+        #updates the territory dict to accurately represent the boardstate.
+        
         keys = ['America', 'Britain', 'Russia', 'Germany', 'Japan', 'Axis', 'Allies']
         self.territories = {territory_name: {player: list() for player in keys} for territory_name in self.game.state_dict.keys()}
         for territory_name in self.territories.keys():
@@ -66,6 +68,8 @@ class Vulnerability:
         self.invalid = False
 
     def battle_formula(self, attack_units=None, defense_units=None):
+        # Impliments a formula representing the rough apporoximation of a battle without taking the time to calculate 500 simulations
+        
         if self.invalid:
             self.update()
         # James' Formula:
@@ -109,17 +113,23 @@ class Vulnerability:
         values = [self.battle_formula(attack_units, defending_units) for attack_units in attacking_units]
         worst_case = max(values)
 
+        # TODO: Have AI decide risk_tolerance based on its estimate of losing or not.
         return worst_case > 1 - risk_tolerance
 
 
 class Build:
+    """
+    AI decides upon priority values. Purchases are determiend by the ratio of each priority value to the sum times the total ipc.
+    """
+    
     def __init__(self, game, endangered_name_list):  # game.turn_state, etc.
         self.game = game
         self.player = self.game.turn_state.player
-        game.turn_state.phase = 2
+        game.turn_state.phase = 2       # TODO. Later. Maybe change the position of this bc it seems irrelevent to have to here
         self.ipc = self.game.turn_state.player.ipc
 
         # TODO: Make AI decide to build a factory according to previous games/ its other factors
+        # TODO: Make the AI decide these priorities
         self.prioritization_list = []
         self.prioritization_list.append(['tech_token', 0])              # never use this one
         self.prioritization_list.append(['battleship', 0])              # 1
@@ -147,7 +157,7 @@ class Build:
         # land. These may prove vistigial
         self.land_defense_sum = self.prioritization_list[12][1] + self.prioritization_list[13][1] \
             + self.prioritization_list[14][1] + self.prioritization_list[15][1] + self.prioritization_list[7][1]
-        self.land_sum = self.land_defense_sum + self.prioritization_list[2][1] + self.prioritization_list[5][1]
+        self.land_sum = self.land_defense_sum + self.prioritization_list[2][1] + self.prioritization_list[5][1]  # Note that factories are part of land sum
 
         self.priority_sum = self.land_sum + self.sea_sum
 
@@ -167,12 +177,12 @@ class Build:
                             self.ipc -= cost
 
             elif unit_priority[0] == 'transportable_units':
-                cost = 7
+                cost = 7        # transportable units in this context are always infantry and artillery
                 num_purchased = round(allotted_ipc/cost)
                 if num_purchased >= 1:
                     for i in range(num_purchased):
                         if (self.ipc - cost) >= 0:
-                            self.purchased_unit_state_list.append(BoardState.UnitState(self.player, 0))
+                            self.purchased_unit_state_list.append(BoardState.UnitState(self.player, 0))  
                             self.purchased_unit_state_list.append(BoardState.UnitState(self.player, 1))
                             self.ipc -= cost
 
@@ -186,29 +196,27 @@ class Build:
                                 if (self.ipc - cost) >= 0:
                                     self.purchased_unit_state_list.append(BoardState.UnitState(self.player, self.game.rules.units.index(unit)))
                                     self.ipc = self.ipc - cost
-        while self.ipc >= 3:
-            self.purchased_unit_state_list.append(BoardState.UnitState(self.player, 0))
+        while self.ipc >= 3: # Hopefully the AI does not give bad priorities else we run out of placement space
+            self.purchased_unit_state_list.append(BoardState.UnitState(self.player, 0))  # infantry
             self.ipc -= 3
 
-        # self.set_defensive_requirements(endangered_name_list)
-
     def prioritizer(self, prioritization, strength):
+        # Something the AI can call if it wants to change the build priority of a unit
         for arr in self.prioritization_list:
             if arr[0] == prioritization:
                 arr[1] = strength
 
-    def build_unit(self, territory_name, unit_index):  # called by the AI
-        self.game.state_dict[territory_name].append(self.game.rules.get_unit(unit_index))
-        self.ipc = self.ipc - self.game.rules.get_unit(unit_index).cost
-
 
 class BattleCalculator:
+    """ 
+    tool for the AI to determine how a battle WOULD turn out without actually changing the GameState
+    """
     # MAKE A COPY OF STUFF BEFORE YOU USE THIS BC THE BATTLE STUFF ACTUALLY MAKES CHANGES
     # account for land units on transpots in ipc swing
-    # tool for the AI to determine how a battle WOULD turn out without actually changing the GameState
+    
     def __init__(self, unit_state_list, territory_value):
         self.unit_state_list = unit_state_list
-        self.ipc_swing = 0
+        self.ipc_swing = 0      # TODO: Brett. We update this right?
         self.embattled_territory_value = territory_value
         self.victory_chance = 0  # consider both amalgamation and victory chance alone
         self.tie_chance = 0
@@ -216,7 +224,7 @@ class BattleCalculator:
         self.net_ipc_swing = self.ipc_swing + (self.embattled_territory_value * self.victory_chance)
 
     def battle_sim(self):
-        # does the battle
+        # TODO: Brett: FUCK
         pass
 
 
@@ -228,6 +236,7 @@ class BattleCalculator:
 #  approx both sides averaeg by (opponent average * 1/2) + 1
 #   then determine the ratio: and pick like the top 5 to battle calculate
 #  Make sure to both prioritize taking factory territories and to not include them in the above calculation
+
 class CombatMove:
     def __init__(self, game, aa_flyover=True):
         self.game = game
