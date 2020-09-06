@@ -11,7 +11,7 @@ class Territory:
 
     def __init__(self, territory_name, ipc_value, is_seazone, is_capital=""):
         self.name = territory_name
-        self.neighbors = [] #sets a list of neighbors , I'm curious why this and .original_owner are here but not in the init( thing
+        self.neighbors = []
         self.ipc = ipc_value
         self.is_water = is_seazone
         self.is_capital = is_capital
@@ -22,10 +22,6 @@ class Unit:
     """
     Provides a basic template for a unit
     """
-
-    # movement ability
-    # attack defense
-    # transport capacity
     # arbitrarily high default weight so most units cannot be transported
 
     def __init__(self, unit_name, unit_type, cost, attack, defense, movement, transport_weight=100, carrier_weight=100,
@@ -655,7 +651,7 @@ class Rules:
                            "America": "Russia"}
 
     def get_unit(self, index):
-        return self.units[index]#Not sure what this is for
+        return self.units[index]
 
     def enemy_team(self, player='', team=''):
         return 'Allies' if self.teams[player] == 'Axis' or team == 'Axis' else 'Axis'
@@ -719,9 +715,8 @@ class Player:
 
 class Game:
     """
-    IN PROGRESS. Trying to represent the game as a whole, including all static and fluid
-    information (including turn phase and turn ownership -- not yet defined anywhere).
-    Will want to be able to make changes as game progresses.
+    Represents the game as a whole, including all static and fluid
+    information.
     """
 
     # converts unit-state numbers to units using rules.get_unit.
@@ -730,16 +725,15 @@ class Game:
 
         self.rules = Rules()
         # player 0 = russia, 1 = germany, 2 = britain, 3 = japan, 4 = us
-        # phase 0 = tech, 1 = repair, 2 = buy, 3 = combat move, 4 = combat phase, 5 = non-combat, 6 = place, 7 = cleanup6
+        # phase 0 = tech, 1 = repair, 2 = buy, 3 = combat move, 4 = combat phase, 5 = non-combat, 6 = place, 7 = cleanup
         self.turn_state = TurnState(1, "Russia", 2)
-        self.players = {"America": Player('America', 'Eastern United States'), #Dont know why the capitals are here
+        self.players = {"America": Player('America', 'Eastern United States'),    # This implimentation of capitals is redudant. Code uses both. It's fine.
                         "Britain": Player('Britain', 'United Kingdom'),
                         "Russia": Player('Russia', 'Russia'),
                         "Germany": Player('Germany', 'Germany'),
                         "Japan": Player('Japan', 'Japan')}
 
-        # dictionary from territory names to territory states
-        #Below initializes unit locations?
+        # dictionary from territory names to territory states (containing unit_states)
         self.state_dict = {"1 Sea Zone": TerritoryState("Sea Zone", []),
                            "2 Sea Zone": TerritoryState("Sea Zone", []),
                            "3 Sea Zone": TerritoryState("Sea Zone", []),
@@ -1091,7 +1085,7 @@ class Game:
         if phase == -1:
             phase = self.turn_state.phase
 
-        # Can't move if no movement left <-Does this end it if used all its moves to get someplace? Inf moving 1 away will have no movement left but should be able to
+        # Can't move if no movement left.
         if unit_state.moves_used == unit.movement:
             return -1, list()
 
@@ -1363,41 +1357,9 @@ class Game:
         # Otherwise, can move here
         return True
 
-
-# Implement combat (retreats, naval invasion, aa guns, battle simulator)
-# purchase units?
-# implement phases
 # heuristic algorithm? NN? minimax
 
-# ADD IN TERRITORY OWNERSHIP AND ACCOUNT FOR IT IN THE PASSABLE FUNCTION
-
-# neutrals cant move to, and enemy must be during combat phase. Tanks end all movement if battle
-# check phase
-# check if neighbor sea zones have ships that are not subs or trans
-
-# how many moves it takes if land
-# how many moves if sea
-# how many moves if air
-
 # classic pathfinding = dijkstra search or A*
-
-# Make a distance function
-
-# Is_Reachable
-
-# Make an Is_ land_reachable function
-
-# Is_sea_reachable
-
-# Plane_has_retreat
-
-# Controls strait.
-
-# Find a way to impliment the battle calculator
-
-# Is_bordering_enemy
-
-# Is_threatened by enemy
 
 
 game = Game()
