@@ -1023,7 +1023,7 @@ class Game:
         # Set resources
         country_names = {"Americans": "America", "British": "Britain", "Germans": "Germany", "Japanese": "Japan",
                          "Russians": "Russia", "Neutral": "Neutral"}
-        for elem in players:
+        for elem in players: #What the fug is elem
             player = self.players[country_names[elem.get("name")]]
             for resource in elem.findall("resource"):
                 if resource.get("name") == "PUs":
@@ -1044,7 +1044,7 @@ class Game:
         for territory in captured_territories:
             self.state_dict[territory.get("name")].just_captured = True
 
-        # Set units
+        # Set units #This was used earlier, do you need to move this before the unit initialization thing or is that only for c++
         unit_indices = {"infantry": 0, "artillery": 1, "armour": 2, "fighter": 11, "bomber": 12, "transport": 5,
                         "submarine": 6, "destroyer": 7,
                         "cruiser": 8, "carrier": 9, "battleship": 10, "aaGun": 3, "factory": 4}
@@ -1091,7 +1091,7 @@ class Game:
         if phase == -1:
             phase = self.turn_state.phase
 
-        # Can't move if no movement left
+        # Can't move if no movement left <-Does this end it if used all its moves to get someplace? Inf moving 1 away will have no movement left but should be able to
         if unit_state.moves_used == unit.movement:
             return -1, list()
 
@@ -1100,7 +1100,7 @@ class Game:
         if goal_territory.is_water:
             if unit.unit_type == "land":
                 if unit_state.moves_used > 0 or goal_territory.name not in self.rules.board[current_territory.name].neighbors:
-                    return -1, list()
+                    return -1, list()# Tanks can move 2, wouldn't moves used be greater than 1 to end turn?
                 for other_unit_state in goal_territory_state.unit_state_list:
                     # Check for allied transports
                     if other_unit_state.type_index == 5 and self.rules.teams[other_unit_state.owner] == \
@@ -1219,7 +1219,7 @@ class Game:
             if not return_path:
                 return -1, list()
 
-        # We want number of edges, not number of nodes, so subtract 1
+        # We want number of edges, not number of nodes, so subtract 1 <Dont know what this means
         return len(path) - 1, path
 
     def bfs(self, unit_state, root, target, max_dist, carrier_spots=None, phase=-1):
