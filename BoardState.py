@@ -11,7 +11,7 @@ class Territory:
 
     def __init__(self, territory_name, ipc_value, is_seazone, is_capital=""):
         self.name = territory_name
-        self.neighbors = []
+        self.neighbors = [] #sets a list of neighbors , I'm curious why this and .original_owner are here but not in the init( thing
         self.ipc = ipc_value
         self.is_water = is_seazone
         self.is_capital = is_capital
@@ -45,7 +45,7 @@ class Unit:
         self.carrier_capacity = carrier_capacity
 
     def power(self, attack_or_defense):
-        return self.attack if attack_or_defense == 'attack' else self.defense
+        return self.attack if attack_or_defense == 'attack' else self.defense #determines which power to use
 
 
 class Rules:
@@ -655,7 +655,7 @@ class Rules:
                            "America": "Russia"}
 
     def get_unit(self, index):
-        return self.units[index]
+        return self.units[index]#Not sure what this is for
 
     def enemy_team(self, player='', team=''):
         return 'Allies' if self.teams[player] == 'Axis' or team == 'Axis' else 'Axis'
