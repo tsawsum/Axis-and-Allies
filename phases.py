@@ -221,7 +221,7 @@ class BattleCalculator:
         self.victory_chance = 0  # consider both amalgamation and victory chance alone
         self.tie_chance = 0
 
-        self.net_ipc_swing = self.ipc_swing + (self.embattled_territory_value * self.victory_chance)
+        self.net_ipc_swing = self.ipc_swing + ((self.embattled_territory_value * long_term_affinity) * self.victory_chance) #TODO: Later. Have the AI decide on long_term_affinity
 
     def battle_sim(self):
         # TODO: Brett: FUCK
