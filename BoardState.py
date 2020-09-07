@@ -22,10 +22,6 @@ class Unit:
     """
     Provides a basic template for a unit
     """
-
-    # movement ability
-    # attack defense
-    # transport capacity
     # arbitrarily high default weight so most units cannot be transported
 
     def __init__(self, unit_name, unit_type, cost, attack, defense, movement, transport_weight=100, carrier_weight=100,
@@ -45,7 +41,7 @@ class Unit:
         self.carrier_capacity = carrier_capacity
 
     def power(self, attack_or_defense):
-        return self.attack if attack_or_defense == 'attack' else self.defense
+        return self.attack if attack_or_defense == 'attack' else self.defense #determines which power to use
 
 
 class Rules:
@@ -719,9 +715,8 @@ class Player:
 
 class Game:
     """
-    IN PROGRESS. Trying to represent the game as a whole, including all static and fluid
-    information (including turn phase and turn ownership -- not yet defined anywhere).
-    Will want to be able to make changes as game progresses.
+    Represents the game as a whole, including all static and fluid
+    information.
     """
 
     # converts unit-state numbers to units using rules.get_unit.
@@ -730,15 +725,15 @@ class Game:
 
         self.rules = Rules()
         # player 0 = russia, 1 = germany, 2 = britain, 3 = japan, 4 = us
-        # phase 0 = tech, 1 = repair, 2 = buy, 3 = combat move, 4 = combat phase, 5 = non-combat, 6 = place, 7 = cleanup6
+        # phase 0 = tech, 1 = repair, 2 = buy, 3 = combat move, 4 = combat phase, 5 = non-combat, 6 = place, 7 = cleanup
         self.turn_state = TurnState(1, "Russia", 2)
-        self.players = {"America": Player('America', 'Eastern United States'),
+        self.players = {"America": Player('America', 'Eastern United States'),    # This implimentation of capitals is redudant. Code uses both. It's fine.
                         "Britain": Player('Britain', 'United Kingdom'),
                         "Russia": Player('Russia', 'Russia'),
                         "Germany": Player('Germany', 'Germany'),
                         "Japan": Player('Japan', 'Japan')}
 
-        # dictionary from territory names to territory states
+        # dictionary from territory names to territory states (containing unit_states)
         self.state_dict = {"1 Sea Zone": TerritoryState("Sea Zone", []),
                            "2 Sea Zone": TerritoryState("Sea Zone", []),
                            "3 Sea Zone": TerritoryState("Sea Zone", []),
@@ -1016,13 +1011,13 @@ class Game:
         player, phase = player_phase[:i], player_phase[i:]
         turn_state_indices = {"russian": 0, "german": 1, "british": 2, "japanese": 3, "american": 4,
                               "Tech": 0, "Purchase": 2, "CombatMove": 3, "Battle": 3, "NonCombatMove": 5, "Place": 6,
-                              "TechActivation": 6, "EndTurn": 6}
+                              "TechActivation": 6, "EndTurn": 6} #Why are there several things attatched to each number
         self.turn_state = TurnState(int(turn.get("round")), turn_state_indices[player], turn_state_indices[phase])
 
         # Set resources
         country_names = {"Americans": "America", "British": "Britain", "Germans": "Germany", "Japanese": "Japan",
                          "Russians": "Russia", "Neutral": "Neutral"}
-        for elem in players:
+        for elem in players: #What the fug is elem
             player = self.players[country_names[elem.get("name")]]
             for resource in elem.findall("resource"):
                 if resource.get("name") == "PUs":
@@ -1043,7 +1038,7 @@ class Game:
         for territory in captured_territories:
             self.state_dict[territory.get("name")].just_captured = True
 
-        # Set units
+        # Set units #This was used earlier, do you need to move this before the unit initialization thing or is that only for c++
         unit_indices = {"infantry": 0, "artillery": 1, "armour": 2, "fighter": 11, "bomber": 12, "transport": 5,
                         "submarine": 6, "destroyer": 7,
                         "cruiser": 8, "carrier": 9, "battleship": 10, "aaGun": 3, "factory": 4}
@@ -1090,7 +1085,7 @@ class Game:
         if phase == -1:
             phase = self.turn_state.phase
 
-        # Can't move if no movement left
+        # Can't move if no movement left.
         if unit_state.moves_used == unit.movement:
             return -1, list()
 
@@ -1099,7 +1094,7 @@ class Game:
         if goal_territory.is_water:
             if unit.unit_type == "land":
                 if unit_state.moves_used > 0 or goal_territory.name not in self.rules.board[current_territory.name].neighbors:
-                    return -1, list()
+                    return -1, list()# Tanks can move 2, wouldn't moves used be greater than 1 to end turn?
                 for other_unit_state in goal_territory_state.unit_state_list:
                     # Check for allied transports
                     if other_unit_state.type_index == 5 and self.rules.teams[other_unit_state.owner] == \
@@ -1218,7 +1213,7 @@ class Game:
             if not return_path:
                 return -1, list()
 
-        # We want number of edges, not number of nodes, so subtract 1
+        # We want number of edges, not number of nodes, so subtract 1 <Dont know what this means
         return len(path) - 1, path
 
     def bfs(self, unit_state, root, target, max_dist, carrier_spots=None, phase=-1):
@@ -1362,41 +1357,9 @@ class Game:
         # Otherwise, can move here
         return True
 
-
-# Implement combat (retreats, naval invasion, aa guns, battle simulator)
-# purchase units?
-# implement phases
 # heuristic algorithm? NN? minimax
 
-# ADD IN TERRITORY OWNERSHIP AND ACCOUNT FOR IT IN THE PASSABLE FUNCTION
-
-# neutrals cant move to, and enemy must be during combat phase. Tanks end all movement if battle
-# check phase
-# check if neighbor sea zones have ships that are not subs or trans
-
-# how many moves it takes if land
-# how many moves if sea
-# how many moves if air
-
 # classic pathfinding = dijkstra search or A*
-
-# Make a distance function
-
-# Is_Reachable
-
-# Make an Is_ land_reachable function
-
-# Is_sea_reachable
-
-# Plane_has_retreat
-
-# Controls strait.
-
-# Find a way to impliment the battle calculator
-
-# Is_bordering_enemy
-
-# Is_threatened by enemy
 
 
 game = Game()
