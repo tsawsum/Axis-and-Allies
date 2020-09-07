@@ -4,6 +4,231 @@ import math
 from statistics import stdev
 
 
+class Attackable:
+    def __init__(self, game, player, ai_importance, risk_tolerance, factory_risk=None, capital_risk=None):
+        self.game = game
+        self.player = player
+        self.vuln = Vulnerability(game)
+        self.importance = ai_importance
+        self.risk_tolerance = risk_tolerance
+        if factory_risk:
+            self.factory_risk = factory_risk
+        else:
+            self.factory_risk = risk_tolerance
+        if capital_risk:
+            self.capital_risk = capital_risk
+        else:
+            self.capital_risk = risk_tolerance
+
+    def get_is_frontline(self, territory_name):
+        enemy_team = self.game.rules.enemy_team(player=self.game.state_dict[territory_name].owner)
+        for neighbor in self.game.rules.board[territory_name].neighbors:
+            if self.game.rules.teams[self.game.state_dict[neighbor].owner] == enemy_team:
+                return True
+        return False
+
+    def is_worth_attacking_battle_sim(self, territory_name, battle_sim_result):
+        # TODO George: Make this better
+        return battle_sim_result > 0.5
+
+    def is_worth_attacking(self, territory_name):
+        # TODO George: Make this better
+        owner = self.game.state_dict[territory_name].owner
+        enemy_team = self.game.rules.enemy_team(player=self.player)
+
+        has_friendly_units, has_enemy_units, has_factory = False, False, False
+        for unit_state in self.game.state_dict[territory_name].unit_state_list:
+            if self.game.rules.teams[unit_state.owner] == enemy_team:
+                has_enemy_units = True
+            else:
+                has_friendly_units = True
+            if unit_state.type_index == 4:
+                has_factory = True
+
+        vulnerability = self.vuln.get_vulnerability(territory_name, attacker=self.player)
+
+        return self.game.rules.teams[owner] != self.game.rules.teams[self.player] \
+               and (has_enemy_units or not has_friendly_units)\
+               and (vulnerability > 1 - self.risk_tolerance
+                    or (self.game.rules.board[territory_name].is_capital and vulnerability > 1 - self.capital_risk)
+                    or (has_factory and vulnerability > 1 - self.factory_risk))
+
+    def get_best_attacks(self):
+        possible_territories = sorted([territory_name for territory_name in self.game.state_dict.keys()
+                                       if self.is_worth_attacking(territory_name)],
+                                      key=lambda x: self.importance[x], reverse=True)
+
+        # Get list of territories that each unit can attack
+        attackable_by_unit = dict()
+        for territory_name in possible_territories:
+            for unit_state in self.vuln.territories[territory_name][self.player]:
+                if unit_state not in attackable_by_unit.keys():
+                    attackable_by_unit[unit_state] = list()
+                attackable_by_unit[unit_state].append(territory_name)
+
+        attackable_by_unit_copy = {k: v[:] for k, v in attackable_by_unit.items()}
+
+        # Temporarily remove units from battle if they can attack multiple places
+        can_attack_one, can_attack_many = list(), list()
+        for unit_state, territories in attackable_by_unit.items():
+            if len(territories) > 1:
+                can_attack_many.append(unit_state)
+                for territory_name in territories:
+                    self.vuln.territories[territory_name][self.player].remove(unit_state)
+            else:
+                can_attack_one.append(unit_state)
+
+        while True:
+            while True:
+                # See which territories are still good to attack even without these units
+                still_attackable = dict()
+                for territory_name in possible_territories:
+                    if self.is_worth_attacking(territory_name):
+                        still_attackable[territory_name] = self.vuln.get_vulnerability(territory_name)
+
+                # Remove these territories from units that can attack multiple
+                changed_units = list()
+                for unit_state in can_attack_many:
+                    removed = list()
+                    for territory_name in still_attackable.keys():
+                        if territory_name in attackable_by_unit[unit_state]:
+                            attackable_by_unit[unit_state].remove(territory_name)
+                            removed.append(territory_name)
+                    if len(attackable_by_unit[unit_state]) == 0:
+                        most_needed_at = min(removed, key=lambda x: still_attackable[x])
+                        attackable_by_unit[unit_state].append(most_needed_at)
+                    if len(attackable_by_unit[unit_state]) == 1:
+                        changed_units.append(unit_state)
+                        self.vuln.territories[attackable_by_unit[unit_state][0]][self.player].append(unit_state)
+                for unit_state in changed_units:
+                    can_attack_many.remove(unit_state)
+                    can_attack_one.append(unit_state)
+                if not changed_units:
+                    break
+
+            # See which territories still need help
+            not_still_attackable = list()
+            for territory_name in possible_territories:
+                if not self.is_worth_attacking(territory_name):
+                    not_still_attackable.append(territory_name)
+
+            if not can_attack_many or not not_still_attackable:
+                break
+
+            """
+            NOTE: I'm not using this because I think it will spread out units too much to win any battles, causing nothing to be attacked
+            biggest_boost, attacking_unit, attacking_territory = 0, None, None
+            # Check each attackable territory for the biggest boost
+            for unit_state in can_attack_many:
+                for territory_name in attackable_by_unit[unit_state]:
+                    prev_vuln = self.vuln.get_vulnerability(territory_name, attacker=self.player)
+                    self.vuln.territories[territory_name][self.player].append(unit_state)
+                    vuln_boost = (prev_vuln - self.vuln.get_vulnerability(territory_name, attacker=self.player)) * ipc_swing
+                    self.vuln.territories[territory_name][self.player].remove(unit_state)
+                    if vuln_boost > biggest_boost:
+                        biggest_boost, attacking_unit, attacking_territory = vuln_boost, unit_state, territory_name
+            
+            can_attack_many.remove(attacking_unit)
+            can_attack_one.append(attacking_unit)
+            self.vuln.territories[attacking_territory][self.player].append(unit_state)
+            """
+
+            # Send units to attack the most important territory still remaining
+            # Choose units to send based on how much they boost vulnerability
+            attacking_territory = not_still_attackable[0]
+            while not self.is_worth_attacking(attacking_territory):
+                biggest_boost, attacking_unit = 0, None
+                for unit_state in can_attack_many:
+                    if attacking_territory in attackable_by_unit[unit_state]:
+                        prev_vuln = self.vuln.get_vulnerability(attacking_territory, attacker=self.player)
+                        self.vuln.territories[attacking_territory][self.player].append(unit_state)
+                        vuln_boost = prev_vuln - self.vuln.get_vulnerability(attacking_territory, attacker=self.player)
+                        self.vuln.territories[attacking_territory][self.player].remove(unit_state)
+                        if vuln_boost > biggest_boost:
+                            attacking_unit, biggest_boost = unit_state, vuln_boost
+                if attacking_unit:
+                    self.vuln.territories[attacking_territory][self.player].append(attacking_unit)
+                    attackable_by_unit[attacking_unit] = [attacking_territory]
+                    can_attack_many.remove(attacking_unit)
+                    can_attack_one.append(attacking_unit)
+                else:
+                    break
+
+        # Any unused units that can attack should help where possible
+        for unit_state in can_attack_many:
+            biggest_boost, attacking_territory = 0, None
+            for territory_name in attackable_by_unit[unit_state]:
+                if territory_name in still_attackable:
+                    prev_vuln = self.vuln.get_vulnerability(territory_name, attacker=self.player)
+                    self.vuln.territories[territory_name][self.player].append(unit_state)
+                    vuln_boost = (prev_vuln - self.vuln.get_vulnerability(territory_name, attacker=self.player)) * self.importance[territory_name]
+                    self.vuln.territories[territory_name][self.player].remove(unit_state)
+                    if vuln_boost > biggest_boost:
+                        attacking_territory, biggest_boost = territory_name, vuln_boost
+            if attacking_territory:
+                self.vuln.territories[attacking_territory][self.player].append(unit_state)
+                attackable_by_unit[unit_state] = [attacking_territory]
+
+        # Create theoretical attack
+        theoretical_attack = dict()
+        for unit_state in attackable_by_unit.keys():
+            if attackable_by_unit[unit_state][0] in still_attackable:
+                theoretical_attack[unit_state] = attackable_by_unit[unit_state][0]
+
+        battles = dict()
+        for unit_state, territory_name in theoretical_attack.items():
+            if territory_name not in battles:
+                battles[territory_name] = self.game.state_dict[territory_name].unit_state_list[:]
+            battles[territory_name].append(unit_state)
+
+        # Run battle simulator on these battles to make sure none of them are bad
+        # If they are, take the worst battle, remove the units and reassign them somewhere better
+        while True:
+            # Find worst battle
+            not_worth = list()
+            for territory_name in battles.keys():
+                battle_sim = BattleCalculator(battles[territory_name], self.game.rules.board[territory_name].ipc).battle_sim()
+                if not self.is_worth_attacking_battle_sim(territory_name, battle_sim):
+                    not_worth.append(territory_name)
+            if not not_worth:
+                break
+            not_worth.sort(key=lambda x: self.importance[x], reverse=True)
+            worst_battle = not_worth.pop()
+            # Reassign these units
+            for unit_state in battles[worst_battle]:
+                theoretical_attack[unit_state] = ''
+                for i in range(len(not_worth)):
+                    if not_worth[i] in attackable_by_unit_copy[unit_state]:
+                        theoretical_attack[unit_state] = not_worth[i]
+                        break
+                if theoretical_attack[unit_state]:
+                    battle_sim = BattleCalculator(battles[theoretical_attack[unit_state]], self.game.rules.board[theoretical_attack[unit_state]].ipc).battle_sim()
+                    if self.is_worth_attacking_battle_sim(theoretical_attack[unit_state], battle_sim):
+                        not_worth.remove(theoretical_attack[unit_state])
+            del battles[worst_battle]
+            if not not_worth:
+                break
+
+        # Find the best location for all unassigned units
+        for unit_state in theoretical_attack.keys():
+            if not theoretical_attack[unit_state]:
+                biggest_boost, attacking_territory = 0, None
+                for territory_name in attackable_by_unit_copy[unit_state]:
+                    if territory_name in still_attackable:
+                        prev_vuln = self.vuln.get_vulnerability(territory_name, attacker=self.player)
+                        self.vuln.territories[territory_name][self.player].append(unit_state)
+                        vuln_boost = (prev_vuln - self.vuln.get_vulnerability(territory_name, attacker=self.player)) * self.importance[territory_name]
+                        self.vuln.territories[territory_name][self.player].remove(unit_state)
+                        if vuln_boost > biggest_boost:
+                            attacking_territory, biggest_boost = territory_name, vuln_boost
+                if attacking_territory:
+                    theoretical_attack[unit_state] = attacking_territory
+                else:
+                    del theoretical_attack[unit_state]
+
+        return theoretical_attack
+
+
 class Vulnerability:
     def __init__(self, game):
         self.game = game
@@ -36,7 +261,7 @@ class Vulnerability:
         # Use calc_movement to see which of these territories can be attacked
         attackable = [territory for territory in within_range if self.game.calc_movement(unit_state, territory_name, territory, phase=3) >= 0]
 
-        # Check if transported units can attack somewhere
+        # TODO Brett: Check if transported units can attack somewhere
         if unit_state.attached_units:
             pass
         else:
@@ -47,7 +272,7 @@ class Vulnerability:
         self.territories[territory_name][self.game.rules.teams[unit_state.owner]].append(self.game.rules.get_unit(unit_state.type_index))
 
     def update(self):
-        #updates the territory dict to accurately represent the boardstate.
+        # updates the territory dict to accurately represent the boardstate.
         
         keys = ['America', 'Britain', 'Russia', 'Germany', 'Japan', 'Axis', 'Allies']
         self.territories = {territory_name: {player: list() for player in keys} for territory_name in self.game.state_dict.keys()}
@@ -60,15 +285,14 @@ class Vulnerability:
                         for ter in self.get_attackable_territories(unit_state, territory_name):
                             self.territories[ter][player] += units
                 elif unit_state.type_index != 4 and unit_state.type_index != 3:  # Ignore factories and AA guns
-                    unit = self.game.rules.get_unit(unit_state.type_index)
                     for ter in self.get_attackable_territories(unit_state, territory_name):
-                        self.territories[ter][player].append(unit)
+                        self.territories[ter][player].append(unit_state)
                     if not unit_state.attached_to:
-                        self.territories[territory_name][self.game.rules.teams[player]].append(unit)
+                        self.territories[territory_name][self.game.rules.teams[player]].append(unit_state)
         self.invalid = False
 
     def battle_formula(self, attack_units=None, defense_units=None):
-        # Impliments a formula representing the rough apporoximation of a battle without taking the time to calculate 500 simulations
+        # Implements a formula representing the rough approximation of a battle without taking the time to calculate 500 simulations
         
         if self.invalid:
             self.update()
@@ -89,7 +313,7 @@ class Vulnerability:
 
         return attack_value / defense_value
 
-    def is_vulnerable(self, territory_name, theoretical_append=list(), attacker='', defender='', risk_tolerance=0):
+    def get_vulnerability(self, territory_name, theoretical_append=list(), attacker='', defender=''):
         if self.invalid:
             self.update()
         if defender in self.game.rules.teams.keys():
@@ -106,15 +330,19 @@ class Vulnerability:
             attacker_team = self.game.rules.enemy_team(team=defender)
             attackers = [player for player, team in self.game.rules.teams.items() if team == attacker_team]
 
-        attacking_units = [self.territories[territory_name][attacking_player] for attacking_player in attackers]
-        defending_units = self.territories[territory_name][defender] + \
-                          [self.game.rules.get_unit(unit_state.type_index) for unit_state in theoretical_append]
+        attacking_units = [[self.game.rules.get_unit(unit_state.type_index) for unit_state in self.territories[territory_name][attacking_player]]
+                           for attacking_player in attackers]
+        defending_units = [self.game.rules.get_unit(unit_state.type_index)
+                           for unit_state in self.territories[territory_name][defender] + theoretical_append]
 
         values = [self.battle_formula(attack_units, defending_units) for attack_units in attacking_units]
         worst_case = max(values)
+        return worst_case
 
+    def is_vulnerable(self, territory_name, theoretical_append=list(), attacker='', defender='', risk_tolerance=0):
+        vulnerability = self.get_vulnerability(territory_name, theoretical_append, attacker, defender)
         # TODO: Have AI decide risk_tolerance based on its estimate of losing or not.
-        return worst_case > 1 - risk_tolerance
+        return vulnerability > 1 - risk_tolerance
 
 
 class Build:
@@ -196,7 +424,7 @@ class Build:
                                 if (self.ipc - cost) >= 0:
                                     self.purchased_unit_state_list.append(BoardState.UnitState(self.player, self.game.rules.units.index(unit)))
                                     self.ipc = self.ipc - cost
-        while self.ipc >= 3: # Hopefully the AI does not give bad priorities else we run out of placement space
+        while self.ipc >= 3:  # Hopefully the AI does not give bad priorities else we run out of placement space
             self.purchased_unit_state_list.append(BoardState.UnitState(self.player, 0))  # infantry
             self.ipc -= 3
 
@@ -221,7 +449,7 @@ class BattleCalculator:
         self.victory_chance = 0  # consider both amalgamation and victory chance alone
         self.tie_chance = 0
 
-        self.net_ipc_swing = self.ipc_swing + ((self.embattled_territory_value * long_term_affinity) * self.victory_chance) #TODO: Later. Have the AI decide on long_term_affinity
+        self.net_ipc_swing = self.ipc_swing + ((self.embattled_territory_value * long_term_affinity) * self.victory_chance)  # TODO: Later. Have the AI decide on long_term_affinity
 
     def battle_sim(self):
         # TODO: Brett: FUCK
@@ -419,6 +647,8 @@ class Battles:
 
             # Don't try to retreat if there's nowhere to retreat to
             # TODO Brett: Planes and subs might still want to leave battle even if other units stay?
+            # TODO Brett: Amphibious can't retreat :(
+            # TODO Brett: submerged subs, transports don't count as enemies
             if self.retreating and retreat_options:
                 self.retreating = False
                 for unit_state in offense_units:
@@ -611,7 +841,7 @@ class Place:
     def __init__(self, game, endangered_name_list, purchased_unit_state_list, build_average):
         game.turn_state.phase = 6
         self.placements = {}
-        self.build_importance = build_importance # dictionary determined by the AI
+        self.build_importance = build_importance  # dictionary determined by the AI
         self.game = game
         self.endangered_name_list = endangered_name_list
         self.purchased_unit_state_list = purchased_unit_state_list
@@ -681,7 +911,7 @@ class Place:
                 if self.game.rules.board[territory_name].is_capital:  # protect capital at all costs
                     self.theoretical_to_placements(theoretical_append, territory_name)
                 else:  # abandon if cant possibly hold.
-                    theoretical_append = []
+                    theoretical_append.clear()
                     can_be_saved = False
 
         else:
@@ -690,11 +920,10 @@ class Place:
                     if len(theoretical_append) < self.build_slots(fac_territory_name):
                         theoretical_append.append(unit_state)
             if self.vulnerability.is_vulnerable(territory_name, theoretical_append):
-                theoretical_append = []
+                theoretical_append.clear()
                 can_be_saved = False
 
-        # TODO: Brett why does it say this theortical append is not used? Is it def reset after I use this function?
-        theoretical_append = []
+        theoretical_append.clear()
         return can_be_saved
 
     def front_line_builder(self, theoretical_append, territory_name, vulnerability_reader_active=True):
@@ -721,8 +950,8 @@ class Place:
                     and vulnerability_reader:
                 if len(theoretical_append) < build_slots:
                     # TODO: BRett. Look at these in all my builder methods. See if I did it right.
-                    if (vulnerability_reader_active \
-                            or len(theoretical_append) < build_importance_getter(territory_name)):
+                    if vulnerability_reader_active \
+                            or len(theoretical_append) < build_importance_getter(territory_name):
                         theoretical_append.append(unit_state)
 
     def reserve_line_builder(self, theoretical_append, territory_name, vulnerability_reader_active=True):
@@ -737,8 +966,8 @@ class Place:
             if self.game.rules.get_unit(unit_state.type_index).unit_type != "sea" \
                     and vulnerability_reader:
                 if len(theoretical_append) < build_slots:
-                    if (vulnerability_reader_active \
-                            or len(theoretical_append) < build_importance_getter(territory_name)):
+                    if vulnerability_reader_active \
+                            or len(theoretical_append) < build_importance_getter(territory_name):
                         theoretical_append.append(unit_state)
 
     def adjacent_factory_finder(self, territory_name):
@@ -779,8 +1008,8 @@ class Place:
                 adjacent_factory_list.sort(reverse=True, key=lambda x:self.game.rules.board[x].ipc)
                 for fac_territory_name in adjacent_factory_list:
                     if i == 0 and len(theoretical_append) < self.build_slots(fac_territory_name):
-                        if (vulnerability_reader_active \
-                                or len(theoretical_append) < build_importance_getter(territory_name)):
+                        if vulnerability_reader_active \
+                                or len(theoretical_append) < build_importance_getter(territory_name):
                             i = 1
                             theoretical_append.append(unit_state)
                             # TODO Later: Have the AI organize the placements list.
@@ -802,8 +1031,8 @@ class Place:
                 adjacent_factory_list.sort(reverse=True, key=lambda x: self.game.rules.board[x].ipc)
                 for fac_territory_name in adjacent_factory_list:
                     if i == 0 and len(theoretical_append) < self.build_slots(fac_territory_name):
-                        if (vulnerability_reader_active \
-                                or len(theoretical_append) < build_importance_getter(territory_name)):
+                        if vulnerability_reader_active or \
+                                len(theoretical_append) < build_importance_getter(territory_name):
                             i = 1
                             theoretical_append.append(unit_state)
 
@@ -965,7 +1194,7 @@ class Cleanup:
                     unit_state.moves_used = 0
                     if unit_state.type_index != 5:  # this is irrelevant because bombing directly affects IPCs. Allows change
                         unit_state.damage = 0
-                    unit_state.moved_from = []
+                    unit_state.moved_from.clear()
 
             if game.state_dict[territory_key].owner == game.turn_state.player and \
                     game.state_dict[game.players[game.turn_state.player].capital].owner == game.turn_state.player:  # has cap
