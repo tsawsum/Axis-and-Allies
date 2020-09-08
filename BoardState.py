@@ -629,7 +629,6 @@ class Rules:
             self.board[item[0]].neighbors.append(item[1])
             self.board[item[1]].neighbors.append(item[0])
 
-        # TODO George: Are these values correct? I'm pretty sure tank is wrong, don't know about the rest
         self.units = [Unit("infantry", "land", 3, 1, 2, 1, 2), Unit("artillery", "land", 4, 2, 2, 1, 3),
                       Unit("tank", "land", 6, 3, 3, 2, 3), Unit("aa", "land", 6, 0, 0, 1, 3),
                       Unit("factory", "land", 15, 0, 0, 0), Unit("transport", "sea", 7, 0, 0, 2, 100, 100, 5),
@@ -643,7 +642,7 @@ class Rules:
                       "Russia": "Allies",
                       "Germany": "Axis",
                       "Japan": "Axis",
-                      "Neutral": "Neutral"}4
+                      "Neutral": "Neutral"}
 
         self.turn_order = {"Russia": "Germany",
                            "Germany": "Britain",
@@ -688,6 +687,9 @@ class UnitState:
         self.attached_to = attached_to
         self.moved_from = moved_from
         self.shots_taken = shots_taken
+        self.retreated = False
+        if self.type_index == 4:
+            self.retreated = True
 
 
 class TurnState:
