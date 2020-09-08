@@ -629,6 +629,7 @@ class Rules:
             self.board[item[0]].neighbors.append(item[1])
             self.board[item[1]].neighbors.append(item[0])
 
+        # TODO George: Are these values correct? I'm pretty sure tank is wrong, don't know about the rest
         self.units = [Unit("infantry", "land", 3, 1, 2, 1, 2), Unit("artillery", "land", 4, 1, 2, 1, 3),
                       Unit("tank", "land", 6, 1, 2, 1, 3), Unit("aa", "land", 6, 0, 0, 1, 3),
                       Unit("factory", "land", 15, 0, 0, 0), Unit("transport", "sea", 7, 0, 0, 2, 100, 100, 5),
@@ -1094,7 +1095,7 @@ class Game:
         if goal_territory.is_water:
             if unit.unit_type == "land":
                 if unit_state.moves_used > 0 or goal_territory.name not in self.rules.board[current_territory.name].neighbors:
-                    return -1, list()# Tanks can move 2, wouldn't moves used be greater than 1 to end turn?
+                    return -1, list()  # Tanks can move 2, wouldn't moves used be greater than 1 to end turn?
                 for other_unit_state in goal_territory_state.unit_state_list:
                     # Check for allied transports
                     if other_unit_state.type_index == 5 and self.rules.teams[other_unit_state.owner] == \
@@ -1102,7 +1103,7 @@ class Game:
                         # Check if the transport has space
                         if len(other_unit_state.attached_units) == 0 or (len(other_unit_state.attached_units) == 1 and (
                                 unit_state.type_index == 0 or other_unit_state.attached_units[0].type_index == 0)):
-                            return unit.movement
+                            return 0, [current_territory.name, goal_territory.name]
                 return -1, list()
         else:
             if unit.unit_type == 'sea':
@@ -1118,11 +1119,12 @@ class Game:
             if goal_territory_state.owner != "Sea Zone" and self.rules.teams[goal_territory_state.owner] != \
                     self.rules.teams[unit_state.owner]:
                 return -1, list()
-            # Can't move into territories with enemy units, unless sub
+            # Can't move into territories with enemy units, unless sub, transport or factory
             for other_unit_state in goal_territory_state.unit_state_list:
                 if self.rules.teams[other_unit_state.owner] != self.rules.teams[unit_state.owner]:
-                    if not (unit_state.name == 'sub' and other_unit_state.name != 'destroyer'):
-                        return -1, list()
+                    if not 4 <= other_unit_state.type_index <= 6:  # Can move through factories, transports, and subs
+                        if unit.name != 'sub' or other_unit_state.type_index == 7:  # Subs can move through anything except destroyers
+                            return -1, list()
         # AA guns can't move in combat turns
         elif phase == 3:
             if unit.name == 'aa':
