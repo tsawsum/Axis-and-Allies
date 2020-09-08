@@ -38,11 +38,11 @@ class Attackable:
         return False
 
     def is_worth_attacking_battle_sim(self, territory_name, battle_sim_result):
-        # TODO George: Make this better
+        # TODO George Later: Make this better
         return battle_sim_result > 0.5
 
     def is_worth_attacking(self, territory_name):
-        # TODO George: Make this better
+        # TODO George Later: Make this better
         owner = self.game.state_dict[territory_name].owner
         enemy_team = self.game.rules.enemy_team(player=self.player)
 
@@ -520,7 +520,7 @@ class BattleCalculator:
     
     def __init__(self, unit_state_list, territory_value):
         self.unit_state_list = unit_state_list
-        self.ipc_swing = 0      # TODO: George. We update this right?
+        self.ipc_swing = 0      # TODO: Brett. We update this right?
         self.embattled_territory_value = territory_value
         self.victory_chance = 0  # consider both amalgamation and victory chance alone
         self.tie_chance = 0
@@ -528,7 +528,7 @@ class BattleCalculator:
         self.net_ipc_swing = self.ipc_swing + ((self.embattled_territory_value * long_term_affinity) * self.victory_chance)  # TODO: Later. Have the AI decide on long_term_affinity
 
     def battle_sim(self):
-        # TODO: George: FUCK
+        # TODO: BRett: FUCK
         pass
 
 
@@ -688,8 +688,8 @@ class Battles:
         elif len(retreat_options) == 1:
             return retreat_options.pop()
 
-        # TODO George: I'm not sure how you want me to implement this.
-        #              I'm worried that is_vulnerable and Attackable break if you have a bunch of units in battle everywhere
+        # TODO BRett: I'm not sure how you want me to implement this.
+        #              I'm worried that is_vulnerable and Attackable break if you have a bunch of units in battle everywhere. Retreat to highest 'value' if not apporx death trap
         return retreat_options.pop()
 
     def battler(self, unit_state_list, territory_name):
@@ -758,7 +758,7 @@ class Battles:
                             if unit_state in unit_state_list:
                                 unit_state_list.remove(unit_state)
 
-                # TODO George: Make sure battler doesn't run for: retreated planes, submerged subs, transports, factories
+                # TODO George: Make sure battler doesn't run for: retreated planes, submerged subs, transports, factories. Retreated value in unit_state?
                 #              But also make sure it doesn't stop if amphibious units stay while others retreat
                 if still_battling:
                     pass
@@ -985,10 +985,10 @@ class Place:
     is a pretty linear, albeit complicated, process.
     """
 
-    # TODO George: Make sure we don't accidentally build duplicates of purchased units, or build too many units per
+    # TODO Brett: Make sure we don't accidentally build duplicates of purchased units, or build too many units per
     #  factory. Also make sure theoretical_append gets reset every time.
     # TODO: Later. Make the AI decide "build average" for every territory
-    def __init__(self, game, endangered_name_list, purchased_unit_state_list, build_average):
+    def __init__(self, game, purchased_unit_state_list, build_average):
         game.turn_state.phase = 6
         self.placements = {}
         self.build_importance = build_importance  # dictionary determined by the AI
@@ -998,6 +998,8 @@ class Place:
         self.immediate_defensive_requirements = list()
         self.latent_defensive_requirements = list()
         self.vulnerability = Vulnerability(game)
+        self.endangered_name_list = self.get_territories_under_threat(ai_importance, risk_tolerance)
+        # TODO. Later. Have the Ai pass these values
 
         self.factories = []
         for territory_name in self.game.state_dict:
@@ -1006,7 +1008,6 @@ class Place:
                     self.factories.append(territory_name)
         # self.factories now has a list of names having factories
 
-    # TODO George: You said you needed this function, implement it where you need to "determine which factories/ key neighbors are under threat"
     def get_territories_under_threat(self, ai_importance, risk_tolerance, factory_risk=None, capital_risk=None):
         # Below code is copy-pasted from do_non_combat_move(). Should probably just make single function for it but nah
         vulnerability = Vulnerability(self.game)
