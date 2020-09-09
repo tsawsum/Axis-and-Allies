@@ -33,26 +33,29 @@ class UnitStack:
             self.land_unit_territories = None
         self.possible_goals = list()
 
+    def remove_units(self, unit_state_list):
+        if self.is_transport:
+            for unit_state in unit_state_list:
+                if unit_state in self.land_unit_states:
+                    i = self.land_unit_states.index(unit_state)
+                    self.land_units.pop(i)
+                    self.land_unit_states.pop(i)
+                    self.land_unit_territories.pop(i)
+
     def get_unit_states(self):
         if self.is_transport:
             return self.land_unit_states
         else:
             return [self.unit_state]
 
-    def get_attack_powers(self):
+    def get_attack_power(self):
         if self.is_transport:
-            return [self.unit.attack]
+            return self.unit.attack
         else:
             if len(self.land_units) == 2 and self.land_units[1].name == 'artillery':
-                return [self.land_units[0].attack + 1, self.land_units[1].attack]
+                return self.land_units[0].attack + 1 + self.land_units[1].attack
             else:
-                return [land_unit.attack for land_unit in self.land_units]
-
-    def get_defense_powers(self):
-        if self.is_transport:
-            return [self.unit.defense]
-        else:
-            return [land_unit.defense for land_unit in self.land_units]
+                return sum([land_unit.attack for land_unit in self.land_units])
 
 
 # James Hawkes' tactical battle strategy: First attack capitals. Otherwise calculate the "IPC value" of
@@ -289,13 +292,28 @@ class Attackable:
 
         # Return a list of the moves to do
         moves_to_do = list()
+        used_units = list()
+        # Do non-amphibious units first
         for unit_stack, target in theoretical_attack.items():
             if not unit_stack.is_transport:
                 moves_to_do.append([unit_stack.unit_state, unit_stack.territory, target])
-            else:
+                used_units.append(unit_stack.unit_state)
+        # Then do amphibious units
+        for unit_stack, target in theoretical_attack.items():
+            if unit_stack.is_transport:
+                # TODO Later: Any unit that can attack both amphibiously and by land will default to doing the land movement, which is not optimal
+                # Remove any units that have already been used
+                unit_stack.remove_units(used_units)
                 # Get a valid path for the transport
-                valid_paths = self.game.check_unit_transport(unit_stack.land_unit_states[0], unit_stack.land_unit_territories[0],
-                                                             unit_stack.transport_state, unit_stack.transport_territory, target, 3, True)
+                if len(unit_stack.land_units) == 0:
+                    continue
+                elif len(unit_stack.land_units) == 1:
+                    valid_paths = self.game.check_unit_transport(unit_stack.land_unit_states[0], unit_stack.land_unit_territories[0],
+                                                                unit_stack.transport_state, unit_stack.transport_territory, target, 3, True)
+                else:
+                    valid_paths = self.game.check_two_unit_transport(unit_stack.land_unit_states[0], unit_stack.land_unit_territories[0],
+                                                                     unit_stack.land_unit_states[1], unit_stack.land_unit_territories[1],
+                                                                     unit_stack.transport_state, unit_stack.transport_territory, target, 3, True)
                 shortest_path = min(valid_paths, key=len)
                 unit_1_picked_up = unit_stack.land_unit_states[0].attached_to is not None
                 unit_2_picked_up = len(unit_stack.land_unit_states) < 2 or unit_stack.land_unit_states[1].attached_to is not None
@@ -436,7 +454,7 @@ class Vulnerability:
             self.transport_data.sort(key=len)
             unit_stack_list = self.transport_data.pop(0)
             if unit_stack_list:
-                best_stack = max(unit_stack_list, key=lambda x: sum(x.get_attack_powers()))
+                best_stack = max(unit_stack_list, key=lambda x: x.get_attack_power())
                 for i in range(len(self.transport_data)):
                     for j in range(len(self.transport_data[i]) - 1, -1, -1):
                         for unit_state in best_stack.land_unit_states:
@@ -906,15 +924,16 @@ class Battles:
                         defensive_power += self.game.rules.get_unit(unit_state.type_index).defense
 
         for unit_state in unit_state_list:
-            if self.game.rules.teams[unit_state.owner] == self.team:
-                if Vulnerability(game).battle_formula(offense_units, defense_units) <= 0.25 \
-                        and not defensive_destroyer:  # 0.25 is arbitrary. change if needed.
-                    unit_state.retreated = True
-            else:
-                if Vulnerability(game).battle_formula(offense_units, defense_units) <= 0.95 \
-                and defensive_power < sub_attack \
-                and not offensive_destroyer:
-                    unit_state.retreated = True
+            if unit_state.type_index == 6:
+                if self.game.rules.teams[unit_state.owner] == self.team:
+                    if Vulnerability(game).battle_formula(offense_units, defense_units) <= 0.25 \
+                            and not defensive_destroyer:  # 0.25 is arbitrary. change if needed.
+                        unit_state.retreated = True
+                else:
+                    if Vulnerability(game).battle_formula(offense_units, defense_units) <= 0.95 \
+                    and defensive_power < sub_attack \
+                    and not offensive_destroyer:
+                        unit_state.retreated = True
 
     def battler(self, unit_state_list, territory_name):
         # inputs units (unit_states) originally in embattled territory and returns remaining units
@@ -925,6 +944,11 @@ class Battles:
         while self.embattled(unit_state_list):
 
             self.sub_submerger(unit_state_list)
+
+            # Any subs that don't retreat in the first round must use up all movement
+            for unit_state in unit_state_list:
+                if unit_state.type_index == 6 and not unit_state.retreated and self.game.rules.teams[unit_state.owner] == self.team:
+                    unit_state.moves_used = 2
 
             total_friendly_power = 0
             total_enemy_power = 0
