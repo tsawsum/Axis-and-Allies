@@ -4,6 +4,57 @@ import math
 from statistics import stdev
 
 
+# Used to make transports in Attackable and Vulnerable much easier to handle
+class UnitStack:
+    def __init__(self, game, unit_state, territory, transported_units=None, transported_unit_territories=None):
+        if transported_units:
+            self.transport_state = unit_state
+            self.transport_territory = territory
+            self.land_unit_territories = transported_unit_territories
+            self.land_unit_states = transported_units
+            self.land_units = [game.rules.get_unit(land_unit_state.type_index) for land_unit_state in self.land_unit_states]
+            if len(self.land_units) == 2 and self.land_units[1].name == 'infantry':
+                self.land_units = self.land_units[::-1]
+                self.land_unit_states = self.land_unit_states[::-1]
+                self.land_unit_territories = self.land_unit_territories[::-1]
+            self.unit_state = None
+            self.unit = None
+            self.is_transport = True
+            self.territory = None
+        else:
+            self.unit_state = unit_state
+            self.unit = game.rules.get_unit(unit_state.type_index)
+            self.territory = territory
+            self.transport_state = None
+            self.land_unit_states = None
+            self.land_units = None
+            self.is_transport = False
+            self.transport_territory = None
+            self.land_unit_territories = None
+        self.possible_goals = list()
+
+    def get_unit_states(self):
+        if self.is_transport:
+            return self.land_unit_states
+        else:
+            return [self.unit_state]
+
+    def get_attack_powers(self):
+        if self.is_transport:
+            return [self.unit.attack]
+        else:
+            if len(self.land_units) == 2 and self.land_units[1].name == 'artillery':
+                return [self.land_units[0].attack + 1, self.land_units[1].attack]
+            else:
+                return [land_unit.attack for land_unit in self.land_units]
+
+    def get_defense_powers(self):
+        if self.is_transport:
+            return [self.unit.defense]
+        else:
+            return [land_unit.defense for land_unit in self.land_units]
+
+
 # James Hawkes' tactical battle strategy: First attack capitals. Otherwise calculate the "IPC value" of
 #   the territory which is the total unit value of the enemy units plus twice the territory value.
 #   then calculate "defense score" which is the total defensive power + (average_power_of_both_sides) * the total number of units
@@ -37,9 +88,9 @@ class Attackable:
                 return True
         return False
 
-    def is_worth_attacking_battle_sim(self, territory_name, battle_sim_result):
+    def is_worth_attacking_battle_sim(self, territory_name, battle_sim):
         # TODO George Later: Make this better
-        return battle_sim_result > 0.5
+        return battle_sim.net_ipc_swing > 0
 
     def is_worth_attacking(self, territory_name):
         # TODO George Later: Make this better
@@ -69,26 +120,24 @@ class Attackable:
                                       key=lambda x: self.importance[x], reverse=True)
 
         # Get list of territories that each unit can attack
-        # TODO Brett: Figure out how to deal with transports in this function. Maybe only consider best pair of units? (in this case, change is_vuln)
-        #  Make sure to fix all occurrences of self.vuln.territories[ter_name][player] in this function since they're broken now
         attackable_by_unit = dict()
         for territory_name in possible_territories:
-            for unit_state in self.vuln.territories[territory_name][self.player]:
-                if unit_state not in attackable_by_unit.keys():
-                    attackable_by_unit[unit_state] = list()
-                attackable_by_unit[unit_state].append(territory_name)
+            for unit_stack in self.vuln.territories[territory_name][self.player]:
+                if unit_stack not in attackable_by_unit.keys():
+                    attackable_by_unit[unit_stack] = list()
+                attackable_by_unit[unit_stack].append(territory_name)
 
         attackable_by_unit_copy = {k: v[:] for k, v in attackable_by_unit.items()}
 
         # Temporarily remove units from battle if they can attack multiple places
         can_attack_one, can_attack_many = list(), list()
-        for unit_state, territories in attackable_by_unit.items():
+        for unit_stack, territories in attackable_by_unit.items():
             if len(territories) > 1:
-                can_attack_many.append(unit_state)
+                can_attack_many.append(unit_stack)
                 for territory_name in territories:
-                    self.vuln.territories[territory_name][self.player].remove(unit_state)
+                    self.vuln.territories[territory_name][self.player].remove(unit_stack)
             else:
-                can_attack_one.append(unit_state)
+                can_attack_one.append(unit_stack)
 
         while True:
             while True:
@@ -100,21 +149,21 @@ class Attackable:
 
                 # Remove these territories from units that can attack multiple
                 changed_units = list()
-                for unit_state in can_attack_many:
+                for unit_stack in can_attack_many:
                     removed = list()
                     for territory_name in still_attackable.keys():
-                        if territory_name in attackable_by_unit[unit_state]:
-                            attackable_by_unit[unit_state].remove(territory_name)
+                        if territory_name in attackable_by_unit[unit_stack]:
+                            attackable_by_unit[unit_stack].remove(territory_name)
                             removed.append(territory_name)
-                    if len(attackable_by_unit[unit_state]) == 0:
+                    if len(attackable_by_unit[unit_stack]) == 0:
                         most_needed_at = min(removed, key=lambda x: still_attackable[x])
-                        attackable_by_unit[unit_state].append(most_needed_at)
-                    if len(attackable_by_unit[unit_state]) == 1:
-                        changed_units.append(unit_state)
-                        self.vuln.territories[attackable_by_unit[unit_state][0]][self.player].append(unit_state)
-                for unit_state in changed_units:
-                    can_attack_many.remove(unit_state)
-                    can_attack_one.append(unit_state)
+                        attackable_by_unit[unit_stack].append(most_needed_at)
+                    if len(attackable_by_unit[unit_stack]) == 1:
+                        changed_units.append(unit_stack)
+                        self.vuln.territories[attackable_by_unit[unit_stack][0]][self.player].append(unit_stack)
+                for unit_stack in changed_units:
+                    can_attack_many.remove(unit_stack)
+                    can_attack_one.append(unit_stack)
                 if not changed_units:
                     break
 
@@ -127,37 +176,19 @@ class Attackable:
             if not can_attack_many or not not_still_attackable:
                 break
 
-            """
-            NOTE: I'm not using this because I think it will spread out units too much to win any battles, causing nothing to be attacked
-            biggest_boost, attacking_unit, attacking_territory = 0, None, None
-            # Check each attackable territory for the biggest boost
-            for unit_state in can_attack_many:
-                for territory_name in attackable_by_unit[unit_state]:
-                    prev_vuln = self.vuln.get_vulnerability(territory_name, attacker=self.player)
-                    self.vuln.territories[territory_name][self.player].append(unit_state)
-                    vuln_boost = (prev_vuln - self.vuln.get_vulnerability(territory_name, attacker=self.player)) * ipc_swing
-                    self.vuln.territories[territory_name][self.player].remove(unit_state)
-                    if vuln_boost > biggest_boost:
-                        biggest_boost, attacking_unit, attacking_territory = vuln_boost, unit_state, territory_name
-
-            can_attack_many.remove(attacking_unit)
-            can_attack_one.append(attacking_unit)
-            self.vuln.territories[attacking_territory][self.player].append(unit_state)
-            """
-
             # Send units to attack the most important territory still remaining
             # Choose units to send based on how much they boost vulnerability
             attacking_territory = not_still_attackable[0]
             while not self.is_worth_attacking(attacking_territory):
                 biggest_boost, attacking_unit = 0, None
-                for unit_state in can_attack_many:
-                    if attacking_territory in attackable_by_unit[unit_state]:
+                for unit_stack in can_attack_many:
+                    if attacking_territory in attackable_by_unit[unit_stack]:
                         prev_vuln = self.vuln.get_vulnerability(attacking_territory, attacker=self.player)
-                        self.vuln.territories[attacking_territory][self.player].append(unit_state)
+                        self.vuln.territories[attacking_territory][self.player].append(unit_stack)
                         vuln_boost = prev_vuln - self.vuln.get_vulnerability(attacking_territory, attacker=self.player)
-                        self.vuln.territories[attacking_territory][self.player].remove(unit_state)
+                        self.vuln.territories[attacking_territory][self.player].remove(unit_stack)
                         if vuln_boost > biggest_boost:
-                            attacking_unit, biggest_boost = unit_state, vuln_boost
+                            attacking_unit, biggest_boost = unit_stack, vuln_boost
                 if attacking_unit:
                     self.vuln.territories[attacking_territory][self.player].append(attacking_unit)
                     attackable_by_unit[attacking_unit] = [attacking_territory]
@@ -167,32 +198,33 @@ class Attackable:
                     break
 
         # Any unused units that can attack should help where possible
-        for unit_state in can_attack_many:
+        for unit_stack in can_attack_many:
             biggest_boost, attacking_territory = 0, None
-            for territory_name in attackable_by_unit[unit_state]:
+            for territory_name in attackable_by_unit[unit_stack]:
                 if territory_name in still_attackable:
                     prev_vuln = self.vuln.get_vulnerability(territory_name, attacker=self.player)
-                    self.vuln.territories[territory_name][self.player].append(unit_state)
+                    self.vuln.territories[territory_name][self.player].append(unit_stack)
                     vuln_boost = (prev_vuln - self.vuln.get_vulnerability(territory_name, attacker=self.player)) * \
                                  self.importance[territory_name]
-                    self.vuln.territories[territory_name][self.player].remove(unit_state)
+                    self.vuln.territories[territory_name][self.player].remove(unit_stack)
                     if vuln_boost > biggest_boost:
                         attacking_territory, biggest_boost = territory_name, vuln_boost
             if attacking_territory:
-                self.vuln.territories[attacking_territory][self.player].append(unit_state)
-                attackable_by_unit[unit_state] = [attacking_territory]
+                self.vuln.territories[attacking_territory][self.player].append(unit_stack)
+                attackable_by_unit[unit_stack] = [attacking_territory]
 
         # Create theoretical attack
         theoretical_attack = dict()
-        for unit_state in attackable_by_unit.keys():
-            if attackable_by_unit[unit_state][0] in still_attackable:
-                theoretical_attack[unit_state] = attackable_by_unit[unit_state][0]
+        for unit_stack in attackable_by_unit.keys():
+            if attackable_by_unit[unit_stack][0] in still_attackable:
+                theoretical_attack[unit_stack] = attackable_by_unit[unit_stack][0]
 
         battles = dict()
-        for unit_state, territory_name in theoretical_attack.items():
+        for unit_stack, territory_name in theoretical_attack.items():
             if territory_name not in battles:
-                battles[territory_name] = self.game.state_dict[territory_name].unit_state_list[:]
-            battles[territory_name].append(unit_state)
+                battles[territory_name] = [UnitStack(self.game, unit_state, territory_name)
+                                           for unit_state in self.game.state_dict[territory_name].unit_state_list[:]]
+            battles[territory_name].append(unit_stack)
 
         # Run battle simulator on these battles to make sure none of them are bad
         # If they are, take the worst battle, remove the units and reassign them somewhere better
@@ -200,8 +232,11 @@ class Attackable:
             # Find worst battle
             not_worth = list()
             for territory_name in battles.keys():
-                battle_sim = BattleCalculator(battles[territory_name],
-                                              self.game.rules.board[territory_name].ipc).battle_sim()
+                unit_state_list = list()
+                for unit_stack in battles[territory_name]:
+                    for unit_state in unit_stack.get_unit_states():
+                        unit_state_list.append(unit_state)
+                battle_sim = BattleCalculator(self.game, self.player, unit_state_list, self.game.rules.board[territory_name].ipc)
                 if not self.is_worth_attacking_battle_sim(territory_name, battle_sim):
                     not_worth.append(territory_name)
             if not not_worth:
@@ -209,17 +244,20 @@ class Attackable:
             not_worth.sort(key=lambda x: self.importance[x], reverse=True)
             worst_battle = not_worth.pop()
             # Reassign these units
-            for unit_state in battles[worst_battle]:
-                theoretical_attack[unit_state] = ''
+            for unit_stack in battles[worst_battle]:
+                theoretical_attack[unit_stack] = ''
                 for i in range(len(not_worth)):
-                    if not_worth[i] in attackable_by_unit_copy[unit_state]:
-                        theoretical_attack[unit_state] = not_worth[i]
+                    if not_worth[i] in attackable_by_unit_copy[unit_stack]:
+                        theoretical_attack[unit_stack] = not_worth[i]
                         break
-                if theoretical_attack[unit_state]:
-                    battle_sim = BattleCalculator(battles[theoretical_attack[unit_state]], self.game.rules.board[
-                        theoretical_attack[unit_state]].ipc).battle_sim()
-                    if self.is_worth_attacking_battle_sim(theoretical_attack[unit_state], battle_sim):
-                        not_worth.remove(theoretical_attack[unit_state])
+                if theoretical_attack[unit_stack]:
+                    unit_state_list = list()
+                    for other_unit_stack in battles[theoretical_attack[unit_stack]]:
+                        for unit_state in other_unit_stack.get_unit_states():
+                            unit_state_list.append(unit_state)
+                    battle_sim = BattleCalculator(self.game, self.player, unit_state_list, self.game.rules.board[theoretical_attack[unit_stack]].ipc)
+                    if self.is_worth_attacking_battle_sim(theoretical_attack[unit_stack], battle_sim):
+                        not_worth.remove(theoretical_attack[unit_stack])
             del battles[worst_battle]
             if not not_worth:
                 break
@@ -230,32 +268,52 @@ class Attackable:
             return list(battles.keys())
 
         # Find the best location for all unassigned units
-        for unit_state in theoretical_attack.keys():
-            if not theoretical_attack[unit_state]:
+        for unit_stack in theoretical_attack.keys():
+            if not theoretical_attack[unit_stack]:
                 biggest_boost, attacking_territory = 0, None
-                for territory_name in attackable_by_unit_copy[unit_state]:
+                for territory_name in attackable_by_unit_copy[unit_stack]:
                     if territory_name in still_attackable:
                         prev_vuln = self.vuln.get_vulnerability(territory_name, attacker=self.player)
-                        self.vuln.territories[territory_name][self.player].append(unit_state)
+                        self.vuln.territories[territory_name][self.player].append(unit_stack)
                         vuln_boost = (prev_vuln - self.vuln.get_vulnerability(territory_name, attacker=self.player)) * \
                                      self.importance[territory_name]
-                        self.vuln.territories[territory_name][self.player].remove(unit_state)
+                        self.vuln.territories[territory_name][self.player].remove(unit_stack)
                         if vuln_boost > biggest_boost:
                             attacking_territory, biggest_boost = territory_name, vuln_boost
                 if attacking_territory:
-                    theoretical_attack[unit_state] = attacking_territory
+                    theoretical_attack[unit_stack] = attacking_territory
                 else:
-                    del theoretical_attack[unit_state]
+                    del theoretical_attack[unit_stack]
 
         self.vuln.invalid = True
 
-        # We need to get starting territory, but unit_states don't store this info. So, loop through every unit in every territory
+        # Return a list of the moves to do
         moves_to_do = list()
-        for territory_name, territory_state in self.game.state_dict.items():
-            for unit_state in territory_state.unit_state_list:
-                if unit_state in theoretical_attack:
-                    moves_to_do.append((unit_state, territory_name, theoretical_attack[unit_state]))
-
+        for unit_stack, target in theoretical_attack.items():
+            if not unit_stack.is_transport:
+                moves_to_do.append([unit_stack.unit_state, unit_stack.territory, target])
+            else:
+                # Get a valid path for the transport
+                valid_paths = self.game.check_unit_transport(unit_stack.land_unit_states[0], unit_stack.land_unit_territories[0],
+                                                             unit_stack.transport_state, unit_stack.transport_territory, target, 3, True)
+                shortest_path = min(valid_paths, key=len)
+                unit_1_picked_up = unit_stack.land_unit_states[0].attached_to is not None
+                unit_2_picked_up = len(unit_stack.land_unit_states) < 2 or unit_stack.land_unit_states[1].attached_to is not None
+                idx = 0
+                while True:
+                    if not unit_1_picked_up and unit_stack.land_unit_territories[0] in self.game.rules.board[shortest_path[idx]].neighbors:
+                        moves_to_do.append([unit_stack.land_unit_states[0], unit_stack.land_unit_territories[0], shortest_path[idx]])
+                        unit_1_picked_up = True
+                    elif not unit_2_picked_up and unit_stack.land_unit_territories[1] in self.game.rules.board[shortest_path[idx]].neighbors:
+                        moves_to_do.append([unit_stack.land_unit_states[1], unit_stack.land_unit_territories[1], shortest_path[idx]])
+                        unit_2_picked_up = True
+                    elif unit_1_picked_up and unit_2_picked_up and target in self.game.rules.board[shortest_path[idx]].neighbors:
+                        for i in range(len(unit_stack.land_unit_states)):
+                            moves_to_do.append([unit_stack.land_unit_states[i], shortest_path[idx], target])
+                        break
+                    else:
+                        moves_to_do.append([unit_stack.transport_state, shortest_path[idx], shortest_path[idx+1]])
+                        idx += 1
         return moves_to_do
 
 
@@ -263,6 +321,7 @@ class Vulnerability:
     def __init__(self, game, init_territories=True):
         self.game = game
         self.territories = dict()
+        self.transport_data = dict()
         self.invalid = True
         if init_territories:
             self.update()
@@ -312,10 +371,13 @@ class Vulnerability:
             pick_up_infantry = True
 
         # Find all units that can be picked up, and see which territories they can attack
+        possible_units = dict()
         # Start with already attached units
         for land_unit_state in unit_state.attached_units:
             for territory in reachable_land:
-                self.territories[territory][unit_state.owner].append([land_unit_state, unit_state, territory_name, territory])
+                if land_unit_state not in possible_units:
+                    possible_units[land_unit_state] = [territory_name, list()]
+                possible_units[land_unit_state][1].append(territory)
         # Then check all other units
         if pick_up_infantry or pick_up_other:
             for territory in reachable_land:
@@ -324,8 +386,26 @@ class Vulnerability:
                         if (land_unit_state.type_index == 0 and pick_up_infantry) or pick_up_other:
                             for goal_territory in reachable_land:
                                 if self.game.check_unit_transport(land_unit_state, territory, unit_state, territory_name, goal_territory, 3):
-                                    # Land_unit_state, transport_state, land_unit_territory, transport_territory, goal_territory
-                                    self.territories[territory][unit_state.owner].append([land_unit_state, unit_state, territory, territory_name, goal_territory])
+                                    if land_unit_state not in possible_units:
+                                        possible_units[land_unit_state] = [territory, list()]
+                                    possible_units[land_unit_state][1].append(goal_territory)
+        # Get all possible pairs of units
+        all_unit_states = list(possible_units.keys())
+        self.transport_data.append(list())
+        for i in range(len(all_unit_states)):
+            for j in range(i+1, len(all_unit_states)):
+                unit_state_1, unit_state_2 = all_unit_states[i], all_unit_states[j]
+                territory_1, territory_2 = possible_units[unit_state_1][0], possible_units[unit_state_2][0]
+                goal_territories_1, goal_territories_2 = possible_units[unit_state_1][1], possible_units[unit_state_2][1]
+                goals = set(goal_territories_1).intersection(goal_territories_2)
+                unit_stack = UnitStack(self.game, unit_state, territory_name, [unit_state_1, unit_state_2], [territory_1, territory_2])
+                for goal_territory in goals:
+                    if self.game.check_two_unit_transport(unit_state_1, territory_1, unit_state_2, territory_2,
+                                                          unit_state, territory_name, goal_territory, phase=3):
+                        unit_stack.possible_goals.append(goal_territory)
+                self.transport_data[-1].append(unit_stack)
+            unit_stack = UnitStack(self.game, unit_state, territory_name, [all_unit_states[i]], [possible_units[all_unit_states[i]][0]])
+            unit_stack.possible_goals = possible_units[all_unit_states[i]][1]
 
     def place_unit(self, unit_state, territory_name):
         # This unit isn't actually placed here - it only counts towards defense. Make sure update() is called in between phases
@@ -345,10 +425,26 @@ class Vulnerability:
                     self.get_attackable_territories(unit_state, territory_name)
                 elif unit_state.type_index != 4 and unit_state.type_index != 3:  # Ignore factories and AA guns
                     for ter in self.get_attackable_territories(unit_state, territory_name):
-                        if [unit_state] not in self.territories[ter][player]:
-                            self.territories[ter][player].append([unit_state])
+                        unit_stack = UnitStack(self.game, unit_state, territory_name)
+                        if unit_stack not in self.territories[ter][player]:
+                            self.territories[ter][player].append(unit_stack)
                     if not unit_state.attached_to:
                         self.territories[territory_name][self.game.rules.teams[player]].append(unit_state)
+        # Deal with transports
+        # TODO Later: The way this deals with transports in not optimal. Currently just takes strongest unit pairs and doesn't consider anything else
+        while self.transport_data:
+            self.transport_data.sort(key=len)
+            unit_stack_list = self.transport_data.pop(0)
+            if unit_stack_list:
+                best_stack = max(unit_stack_list, key=lambda x: sum(x.get_attack_powers()))
+                for i in range(len(self.transport_data)):
+                    for j in range(len(self.transport_data[i]) - 1, -1, -1):
+                        for unit_state in best_stack.land_unit_states:
+                            if unit_state in self.transport_data[i][j].land_unit_states:
+                                self.transport_data[i].pop(j)
+                                break
+                for goal in best_stack.possible_goals:
+                    self.territories[goal][best_stack.transport_state.owner].append(best_stack)
         self.invalid = False
 
     def battle_formula(self, attack_units=None, defense_units=None):
@@ -414,58 +510,20 @@ class Vulnerability:
 
         # Get attacking and defending units
         attacking_units = list()
+        used_units = list()
         for attacking_player in attackers:
             # Get all units that can attack this territory
             attacking_units.append([])
-            units_per_transport = dict()
-            used_units = list()
-            for arr in self.territories[territory_name][attacking_player]:
-                if len(arr) == 1:
-                    attacking_units[-1].append(self.game.rules.get_unit(arr[0].type_index))
-                    used_units.append(arr[0])
+            for unit_stack in self.territories[territory_name][attacking_player]:
+                if not unit_stack.is_transport:
+                    if unit_stack.unit_state not in used_units:
+                        attacking_units[-1].append(unit_stack.unit)
+                        used_units.append(unit_stack.unit_state)
                 else:
-                    # Transportable units are weird, keep track of them and handle after
-                    if arr[1] not in units_per_transport:
-                        units_per_transport[arr[1]] = [arr[3], []]
-                    units_per_transport[arr[1]][1].append([arr[0], arr[2], arr[4]])
-            # Handle transportable units, one transport at a time
-            for transport_state in units_per_transport.keys():
-                transport_territory = units_per_transport[transport_state][0]
-                transportable_units = [arr for arr in units_per_transport[transport_state][1] if arr[0] not in used_units]
-                # If only one unit, guaranteed to be able to use it
-                if len(transportable_units) < 2:
-                    for arr in transportable_units:
-                        attacking_units[-1].append(self.game.rules.get_unit(arr[0].type_index))
-                # Check if there are infantry (i.e. can fit two units on the transport), and what the max unit is
-                infantry, max_unit = list(), None
-                for arr in transportable_units:
-                    if arr[0].type_index == 0:
-                        infantry.append(arr)
-                    if arr[0].type_index > max_unit.type_index:
-                        max_idx_unit = arr[0]
-                # If no infantry, take the best unit
-                if not infantry and max_unit:
-                    attacking_units[-1].append(self.game.rules.get_unit(max_unit.type_index))
-                    used_units.append(max_unit)
-                # Otherwise, loop through every pair of units to get the best possible
-                best_idx = -1
-                best_units = []
-                for land_unit_state_1, land_unit_territory_1, goal_territory_1 in infantry:
-                    for land_unit_state_2, land_unit_territory_2, goal_territory_2 in transportable_units:
-                        if land_unit_state_1 != land_unit_state_2 and land_unit_state_2.type_index > max_idx:
-                            if goal_territory_1 == goal_territory_2 and \
-                                self.game.check_two_unit_transport(land_unit_state_1, land_unit_territory_1, land_unit_state_2, land_unit_territory_2,
-                                                                   transport_state, transport_territory, goal_territory_1, phase=3):
-                                max_idx = land_unit_state_2.type_index
-                                max_units = [land_unit_state_1, land_unit_state_2]
-                if best_idx >= 0:
-                    attacking_units[-1].append(self.game.rules.get_unit(0))
-                    attacking_units[-1].append(self.game.rules.get_unit(best_idx))
-                    used_units.append(best_units[0])
-                    used_units.append(best_units[1])
-                elif max_unit:
-                    attacking_units[-1].append(self.game.rules.get_unit(max_unit.type_index))
-                    used_units.append(max_unit)
+                    for i in range(len(unit_stack.land_units)):
+                        if unit_stack.land_units_states[i] not in used_units:
+                            attacking_units[-1].append(unit_stack.land_units[i])
+                            used_units.append(unit_stack.land_units_states[i])
 
         defending_units = [self.game.rules.get_unit(unit_state.type_index)
                            for unit_state in self.territories[territory_name][defender] + theoretical_append]
@@ -476,7 +534,7 @@ class Vulnerability:
 
     def is_vulnerable(self, territory_name, theoretical_append=list(), attacker='', defender='', risk_tolerance=0):
         vulnerability = self.get_vulnerability(territory_name, theoretical_append, attacker, defender)
-        # TODO: Have AI decide risk_tolerance based on its estimate of losing or not.
+        # TODO Later: Have AI decide risk_tolerance based on its estimate of losing or not.
         return vulnerability > 1 - risk_tolerance
 
 
@@ -488,11 +546,11 @@ class Build:
     def __init__(self, game, endangered_name_list):  # game.turn_state, etc.
         self.game = game
         self.player = self.game.turn_state.player
-        game.turn_state.phase = 2  # TODO. Later. Maybe change the position of this bc it seems irrelevent to have to here
+        game.turn_state.phase = 2  # TODO Later. Maybe change the position of this bc it seems irrelevent to have to here
         self.ipc = self.game.turn_state.player.ipc
 
-        # TODO: Make AI decide to build a factory according to previous games/ its other factors
-        # TODO: Make the AI decide these priorities
+        # TODO Later: Make AI decide to build a factory according to previous games/ its other factors
+        # TODO Later: Make the AI decide these priorities
         self.prioritization_list = []
         self.prioritization_list.append(['tech_token', 0])  # never use this one
         self.prioritization_list.append(['battleship', 0])  # 1
