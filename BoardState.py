@@ -1082,6 +1082,8 @@ class Game:
         Returns -1 if impossible
         This replaces the old "passable" function
         """
+        if unit_state not in self.state_dict[current_territory].unit_state_list:
+            return -1, list()
         if current_territory == goal_territory:
             return 0, [goal_territory]
 
@@ -1160,8 +1162,7 @@ class Game:
             for other_unit_state in goal_territory.unit_state_list:
                 if self.rules.teams[other_unit_state.owner] != self.rules.teams[unit_state.owner]:
                     enemy_units = True
-
-            if enemy_units:
+            if enemy_units and unit.name != 'sub':
                 return unit.movement - unit_state.moves_used, path
 
         # Check if air units can return (only necessary if combat move)
