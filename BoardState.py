@@ -1014,7 +1014,7 @@ class Game:
         player, phase = player_phase[:i], player_phase[i:]
         turn_state_indices = {"russian": 0, "german": 1, "british": 2, "japanese": 3, "american": 4,
                               "Tech": 0, "Purchase": 2, "CombatMove": 3, "Battle": 3, "NonCombatMove": 5, "Place": 6,
-                              "TechActivation": 6, "EndTurn": 6} #Why are there several things attatched to each number
+                              "TechActivation": 6, "EndTurn": 6}  # Why are there several things attatched to each number
         self.turn_state = TurnState(int(turn.get("round")), turn_state_indices[player], turn_state_indices[phase])
 
         # Set resources
@@ -1082,13 +1082,16 @@ class Game:
         Returns -1 if impossible
         This replaces the old "passable" function
         """
+        if current_territory == goal_territory:
+            return 0, [goal_territory]
+
         # Check if it would be possible to move to goal territory at all before doing BFS
         unit = self.rules.get_unit(unit_state.type_index)
         goal_territory_state = self.state_dict[goal_territory.name]
         if phase == -1:
             phase = self.turn_state.phase
 
-        # Can't move if no movement left.
+        # Can't move if no movement left
         if unit_state.moves_used == unit.movement:
             return -1, list()
 
@@ -1360,6 +1363,112 @@ class Game:
 
         # Otherwise, can move here
         return True
+
+    def check_unit_transport(self, land_unit_state, land_unit_territory, transport_state,
+                             transport_territory, goal_territory, phase=-1, return_paths=False):
+        if phase == -1:
+            phase = self.turn_state.phase
+
+        # Check if already on a different transport
+        if land_unit_state.attached_to and land_unit_state.attached_to != transport_state:
+            return list() if return_paths else False
+
+        # Unit must have all movement to load onto a transport
+        if land_unit_state.moves_used > 0:
+            return list() if return_paths else False
+
+        # Get all territories that the unit can be loaded into
+        loadable_territories = [neighbor for neighbor in self.rules.board[land_unit_territory].neighbors if self.rules.board[neighbor].is_water]
+        # Get all territories that the unit can be unloaded into (or wants to move to)
+        if self.rules.board[goal_territory].is_water:
+            unloadable_territories = [goal_territory]
+        else:
+            unloadable_territories = [neighbor for neighbor in self.rules.board[goal_territory].neighbors if self.rules.board[neighbor].is_water]
+            # Check if unit can even unload here
+            prev_attach = land_unit_state.attached_to
+            land_unit_state.attached_to = transport_state
+            if self.calc_movement(land_unit_state, unloadable_territories[0], goal_territory, phase=phase)[0] < 0:
+                land_unit_state.attached_to = prev_attach
+                return list() if return_paths else False
+            land_unit_state.attached_to = prev_attach
+
+        # Already attached to/next to transport, so don't bother checking other loadable territories
+        if land_unit_state.attached_to == transport_state or transport_territory in loadable_territories:
+            loadable_territories = [transport_territory]
+
+        # If not next to water, then obviously can't transport
+        if not loadable_territories or not unloadable_territories:
+            return list() if return_paths else False
+
+        # Check all possible territory combinations and see which ones are possible
+        paths = list()
+        transport_movement = transport_state.moves_used
+        for territory_1 in loadable_territories:
+            for territory_2 in unloadable_territories:
+                dist_1, path_1 = self.calc_movement(transport_state, transport_territory, territory_1, phase=phase)
+                if dist_1 >= 0:
+                    transport_state.moves_used += dist_1
+                    dist_2, path_2 = self.calc_movement(transport_state, territory_1, territory_2, phase=phase)
+                    if dist_2 >= 0:
+                        paths.append(path_1[:-1] + path_2)
+                    transport_state.moves_used = transport_movement
+
+        return paths if return_paths else (len(paths) > 0)
+
+    def check_two_unit_transport(self, land_unit_state_1, land_unit_territory_1, land_unit_state_2, land_unit_territory_2, transport_state,
+                                 transport_territory, goal_territory, phase=-1, return_paths=False):
+        # Check if they both fit on the transport
+        if land_unit_state_1.type_index > 0 and land_unit_state_2.type_index > 0:
+            return list() if return_paths else False
+
+        # Check each land unit individually
+        paths_1 = self.check_unit_transport(land_unit_state_1, land_unit_territory_1, transport_state,
+                                            transport_territory, goal_territory, phase=phase, return_paths=True)
+        if not paths_1:
+            return list() if return_paths else False
+        paths_2 = self.check_unit_transport(land_unit_state_2, land_unit_territory_2, transport_state,
+                                            transport_territory, goal_territory, phase=phase, return_paths=True)
+        if not paths_2:
+            return list() if return_paths else False
+
+        # In order to merge two paths into one:
+        # The two paths must have the same starting location (always true, since it starts in transport territory)
+        # And the same ending location (can't unload from different spots)
+        # The max length of each path is 3 (3 territories = 2 moves). If both are length 3, they must be identical.
+        # If either is length 2 (or less), then by the first two conditions, it must be a subset of the longer path
+
+        # First separate by ending location
+        ending_spots = dict()
+        for path in paths_1:
+            if path[-1] not in ending_spots:
+                ending_spots[path[-1]] = [[], []]
+            ending_spots[path[-1]][0].append(path)
+        for path in paths_1:
+            if path[-1] not in ending_spots:
+                ending_spots[path[-1]] = [[], []]
+            ending_spots[path[-1]][1].append(path)
+
+        # For each ending location, check for paths of length 2. If found, the entire other list of paths is valid
+        # Otherwise, add paths that match exactly
+        paths = list()
+        for p1, p2 in ending_spots.values():
+            if min(len(path) for path in p1) < 3:
+                # All of p2 is valid
+                for path in p2:
+                    if p2 not in paths:
+                        paths.append(path)
+            if min(len(path) for path in p2) < 3:
+                # All of p1 is valid
+                for path in p1:
+                    if p1 not in paths:
+                        paths.append(path)
+            # Get identical paths
+            for path in p1:
+                if path in p2 and path not in paths:
+                    paths.append(path)
+
+        return paths if return_paths else (len(paths) > 0)
+
 
 # heuristic algorithm? NN? minimax
 
