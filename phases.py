@@ -776,9 +776,6 @@ class Battles:
     def __init__(self, game, ai_importance=None, just_casualty_selector=False):
         self.game = game
 
-        # Avoid initializing entire class just to use the casualty selector lol
-        # TODO George: "Brett what the fuck is this"
-        #  I need the casualty selector for battleship bombardment, but I don't need to initialize the whole class just for that
         if just_casualty_selector:
             return
 
@@ -791,8 +788,7 @@ class Battles:
         self.retreating = False
         self.kamikaze = False
         self.battle_calculator = None
-        # TODO: Later: Have the AI decide on retreating and kamikaze values
-        # TODO George: Deal with subs submerging
+        # TODO: Later: Have the AI decide on retreating and kamikaze values and save_subs values
 
         self.enemy_team = self.game.rules.enemy_team(player=self.player)
 
@@ -831,6 +827,37 @@ class Battles:
         vuln = Vulnerability(self.game, init_territories=False)
         return min(retreat_options, key=lambda x: vuln.get_estimated_defensibility(x, unit_state.owner) / self.importances[x])
 
+    def sub_submerger(self, unit_state_list):
+        offense_units, defense_units = list(), list()
+        offensive_destroyer, defensive_destroyer = False, False
+        defensive_power, sub_attack = 0, 0
+        for unit_state in unit_state_list:
+            if not unit_state.retreated \
+                    and not unit_state.attached_to:  # Units attached to transports can't attack or defend
+                if self.game.rules.teams[unit_state.owner] == self.team:
+                    offense_units.append(unit_state)
+                    if unit_state.type_index == 7:
+                        offensive_destroyer = True
+                else:
+                    defense_units.append(unit_state)
+                    if unit.type_index == 6:
+                        sub_attack += 2
+                    else:
+                        if unit_state.type_index == 7:
+                            defensive_destroyer = True
+                        defensive_power += self.game.rules.get_unit(unit_state.type_index).defense
+
+        for unit_state in unit_state_list:
+            if self.game.rules.teams[unit_state.owner] == self.team:
+                if Vulnerability(game).battle_formula(offense_units, defense_units) <= 0.25 \
+                        and not defensive_destroyer:  # 0.25 is arbitrary. change if needed.
+                    unit_state.retreated = True
+            else:
+                if Vulnerability(game).battle_formula(offense_units, defense_units) <= 0.95 \
+                and defensive_power < sub_attack \
+                and not offensive_destroyer:
+                    unit_state.retreated = True
+
     def battler(self, unit_state_list, territory_name):
         # inputs units (unit_states) originally in embattled territory and returns remaining units
         territory_value = self.game.rules.board[territory_name].ipc
@@ -838,6 +865,8 @@ class Battles:
         land_retreat_options = None
         water_retreat_options = None
         while self.embattled(unit_state_list):
+
+            self.sub_submerger(unit_state_list)
 
             total_friendly_power = 0
             total_enemy_power = 0
@@ -859,20 +888,9 @@ class Battles:
                             offensive_infantry += 1
                         if unit_state.type_index == 1:
                             offensive_artillery += 1
-                    else:
-                        defense_units.append(unit_state)
-                        total_enemy_power += self.game.rules.units[unit_state.type_index].defense
-                        if unit_state.type_index == 0:
-                            defensive_infantry += 1
-                        if unit_state.type_index == 1:
-                            defensive_artillery += 1
-                        # TODO George: I'm pretty sure infantry get +1 attack, not +1 defense, from artillery
             for i in range(offensive_artillery):  # does not change infantry power so dont use this for standard dev calc
                 if i < offensive_infantry:
                     total_friendly_power += 1
-            for i in range(defensive_artillery):
-                if i < defensive_infantry:
-                    total_enemy_power += 1
 
             if land_retreat_options is None:
                 land_retreat_options = set()
@@ -944,9 +962,9 @@ class Battles:
         friendly_units = []
         transports = []
 
-        # TODO George: Looking at the source code, the options they use are:
+        # TODO: Later Maybe optimize with this. Looking at the source code, the options they use are:
         #   keepOneAttackingLandUnit
-        #   retreatAfterRound
+        #   retreatAfterRound. We did this already for 1st round retreat.
         #   retreatAfterXUnitsLeft
         #   retreatWhenOnlyAirLeft
         #  I'm not sure if you want to use this info to change the battler or not
@@ -1518,13 +1536,14 @@ class Place:
 
 
 class Cleanup:
-    # TODO George: Make sure to reset unit.retreat values
     def __init__(self, game):
 
         game.turn_state.phase = 7
 
         for territory_key in game.state_dict:
             for unit_state in game.state_dict[territory_key].unit_state_list:
+                if unit_state != 4:
+                    unit_state.retreated = False  # resets reatreated units
                 if (unit_state.type_index == 4) and (game.state_dict[territory_key].owner != unit_state.owner):
                     unit_state.owner = game.state_dict[territory_key].owner  # reset factory ownership
             for territory_state in game.state_dict[territory_key]:
