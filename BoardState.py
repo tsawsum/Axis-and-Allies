@@ -649,13 +649,15 @@ class Rules:
                            "Britain": "Japan",
                            "Japan": "America",
                            "America": "Russia"}
+        
+        self.win_cons = ["France", "Germany", "Italy", "Karelia S.S.R.", "United Kingdom", "Eastern United States", 
+                         "Western United States", "Russia", "India", "Kiangsu", "Japan", "Philippine Islands", "Hawaiian Islands]
 
     def get_unit(self, index):
         return self.units[index]
 
     def enemy_team(self, player='', team=''):
         return 'Allies' if self.teams[player] == 'Axis' or team == 'Axis' else 'Axis'
-
 
 class TerritoryState:
     """
@@ -996,6 +998,21 @@ class Game:
         # Set original owners
         for k, v in self.state_dict.items():
             self.rules.board[k].original_owner = v.owner
+    
+   def has_won(self):
+        axis_victory_cities = 0
+        allies_victory_cities = 0
+        for territory_name in self.rules.win_cons:
+            if self.rules.teams[self.state_dict[territory_name].owner] == "Allies":
+                allies_victory_cities += 1
+            elif self.rules.teams[self.state_dict[territory_name].owner] == "Axis":
+                axis_victory_cities += 1
+         if axis_victory_cities >= 9:
+            return "Axis"
+         elif allies_victory_cities >= 10:
+            return "Allies"
+         else
+            return ""                      
 
     def export_reader(self, xml_file):
         # Read xml
