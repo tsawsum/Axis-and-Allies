@@ -92,11 +92,11 @@ class Attackable:
         return False
 
     def is_worth_attacking_battle_sim(self, territory_name, battle_sim):
-        # TODO George Later: Make this better
+        # TODO: Later: Make this better
         return battle_sim.net_ipc_swing > 0
 
     def is_worth_attacking(self, territory_name):
-        # TODO George Later: Make this better
+        # TODO: Later: Make this better
         owner = self.game.state_dict[territory_name].owner
         enemy_team = self.game.rules.enemy_team(player=self.player)
 
@@ -301,7 +301,7 @@ class Attackable:
         # Then do amphibious units
         for unit_stack, target in theoretical_attack.items():
             if unit_stack.is_transport:
-                # TODO Later: Any unit that can attack both amphibiously and by land will default to doing the land movement, which is not optimal
+                # TODO: Later: Any unit that can attack both amphibiously and by land will default to doing the land movement, which is not optimal
                 # Remove any units that have already been used
                 unit_stack.remove_units(used_units)
                 # Get a valid path for the transport
@@ -449,7 +449,7 @@ class Vulnerability:
                     if not unit_state.attached_to:
                         self.territories[territory_name][self.game.rules.teams[player]].append(unit_state)
         # Deal with transports
-        # TODO Later: The way this deals with transports in not optimal. Currently just takes strongest unit pairs and doesn't consider anything else
+        # TODO: Later: The way this deals with transports in not optimal. Currently just takes strongest unit pairs and doesn't consider anything else
         while self.transport_data:
             self.transport_data.sort(key=len)
             unit_stack_list = self.transport_data.pop(0)
@@ -552,7 +552,7 @@ class Vulnerability:
 
     def is_vulnerable(self, territory_name, theoretical_append=list(), attacker='', defender='', risk_tolerance=0):
         vulnerability = self.get_vulnerability(territory_name, theoretical_append, attacker, defender)
-        # TODO Later: Have AI decide risk_tolerance based on its estimate of losing or not.
+        # TODO: AI: Have AI decide risk_tolerance based on its estimate of losing or not.
         return vulnerability > 1 - risk_tolerance
 
 
@@ -564,11 +564,10 @@ class Build:
     def __init__(self, game, endangered_name_list):  # game.turn_state, etc.
         self.game = game
         self.player = self.game.turn_state.player
-        game.turn_state.phase = 2  # TODO Later. Maybe change the position of this bc it seems irrelevent to have to here
         self.ipc = self.game.turn_state.player.ipc
 
-        # TODO Later: Make AI decide to build a factory according to previous games/ its other factors
-        # TODO Later: Make the AI decide these priorities
+        # TODO: AI: Make AI decide to build a factory according to previous games/ its other factors
+        # TODO: AI: Make the AI decide these priorities
         self.prioritization_list = []
         self.prioritization_list.append(['tech_token', 0])  # never use this one
         self.prioritization_list.append(['battleship', 0])  # 1
@@ -670,7 +669,7 @@ class BattleCalculator:
         self.defend_priority = defender_prioritize_unit_index
         self.attacking_player = attacking_player
         self.battle_sim(500)
-        self.net_ipc_swing = self.ipc_swing + ((self.embattled_territory_value * long_term_affinity) * self.victory_chance)  # TODO: Later. Have the AI decide on long_term_affinity
+        self.net_ipc_swing = self.ipc_swing + ((self.embattled_territory_value * long_term_affinity) * self.victory_chance)  # TODO: AI: Have the AI decide on long_term_affinity
 
     def num_casualties(self, total_power):
         return total_power // 6 + (random.randint(1, 6) < total_power % 6)
@@ -843,7 +842,7 @@ class CombatMove:
         attackable = Attackable(self.game, self.game.turn_state.player, ai_importance, risk_tolerance, factory_risk,
                                 capital_risk)
         moves_to_do = attackable.get_best_attacks()
-        # TODO Later: Currently can't bomb or bombard lol
+        # TODO: Later: Currently can't bomb or bombard lol
         for unit_state, current_territory, goal_territory in moves_to_do:
             self.move_unit(unit_state, current_territory, goal_territory)
 
@@ -864,7 +863,7 @@ class Battles:
         self.retreating = False
         self.kamikaze = False
         self.battle_calculator = None
-        # TODO: Later: Have the AI decide on retreating and kamikaze values and save_subs values
+        # TODO: Hardcode: Have the AI decide on retreating and kamikaze values
 
         self.enemy_team = self.game.rules.enemy_team(player=self.player)
 
@@ -994,7 +993,7 @@ class Battles:
 
             # Unexpected retreat decision
             self.battle_calculator = BattleCalculator(unit_state_list, territory_value)
-            if (self.battle_calculator.net_ipc_swing <= 0) and not self.kamikaze:  # this might not want to always be 0. Could let the AI decide?
+            if (self.battle_calculator.net_ipc_swing <= 0) and not self.kamikaze:
                 self.retreating = True
 
             if self.retreating and (land_retreat_options or water_retreat_options):
@@ -1044,7 +1043,7 @@ class Battles:
         friendly_units = []
         transports = []
 
-        # TODO: Later Maybe optimize with this. Looking at the source code, the options they use are:
+        # TODO: Later: Maybe optimize with this. Looking at the source code, the options they use are:
         #   keepOneAttackingLandUnit
         #   retreatAfterRound. We did this already for 1st round retreat.
         #   retreatAfterXUnitsLeft
@@ -1120,7 +1119,7 @@ class NonCombatMove:
         self.game = game
         self.aa_flyover = aa_flyover
 
-        # TODO Later: Have the AI make this dict
+        # TODO: AI: Have the AI get importance values
         self.important_territories = {}
 
     def can_move(self, unit_state, current_territory, goal_territory):
@@ -1256,18 +1255,18 @@ class Place:
     is a pretty linear, albeit complicated, process.
     """
 
-    # TODO: Later. Make the AI decide "build average" for every territory
-    def __init__(self, game, purchased_unit_state_list, build_average):
+    # TODO: AI: Make the AI decide "build importance" for every territory
+    def __init__(self, game, purchased_unit_state_list, build_importance):
         game.turn_state.phase = 6
         self.placements = {}
-        self.build_importance = build_importance  # dictionary determined by the AI
+        self.build_importance = build_importance
         self.game = game
         self.purchased_unit_state_list = purchased_unit_state_list
         self.immediate_defensive_requirements = list()
         self.latent_defensive_requirements = list()
         self.vulnerability = Vulnerability(game)
         self.endangered_name_list = self.get_territories_under_threat(build_importance, risk_tolerance)
-        # TODO. Later. Have the Ai pass these values
+        # TODO: AI: Have the Ai pass these values
 
         self.factories = []
         for territory_name in self.game.state_dict:
@@ -1449,7 +1448,7 @@ class Place:
                                 or len(theoretical_append) < build_importance_getter(territory_name):
                             i = 1
                             theoretical_append.append(unit_state)
-                            # TODO Later: Have the AI organize the placements list.
+                            # TODO: AI: Have the AI organize the placements list.
 
             elif unit_state.type_index == 11 and \
                     vulnerability_reader:
@@ -1545,7 +1544,7 @@ class Place:
 
         for unit_state in self.purchased_unit_state_list:
             if self.game.rules.unit_state.type_index == 4:
-                # TODO: Later. Make ai factory placement work.
+                # TODO: AI: Make ai factory placement work.
                 # Will require a list of factory affinity weighted by how close to the turn it was build you are on
                 # territory_name = ai_factory_placement_decider(maybe will need: player, strategy, weighted_list)
                 territory_name = "Union of South Africa"  # TEMPORARY STAND-IN
