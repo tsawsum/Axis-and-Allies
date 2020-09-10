@@ -651,7 +651,7 @@ class Rules:
                            "America": "Russia"}
         
         self.win_cons = ["France", "Germany", "Italy", "Karelia S.S.R.", "United Kingdom", "Eastern United States", 
-                         "Western United States", "Russia", "India", "Kiangsu", "Japan", "Philippine Islands", "Hawaiian Islands]
+                         "Western United States", "Russia", "India", "Kiangsu", "Japan", "Philippine Islands", "Hawaiian Islands"]
 
     def get_unit(self, index):
         return self.units[index]
@@ -999,7 +999,7 @@ class Game:
         for k, v in self.state_dict.items():
             self.rules.board[k].original_owner = v.owner
     
-   def has_won(self):
+    def has_won(self):
         axis_victory_cities = 0
         allies_victory_cities = 0
         for territory_name in self.rules.win_cons:
@@ -1007,11 +1007,11 @@ class Game:
                 allies_victory_cities += 1
             elif self.rules.teams[self.state_dict[territory_name].owner] == "Axis":
                 axis_victory_cities += 1
-         if axis_victory_cities >= 9:
+        if axis_victory_cities >= 9:
             return "Axis"
-         elif allies_victory_cities >= 10:
+        elif allies_victory_cities >= 10:
             return "Allies"
-         else
+        else:
             return ""                      
 
     def export_reader(self, xml_file):
@@ -1085,13 +1085,15 @@ class Game:
                 transport_unit.attached_units.append(land_unit)
                 land_unit.attached_to = transport_unit
 
-    def controls_suez(self):
-        player = self.turn_state.player
-        return (self.state_dict["Egypt"].owner == player) and (self.state_dict["Trans-Jordan"].owner == player)
+    def controls_suez(self, team=''):
+        if not team:
+            team = self.rules.teams[self.turn_state.player]
+        return (self.rules.teams[self.state_dict["Egypt"].owner] == team) and (self.rules.teams[self.state_dict["Trans-Jordan"].owner] == team)
 
-    def controls_panama(self):
-        player = self.turn_state.player
-        return self.state_dict["Central America"].owner == player
+    def controls_panama(self, team=''):
+        if not team:
+            team = self.rules.teams[self.turn_state.player]
+        return self.rules.teams[self.state_dict["Central America"].owner] == team
 
     def calc_movement(self, unit_state, current_territory, goal_territory, phase=-1):
         """
