@@ -14,7 +14,7 @@ Some Heuristics to consider:
  - Could do a similar luck value based on percentages, where an actual win is 1 and a loss 0.
  - Obviously number of controlled capitals.
  - Number of factories taken from enemy
- - which team controls suez
+ - which team controls sue
 
 List of things AI needs to do:
 - Needs to decide if we are winning
