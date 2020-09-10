@@ -37,3 +37,181 @@ List of things AI needs to do:
  * WHAT THE FUCK WERE WE THINKING WHYYYYYYY
 - Needs to decide build priority values.
 """
+
+
+import keras
+
+
+class Brain:
+    def __init__(self):
+        self.risk = RiskTolerance()
+        self.importance = ImportanceValue()
+        self.build = BuildAverage()
+        self.winning = IsWinning()
+
+    def get_risk_tolerances(self, game, player=''):
+        if not player:
+            player = game.turn_state.player
+        return {territory: self.risk.get_value(game, territory, player) for territory in game.state_dict.keys()}
+
+    def get_importance_values(self, game, player=''):
+        if not player:
+            player = game.turn_state.player
+        return {territory: self.importance.get_value(game, territory, player) for territory in game.state_dict.keys()}
+
+    def get_build_average(self, game, player=''):
+        if not player:
+            player = game.turn_state.player
+        return {territory: self.build.get_value(game, territory, player) for territory in game.state_dict.keys()}
+
+    def get_winning_team(self, game):
+        result = self.winning.get_value(game)
+        if result >= 0.5:
+            return 'Allies', (2 * result - 1)
+        else:
+            return 'Axis', (1 - 2 * result)
+
+
+class Heuristics:
+    def __init__(self, name, load_net=True):
+        self.name = name
+        self.net = None
+        if load_net:
+            self.load_neural_net()
+
+    def load_neural_net(self):
+        model_file = 'NNData/' + self.name + '_model.h5'
+        self.net = keras.models.load_model(model_file)
+
+    def get_heuristics(self, game, player='', territory_name=''):
+        return list()
+
+    def get_value(self, game, territory_name='', player=''):
+        inputs = self.get_heuristics(game, territory_name, player)
+        return self.net.predict(inputs)
+
+
+class RiskTolerance(Heuristics):
+    def __init__(self):
+        super().__init__('risk_tolerance')
+
+    def get_heuristics(self, game, player='', territory_name=''):
+        if not territory_name or not player:
+            print('Must input both territory_name and player')
+        heuristics = list()
+        territory = game.rules.board[territory_name]
+        territory_state = game.state_dict[territory_name]
+
+        # IPC value of territory
+        heuristics.append(territory.ipc)
+
+        # Defensive power in territory
+        power = 0
+        for unit_state in territory_state.unit_state_list:
+            if game.rules.teams[unit_state.owner] == game.rules.teams[player]:
+                power += game.rules.get_unit(unit_state.type_index).defense
+        heuristics.append(power)
+
+        # Is capital
+        heuristics.append(1 if territory.is_capital else 0)
+
+        # Is water
+        heuristics.append(1 if territory.is_water else 0)
+
+        # TODO: Add more heuristics to the example above
+
+        return heuristics
+
+
+class ImportanceValue(Heuristics):
+    def __init__(self):
+        super().__init__('importance_value')
+
+    def get_heuristics(self, game, player='', territory_name=''):
+        if not territory_name or not player:
+            print('Must input both territory_name and player')
+        heuristics = list()
+        territory = game.rules.board[territory_name]
+        territory_state = game.state_dict[territory_name]
+
+        # IPC value of territory
+        heuristics.append(territory.ipc)
+
+        # Defensive power in territory
+        power = 0
+        for unit_state in territory_state.unit_state_list:
+            if game.rules.teams[unit_state.owner] == game.rules.teams[player]:
+                power += game.rules.get_unit(unit_state.type_index).defense
+        heuristics.append(power)
+
+        # Is capital
+        heuristics.append(1 if territory.is_capital else 0)
+
+        # Is water
+        heuristics.append(1 if territory.is_water else 0)
+
+        # TODO: Add more heuristics to the examples above
+
+        return heuristics
+
+
+class BuildAverage(Heuristics):
+    def __init__(self):
+        super().__init__('build_average')
+
+    def get_heuristics(self, game, player='', territory_name=''):
+        if not territory_name or not player:
+            print('Must input both territory_name and player')
+        heuristics = list()
+        territory = game.rules.board[territory_name]
+        territory_state = game.state_dict[territory_name]
+
+        # IPC value of territory
+        heuristics.append(territory.ipc)
+
+        # Defensive power in territory
+        power = 0
+        for unit_state in territory_state.unit_state_list:
+            if game.rules.teams[unit_state.owner] == game.rules.teams[player]:
+                power += game.rules.get_unit(unit_state.type_index).defense
+        heuristics.append(power)
+
+        # Is capital
+        heuristics.append(1 if territory.is_capital else 0)
+
+        # Is water
+        heuristics.append(1 if territory.is_water else 0)
+
+        # TODO: Add more heuristics to the examples above
+
+        return heuristics
+
+
+class IsWinning(Heuristics):
+    def __init__(self):
+        super().__init__('is_winning')
+
+    def get_heuristics(self, game, player='', territory_name=''):
+        heuristics = list()
+
+        # Controls Suez
+        heuristics.append(1 if game.controls_suez('Allies') else 0)
+
+        # Capitals owned by Allies
+        allies_caps = 0
+        for player_obj in self.players:
+            allies_caps += (game.rules.teams[game.state_dict[player_obj.capital].owner] == 'Allies')
+        heuristics.append(allies_caps)
+
+        # TODO: Add more heuristics to the examples above
+        #  Note: This function shouldn't use player or territory_name, those are only there because it inherits the method
+
+        return heuristics
+
+
+# Example uses:
+# brain = Brain()
+# brain.get_importance_values(game, 'America')  # Returns dict of importance values between 0 and 1 for America
+# brain.get_build_average(game)  # Returns dict of build averages for whichever player's turn it is
+# brain.get_risk_tolerances(game, 'Russia')  # Returns dict of risk tolerances for each territory for when Russia is attacking
+# brain.get_winning_team(game)  # Returns winner (either 'Axis' or 'Allies'), and how much they're winning by (0 = tied, 1 = almost guaranteed win)
