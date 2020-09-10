@@ -1,20 +1,4 @@
 """
-Some Heuristics to consider:
- - Total Unit Value Ratio (Axis vs Allies) compared to the start to determine who is winning
- - Same thing but just sea power
- - Same thing but just air power
- - Same thing but just land power
- - Might be worth literally checking every unit to see if there is a correlation but this might be crazy
- - Percent of unit value in range of the front line
- - Total income compared to start
- - Number of 'combat important territories' you control / have ranged jurisdiction over
- - Number of your vs. their factories that are in danger
- - Create some sort of "Similarity distance' function to compare current board with known 'winning' boards
- - Overall 'luck' value. Do battle calculator before every battle and add up the difference between expected ipc_swing for your side and actual
- - Could do a similar luck value based on percentages, where an actual win is 1 and a loss 0.
- - Obviously number of controlled capitals.
- - Number of factories taken from enemy
- - which team controls sue
 
 List of things AI needs to do:
 - Needs to decide if we are winning
@@ -92,6 +76,16 @@ class Heuristics:
 
 
 class RiskTolerance(Heuristics):
+    """
+    - actual battles in that territory risk tolerance calc
+    - what turn is it
+    - are you winning?
+    - has factory
+    - is attacking?
+    - hawkes defense score of attacking territiroy
+    - ipc
+    - distace from capital, etc.
+    """
     def __init__(self):
         super().__init__('risk_tolerance')
 
@@ -124,6 +118,18 @@ class RiskTolerance(Heuristics):
 
 
 class ImportanceValue(Heuristics):
+    """
+    - average power in range of territory across the games
+    - average number of battles in the territory/turn
+    - is victory city
+    - is frontline
+    - distance to nearest enmny factory
+    - distacne to your capital
+    - distance to nearest enmny capital
+    - ipc value
+    -
+    """
+
     def __init__(self):
         super().__init__('importance_value')
 
@@ -156,6 +162,16 @@ class ImportanceValue(Heuristics):
 
 
 class BuildAverage(Heuristics):
+    """
+    - distance to nearest enemny land territory
+    - distance to nearest enemy transport
+    - distance to nearest enemy military ship
+    - in-range enmny power
+    - is frontline
+    - distance from capital
+    - is victory city
+    """
+
     def __init__(self):
         super().__init__('build_average')
 
@@ -188,6 +204,24 @@ class BuildAverage(Heuristics):
 
 
 class IsWinning(Heuristics):
+    """
+ - Total Unit Value Ratio (Axis vs Allies) compared to the start to determine who is winning
+ - Same thing but just sea power
+ - Same thing but just air power
+ - Same thing but just land power
+ - Might be worth literally checking every unit to see if there is a correlation but this might be crazy
+ - Percent of unit value in range of the front line
+ - Total income compared to start
+ - Number of 'combat important territories' you control / have ranged jurisdiction over
+ - Number of your vs. their factories that are in danger
+ - Create some sort of "Similarity distance' function to compare current board with known 'winning' boards
+ - Overall 'luck' value. Do battle calculator before every battle and add up the difference between expected ipc_swing for your side and actual
+ - Could do a similar luck value based on percentages, where an actual win is 1 and a loss 0.
+ - Obviously number of controlled capitals.
+ - Number of factories taken from enemy
+ - which team controls sue
+    """
+
     def __init__(self):
         super().__init__('is_winning')
 
