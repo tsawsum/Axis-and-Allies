@@ -74,6 +74,30 @@ class Heuristics:
         inputs = self.get_heuristics(game, territory_name, player)
         return self.net.predict(inputs)
 
+    def get_generic_heuristics(self, game, player='', territory_name=''):
+        generic_heuristics = list()
+
+        generic_heuristics.append(game.turn_state.round_num)   # turn number
+        generic_heuristics.append(1 if is_winning else 0) # TODO. Brett. Somehow use is_winning here
+        generic_heuristics.append(1 if territory_name.is_capital else 0)         # is capital
+        generic_heuristics.append(1 if territory_name.is_water else 0)           # is water
+        power = 0
+        for unit_state in territory_state.unit_state_list:
+            if game.rules.teams[unit_state.owner] == game.rules.teams[player]:
+                power += game.rules.get_unit(unit_state.type_index).defense
+        generic_heuristics.append(power)                                    # defensive power in territory
+        generic_heuristics.append(territory.ipc)                            # IPC value of territory
+        generic_heuristics.append()  # TODO. Brett. Distace from your capital
+        generic_heuristics.append()  # TODO. Brett. Distace from nearest enemny capital
+        generic_heuristics.append()  # TODO. Brett. Distance to nearest enemny factory
+        generic_heuristics.append()  # TODO. Brett. Is_vulerable yes or no
+        generic_heuristics.append()  # TODO. Brett. Power in range of territory
+        generic_heuristics.append(1 if territory_name in game.rules.win_cons else 0)
+        generic_heuristics.append()  # TODO. Brett. Distance to nearest enemy land terrtiory
+        generic_heuristics.append()  # TODO. Brett. Distance to nearest enemny transport
+        generic_heuristics.append()  # TODO. Brett. Distance to nearest enemny warship
+
+        return generic_heuristics
 
 class RiskTolerance(Heuristics):
     """
@@ -88,29 +112,16 @@ class RiskTolerance(Heuristics):
     """
     def __init__(self):
         super().__init__('risk_tolerance')
+        self.Heuristics = Heuristics # TODO: Brett. is this okay?
 
     def get_heuristics(self, game, player='', territory_name=''):
         if not territory_name or not player:
             print('Must input both territory_name and player')
-        heuristics = list()
+        heuristics = get_generic_heuristics(game, player, territory_name)
         territory = game.rules.board[territory_name]
         territory_state = game.state_dict[territory_name]
 
-        # IPC value of territory
-        heuristics.append(territory.ipc)
-
-        # Defensive power in territory
-        power = 0
-        for unit_state in territory_state.unit_state_list:
-            if game.rules.teams[unit_state.owner] == game.rules.teams[player]:
-                power += game.rules.get_unit(unit_state.type_index).defense
-        heuristics.append(power)
-
-        # Is capital
-        heuristics.append(1 if territory.is_capital else 0)
-
-        # Is water
-        heuristics.append(1 if territory.is_water else 0)
+        heuristics.append()  # TODO. Brett. Defensibility value of attacking territory
 
         # TODO: Add more heuristics to the example above
 
@@ -132,29 +143,14 @@ class ImportanceValue(Heuristics):
 
     def __init__(self):
         super().__init__('importance_value')
+        self.Heuristics = Heuristics  # TODO: Brett. is this okay?
 
     def get_heuristics(self, game, player='', territory_name=''):
         if not territory_name or not player:
             print('Must input both territory_name and player')
-        heuristics = list()
+        heuristics = get_generic_heuristics(game, player, territory_name)
         territory = game.rules.board[territory_name]
         territory_state = game.state_dict[territory_name]
-
-        # IPC value of territory
-        heuristics.append(territory.ipc)
-
-        # Defensive power in territory
-        power = 0
-        for unit_state in territory_state.unit_state_list:
-            if game.rules.teams[unit_state.owner] == game.rules.teams[player]:
-                power += game.rules.get_unit(unit_state.type_index).defense
-        heuristics.append(power)
-
-        # Is capital
-        heuristics.append(1 if territory.is_capital else 0)
-
-        # Is water
-        heuristics.append(1 if territory.is_water else 0)
 
         # TODO: Add more heuristics to the examples above
 
@@ -174,29 +170,14 @@ class BuildAverage(Heuristics):
 
     def __init__(self):
         super().__init__('build_average')
+        self.Heuristics = Heuristics  # TODO: Brett. is this okay?
 
     def get_heuristics(self, game, player='', territory_name=''):
         if not territory_name or not player:
             print('Must input both territory_name and player')
-        heuristics = list()
+        heuristics = get_generic_heuristics(game, player, territory_name)
         territory = game.rules.board[territory_name]
         territory_state = game.state_dict[territory_name]
-
-        # IPC value of territory
-        heuristics.append(territory.ipc)
-
-        # Defensive power in territory
-        power = 0
-        for unit_state in territory_state.unit_state_list:
-            if game.rules.teams[unit_state.owner] == game.rules.teams[player]:
-                power += game.rules.get_unit(unit_state.type_index).defense
-        heuristics.append(power)
-
-        # Is capital
-        heuristics.append(1 if territory.is_capital else 0)
-
-        # Is water
-        heuristics.append(1 if territory.is_water else 0)
 
         # TODO: Add more heuristics to the examples above
 
@@ -236,6 +217,103 @@ class IsWinning(Heuristics):
         for player_obj in self.players:
             allies_caps += (game.rules.teams[game.state_dict[player_obj.capital].owner] == 'Allies')
         heuristics.append(allies_caps)
+
+        # Total unit values
+        axis_unit_value = 0
+        axis_land_value = 0
+        axis_sea_value = 0
+        axis_air_value = 0
+        allies_unit_value = 0
+        allies_land_value = 0
+        allies_sea_value = 0
+        allies_air_value = 0
+
+        #Some other things
+        allies_total_ipc = 0
+        allies_control_suez = 0
+        allies_control_panama = 0
+        allies_controlled_capitals = 0
+        allies_controlled_factories = 0
+        axis_total_ipc = 0
+        axis_control_suez = 0
+        axis_control_panama = 0
+        axis_controlled_capitals = 0
+        axis_controlled_factories = 0
+        for territory_key in game.state_dict:
+            for unit_state in game.state_dict[territory_key]:
+                if game.rules.get_unit(unit_state.type_index).unit_type == 'sea':
+                    if game.teams[unit_state.owner] == "Axis":
+                        axis_unit_value += game.rules.get_unit(unit_state.type_index).cost
+                        axis_sea_value += game.rules.get_unit(unit_state.type_index).cost
+                    elif game.teams[unit_state.owner] == "Allies":
+                        allies_unit_value += game.rules.get_unit(unit_state.type_index).cost
+                        allies_sea_value += game.rules.get_unit(unit_state.type_index).cost
+                elif game.rules.get_unit(unit_state.type_index).unit_type == 'land':
+                    if game.teams[unit_state.owner] == "Axis":
+                        axis_unit_value += game.rules.get_unit(unit_state.type_index).cost
+                        axis_land_value += game.rules.get_unit(unit_state.type_index).cost
+                        if unit_state.type_index == 4:
+                            axis_controlled_factories += 0
+                    elif game.teams[unit_state.owner] == "Allies":
+                        allies_unit_value += game.rules.get_unit(unit_state.type_index).cost
+                        allies_land_value += game.rules.get_unit(unit_state.type_index).cost
+                        if unit_state.type_index == 4:
+                            allies_controlled_factories += 0
+                elif game.rules.get_unit(unit_state.type_index).unit_type == 'air':
+                    if game.teams[unit_state.owner] == "Axis":
+                        axis_unit_value += game.rules.get_unit(unit_state.type_index).cost
+                        axis_air_value += game.rules.get_unit(unit_state.type_index).cost
+                    elif game.teams[unit_state.owner] == "Allies":
+                        allies_unit_value += game.rules.get_unit(unit_state.type_index).cost
+                        allies_air_value += game.rules.get_unit(unit_state.type_index).cost
+
+            if game.rules.teams[game.state_dict[territory_key].owner] == "Allies":
+                allies_total_ipc += game.rules.board[territory_key].ipc
+                if territory_key == "Egypt" \
+                and game.rules.teams[game.state_dict["Trans-Jordan"].owner] == "Allies":
+                    allies_control_suez = 1
+                if territory_key == "Central America":
+                    allies_control_panama = 1
+                if game.rules.board[territory_key].is_capital:
+                    allies_controlled_capitals = 0
+            elif game.rules.teams[game.state_dict[territory_key].owner] == "Axis":
+                axis_total_ipc += game.rules.board[territory_key].ipc
+                if territory_key == "Egypt" \
+                and game.rules.teams[game.state_dict["Trans-Jordan"].owner] == "Axis":
+                    axis_control_suez = 1
+                if territory_key == "Central America":
+                    axis_control_panama = 1
+                if game.rules.board[territory_key].is_capital:
+                    axis_controlled_capitals = 0
+
+        # TODO: Brett. we can use the total unit value ratio combined with controlled ipc at the beginning
+        # to determine the baseline for who is winning. Obv they should be 'equal' to start
+        heuristics.append(axis_unit_value/allies_unit_value) #TODO. Brett. this is clearly redudant but might be good? keep?
+        heuristics.append(axis_unit_value)
+        heuristics.append(axis_land_value)
+        heuristics.append(axis_sea_value)
+        heuristics.append(axis_air_value)
+        heuristics.append(allies_unit_value)
+        heuristics.append(allies_land_value)
+        heuristics.append(allies_sea_value)
+        heuristics.append(allies_air_value)
+
+        heuristics.append(allies_total_ipc)
+        heuristics.append(allies_control_suez)
+        heuristics.append(allies_control_panama)
+        heuristics.append(allies_controlled_capitals)
+        heuristics.append(allies_controlled_factories)
+        heuristics.append(axis_total_ipc)
+        heuristics.append(axis_control_suez)
+        heuristics.append(axis_control_panama)
+        heuristics.append(axis_controlled_capitals)
+        heuristics.append(axis_controlled_factories)
+
+        # for all these consider if needs to deliniate axis and allies as different values
+        heuristics.append() # TODO: BRett. percent of unit value in range fo front line
+        heuristics.append()  # TODO: BRett. number of important territoryes you contorl/ have power over
+        heuristics.append()  # TODO: BRett. number of factories in danger
+        heuristics.append()  # TODO: BRett. luck value? see above comment in triple quotes
 
         # TODO: Add more heuristics to the examples above
         #  Note: This function shouldn't use player or territory_name, those are only there because it inherits the method
