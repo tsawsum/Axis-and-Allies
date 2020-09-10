@@ -714,6 +714,7 @@ class Player:
     def __init__(self, name, capital, ipc=0, tech_tokens=0):
         self.name = name
         self.ipc = ipc
+        self.total_income = ipc
         self.tech_tokens = tech_tokens
         self.capital = capital
 
