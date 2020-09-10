@@ -1618,6 +1618,9 @@ class Place:
 
 class Cleanup:
     def __init__(self, game):
+        
+        if game.has_won(): # decides if there is a winner
+            return game.has_won()
 
         game.turn_state.phase = 7
 
