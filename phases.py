@@ -98,8 +98,6 @@ class Attackable:
                 has_enemy_units = True
             else:
                 has_friendly_units = True
-            if unit_state.type_index == 4:
-                has_factory = True
 
         vulnerability = self.vuln.get_vulnerability(territory_name, attacker=self.player)
 
@@ -634,7 +632,7 @@ class Build:
             self.purchased_unit_state_list.append(BoardState.UnitState(self.player, 0))  # infantry
             self.ipc -= 3
 
-        self.game.purchased_units = self.purchased_unit_state_list[:]
+        self.game.purchased_units[self.player] += self.purchased_unit_state_list[:]
 
     def prioritizer(self, prioritization, strength):
         # Something the AI can call if it wants to change the build priority of a unit
@@ -751,6 +749,8 @@ class CombatMove:
         current_territory_state, goal_territory_state = self.game.state_dict[current_territory.name], \
                                                         self.game.state_dict[goal_territory.name]
         current_territory_state.unit_state_list.remove(unit_state)
+        for other_unit_state in unit_state.attached_units:
+            current_territory_state.unit_state_list.remove(other_unit_state)
         unit = self.game.rules.get_unit(unit_state.type_index)
         print('Moved', unit.name, 'from', current_territory, 'to', goal_territory)
         if unit.name == 'transport':
@@ -776,7 +776,8 @@ class CombatMove:
         if bombing and unit.name == 'bomber':
             unit_state.retreated = True
             for other_unit_state in goal_territory_state:
-                if other_unit_state.type_index == 4 and other_unit_state.shots_taken < 3:
+                if other_unit_state.type_index == 4 and other_unit_state.shots_taken < 3 and \
+                        self.game.rules.teams[other_unit_state.owner] != self.game.rules.teams[unit_state.owner]:
                     dmg = random.randint(1, 6)
                     print('    - Unit shot factory for', dmg, 'damage')
                     self.game.players[unit_state.owner].ipc -= dmg
@@ -787,7 +788,41 @@ class CombatMove:
                         return True
 
         # Update unit
+        captured_territories = list()
+        # Check for tank blitzes
+        if unit.name == 'tank' and dist == 2:
+            if self.game.rules.teams[self.game.state_dict[path[1]].owner] != self.game.rules.teams[unit_state.owner]:
+                print('    - Blitzed with tank')
+                captured_territories.append(path[1])
+        # And check if territory it went to is empty
+        if unit.unit_type == 'land' and self.game.rules.teams[goal_territory_state.owner] != self.game.rules.teams[unit_state.owner]:
+            enemy_units = False
+            for other_unit_state in goal_territory_state.unit_state_list:
+                if other_unit_state.type_index != 4 and self.game.rules.teams[other_unit_state.owner] != self.game.rules.teams[unit_state.owner]:
+                    enemy_units = True
+                    break
+            if enemy_units:
+                captured_territories.append(goal_territory)
+        # Then capture these territories
+        for ter in captured_territories:
+            ter_state = self.game.state_dict[ter]
+            ter_state.just_captured = True
+            # Check if original owner has capital and is ally, if so give it back to them
+            original_owner = self.game.rules.board[ter].original_owner
+            capital = self.game.players[original_owner].capital
+            if self.game.rules.teams[unit_state.owner] == self.game.rules.teams[original_owner] \
+                    and (self.game.state_dict[capital].owner == original_owner or ter == capital):
+                ter_state.owner = original_owner
+            else:
+                ter_state.owner = unit_state.owner
+                if self.game.rules.board[ter].is_capital:  # if the territory is someone's capital
+                    original_owner = self.game.rules.board[ter].original_owner
+                    self.game.players[unit_state.owner].ipc += self.game.players[original_owner].ipc
+                    self.game.players[original_owner].ipc = 0
+
         goal_territory_state.unit_state_list.append(unit_state)
+        for other_unit_state in unit_state.attached_units:
+            goal_territory_state.unit_state_list.append(other_unit_state)
         unit_state.moves_used += dist
         unit_state.moved_from = path
         if unit_state.attached_to:
@@ -1232,6 +1267,7 @@ class NonCombatMove:
         return True
 
     def do_non_combat_move(self):
+        # TODO: Later: Abandoning territories, leave one weak unit behind
         # Get which units even have moves left
         available_units = list()
         total_moves = [self.game.rules.get_unit(i).movement for i in range(len(self.game.rules.units))]
@@ -1277,6 +1313,9 @@ class NonCombatMove:
                 else:
                     vulnerability.territories[territory_name][
                         self.game.rules.teams[self.game.turn_state.player]].append(unit_state)
+
+        # For planes, make sure they return to non-captured territories, or to carriers
+        # TODO
 
 
 class Place:
@@ -1641,6 +1680,7 @@ class Place:
             for unit_state in self.placements[territory_key]:
                 self.game.state_dict[territory_key].unit_state_list.append(unit_state)
                 print('Placed', self.game.rules.get_unit(unit_state.type_index).name, 'in', territory_key)
+                self.game.purchased_units[self.game.turn_state.player].remove(unit_state)
         self.vulnerability.invalid = True
 
 
@@ -1650,8 +1690,6 @@ class Cleanup:
         self.game_result = game.has_won()
         if self.game_result:
             return
-
-        game.turn_state.phase = 2
 
         for territory_key in game.state_dict:
             for unit_state in game.state_dict[territory_key].unit_state_list:

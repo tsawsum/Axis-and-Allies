@@ -1,0 +1,417 @@
+<game>
+    <info name="World War II v5 1942 SE TR" version="1.9.0"/>
+    <turn round="1" phase="russianPurchase"/>
+    <capturedTerritories>
+    </capturedTerritories>
+    <players>
+        <player name="Russians">
+            <resource name="PUs" quantity="24"/>
+        </player>
+        <player name="Germans">
+            <resource name="PUs" quantity="41"/>
+        </player>
+        <player name="British">
+            <resource name="PUs" quantity="31"/>
+        </player>
+        <player name="Japanese">
+            <resource name="PUs" quantity="30"/>
+        </player>
+        <player name="Americans">
+            <resource name="PUs" quantity="42"/>
+        </player>
+    </players>
+    <territories>
+        <territory name="1 Sea Zone" owner="Neutral"/>
+        <territory name="2 Sea Zone" owner="Neutral"/>
+        <territory name="3 Sea Zone" owner="Neutral"/>
+        <territory name="4 Sea Zone" owner="Neutral"/>
+        <territory name="5 Sea Zone" owner="Neutral"/>
+        <territory name="6 Sea Zone" owner="Neutral"/>
+        <territory name="7 Sea Zone" owner="Neutral"/>
+        <territory name="8 Sea Zone" owner="Neutral"/>
+        <territory name="9 Sea Zone" owner="Neutral"/>
+        <territory name="10 Sea Zone" owner="Neutral"/>
+        <territory name="11 Sea Zone" owner="Neutral"/>
+        <territory name="12 Sea Zone" owner="Neutral"/>
+        <territory name="13 Sea Zone" owner="Neutral"/>
+        <territory name="14 Sea Zone" owner="Neutral"/>
+        <territory name="15 Sea Zone" owner="Neutral"/>
+        <territory name="16 Sea Zone" owner="Neutral"/>
+        <territory name="17 Sea Zone" owner="Neutral"/>
+        <territory name="18 Sea Zone" owner="Neutral"/>
+        <territory name="19 Sea Zone" owner="Neutral"/>
+        <territory name="20 Sea Zone" owner="Neutral"/>
+        <territory name="21 Sea Zone" owner="Neutral"/>
+        <territory name="22 Sea Zone" owner="Neutral"/>
+        <territory name="23 Sea Zone" owner="Neutral"/>
+        <territory name="24 Sea Zone" owner="Neutral"/>
+        <territory name="25 Sea Zone" owner="Neutral"/>
+        <territory name="26 Sea Zone" owner="Neutral"/>
+        <territory name="27 Sea Zone" owner="Neutral"/>
+        <territory name="28 Sea Zone" owner="Neutral"/>
+        <territory name="29 Sea Zone" owner="Neutral"/>
+        <territory name="30 Sea Zone" owner="Neutral"/>
+        <territory name="31 Sea Zone" owner="Neutral"/>
+        <territory name="32 Sea Zone" owner="Neutral"/>
+        <territory name="33 Sea Zone" owner="Neutral"/>
+        <territory name="34 Sea Zone" owner="Neutral"/>
+        <territory name="35 Sea Zone" owner="Neutral"/>
+        <territory name="36 Sea Zone" owner="Neutral"/>
+        <territory name="37 Sea Zone" owner="Neutral"/>
+        <territory name="38 Sea Zone" owner="Neutral"/>
+        <territory name="39 Sea Zone" owner="Neutral"/>
+        <territory name="40 Sea Zone" owner="Neutral"/>
+        <territory name="41 Sea Zone" owner="Neutral"/>
+        <territory name="42 Sea Zone" owner="Neutral"/>
+        <territory name="43 Sea Zone" owner="Neutral"/>
+        <territory name="44 Sea Zone" owner="Neutral"/>
+        <territory name="45 Sea Zone" owner="Neutral"/>
+        <territory name="46 Sea Zone" owner="Neutral"/>
+        <territory name="47 Sea Zone" owner="Neutral"/>
+        <territory name="48 Sea Zone" owner="Neutral"/>
+        <territory name="49 Sea Zone" owner="Neutral"/>
+        <territory name="50 Sea Zone" owner="Neutral"/>
+        <territory name="51 Sea Zone" owner="Neutral"/>
+        <territory name="52 Sea Zone" owner="Neutral"/>
+        <territory name="53 Sea Zone" owner="Neutral"/>
+        <territory name="54 Sea Zone" owner="Neutral"/>
+        <territory name="55 Sea Zone" owner="Neutral"/>
+        <territory name="56 Sea Zone" owner="Neutral"/>
+        <territory name="57 Sea Zone" owner="Neutral"/>
+        <territory name="58 Sea Zone" owner="Neutral"/>
+        <territory name="59 Sea Zone" owner="Neutral"/>
+        <territory name="60 Sea Zone" owner="Neutral"/>
+        <territory name="61 Sea Zone" owner="Neutral"/>
+        <territory name="62 Sea Zone" owner="Neutral"/>
+        <territory name="63 Sea Zone" owner="Neutral"/>
+        <territory name="64 Sea Zone" owner="Neutral"/>
+        <territory name="65 Sea Zone" owner="Neutral"/>
+        <territory name="Afghanistan" owner="Neutral"/>
+        <territory name="Alaska" owner="Americans"/>
+        <territory name="Algeria" owner="Germans"/>
+        <territory name="Anglo-Egyptian Sudan" owner="British"/>
+        <territory name="Angola" owner="Neutral"/>
+        <territory name="Anhwei" owner="Americans"/>
+        <territory name="Archangel" owner="Russians"/>
+        <territory name="Baltic States" owner="Germans"/>
+        <territory name="Belgian Congo" owner="British"/>
+        <territory name="Belorussia" owner="Germans"/>
+        <territory name="Borneo" owner="Japanese"/>
+        <territory name="Brazil" owner="Americans"/>
+        <territory name="Bulgaria Romania" owner="Germans"/>
+        <territory name="Burma" owner="British"/>
+        <territory name="Buryatia S.S.R." owner="Russians"/>
+        <territory name="Caroline Islands" owner="Japanese"/>
+        <territory name="Caucasus" owner="Russians"/>
+        <territory name="Central America" owner="Americans"/>
+        <territory name="Central United States" owner="Americans"/>
+        <territory name="Chile" owner="Neutral"/>
+        <territory name="Colombia Equador" owner="Neutral"/>
+        <territory name="East Indies" owner="Japanese"/>
+        <territory name="East Mexico" owner="Americans"/>
+        <territory name="Eastern Australia" owner="British"/>
+        <territory name="Eastern Canada" owner="British"/>
+        <territory name="Eastern United States" owner="Americans"/>
+        <territory name="Egypt" owner="British"/>
+        <territory name="Eire" owner="Neutral"/>
+        <territory name="Evenki National Okrug" owner="Russians"/>
+        <territory name="Finland" owner="Germans"/>
+        <territory name="Formosa" owner="Japanese"/>
+        <territory name="France" owner="Germans"/>
+        <territory name="French Equatorial Africa" owner="British"/>
+        <territory name="French Indo-China Thailand" owner="Japanese"/>
+        <territory name="French Madagascar" owner="British"/>
+        <territory name="French West Africa" owner="British"/>
+        <territory name="Germany" owner="Germans"/>
+        <territory name="Gibraltar" owner="British"/>
+        <territory name="Greenland" owner="Americans"/>
+        <territory name="Hawaiian Islands" owner="Americans"/>
+        <territory name="Himalaya" owner="Neutral"/>
+        <territory name="Iceland" owner="British"/>
+        <territory name="India" owner="British"/>
+        <territory name="Italian East Africa" owner="British"/>
+        <territory name="Italy" owner="Germans"/>
+        <territory name="Iwo Jima" owner="Japanese"/>
+        <territory name="Japan" owner="Japanese"/>
+        <territory name="Karelia S.S.R." owner="Russians"/>
+        <territory name="Kazakh S.S.R." owner="Russians"/>
+        <territory name="Kiangsu" owner="Japanese"/>
+        <territory name="Kwangtung" owner="Japanese"/>
+        <territory name="Libya" owner="Germans"/>
+        <territory name="Malaya" owner="Japanese"/>
+        <territory name="Manchuria" owner="Japanese"/>
+        <territory name="Mexico" owner="Americans"/>
+        <territory name="Midway" owner="Americans"/>
+        <territory name="Mongolia" owner="Neutral"/>
+        <territory name="Morocco" owner="Germans"/>
+        <territory name="Mozambique" owner="Neutral"/>
+        <territory name="New Guinea" owner="Japanese"/>
+        <territory name="New Zealand" owner="British"/>
+        <territory name="Northwestern Europe" owner="Germans"/>
+        <territory name="Norway" owner="Germans"/>
+        <territory name="Novosibirsk" owner="Russians"/>
+        <territory name="Okinawa" owner="Japanese"/>
+        <territory name="Persia" owner="British"/>
+        <territory name="Peru Argentina" owner="Neutral"/>
+        <territory name="Philippine Islands" owner="Japanese"/>
+        <territory name="Poland" owner="Germans"/>
+        <territory name="Rhodesia" owner="British"/>
+        <territory name="Russia" owner="Russians"/>
+        <territory name="Sahara" owner="Neutral"/>
+        <territory name="Saudi Arabia" owner="Neutral"/>
+        <territory name="Sinkiang" owner="Americans"/>
+        <territory name="Solomon Islands" owner="Japanese"/>
+        <territory name="Southern Europe" owner="Germans"/>
+        <territory name="Soviet Far East" owner="Russians"/>
+        <territory name="Spain Portugal" owner="Neutral"/>
+        <territory name="Sweden" owner="Neutral"/>
+        <territory name="Switzerland" owner="Neutral"/>
+        <territory name="Szechwan" owner="Americans"/>
+        <territory name="Trans-Jordan" owner="British"/>
+        <territory name="Turkey" owner="Neutral"/>
+        <territory name="Ukraine S.S.R." owner="Germans"/>
+        <territory name="Union of South Africa" owner="British"/>
+        <territory name="United Kingdom" owner="British"/>
+        <territory name="Venezuela" owner="Neutral"/>
+        <territory name="Vologda" owner="Russians"/>
+        <territory name="Wake Island" owner="Japanese"/>
+        <territory name="West Indies" owner="Americans"/>
+        <territory name="West Russia" owner="Germans"/>
+        <territory name="Western Australia" owner="British"/>
+        <territory name="Western Canada" owner="British"/>
+        <territory name="Western United States" owner="Americans"/>
+        <territory name="Yakut S.S.R." owner="Russians"/>
+        <territory name="Yunnan" owner="Americans"/>
+    </territories>
+    <units>
+        <unit type="submarine" owner="Russians" territory="4 Sea Zone" id="77b247d1-9ad5-46e9-9dcc-603dc33e6be1" movesLeft="2" damage="0" transport="null"/>
+        <unit type="transport" owner="Germans" territory="5 Sea Zone" id="416b7a3c-0c5d-43d8-bf0f-df92a3e18619" movesLeft="2" damage="0" transport="null"/>
+        <unit type="submarine" owner="Germans" territory="5 Sea Zone" id="7b9e9c44-f648-4fcb-bb71-b26c43d1cb09" movesLeft="2" damage="0" transport="null"/>
+        <unit type="cruiser" owner="Germans" territory="5 Sea Zone" id="f3903e6e-1b6f-4569-8340-17e95612ed33" movesLeft="2" damage="0" transport="null"/>
+        <unit type="battleship" owner="British" territory="7 Sea Zone" id="77870a3e-c7fc-4bc1-b965-2ad40fe9f583" movesLeft="2" damage="0" transport="null"/>
+        <unit type="transport" owner="British" territory="7 Sea Zone" id="dc7c1e37-1c6a-4219-9cf7-23f13a654428" movesLeft="2" damage="0" transport="null"/>
+        <unit type="destroyer" owner="British" territory="7 Sea Zone" id="ba6158f3-41a4-44a2-a22a-e26a0a650fb3" movesLeft="2" damage="0" transport="null"/>
+        <unit type="submarine" owner="Germans" territory="9 Sea Zone" id="c5efa9e4-dd7a-4ed1-964b-61b0af2223e8" movesLeft="2" damage="0" transport="null"/>
+        <unit type="submarine" owner="Germans" territory="9 Sea Zone" id="c91f3de1-ed52-4dc8-9b34-131f2a87c0d1" movesLeft="2" damage="0" transport="null"/>
+        <unit type="transport" owner="British" territory="10 Sea Zone" id="10e6589b-0d73-4a15-a2d5-448567bfd780" movesLeft="2" damage="0" transport="null"/>
+        <unit type="destroyer" owner="British" territory="10 Sea Zone" id="7512fde5-ca72-44fc-8642-5ff64ebc62ef" movesLeft="2" damage="0" transport="null"/>
+        <unit type="transport" owner="Americans" territory="11 Sea Zone" id="418f99d0-8bb1-4d60-bd4c-62a0a76b351c" movesLeft="2" damage="0" transport="null"/>
+        <unit type="transport" owner="Americans" territory="11 Sea Zone" id="b058df33-f0bb-4082-931b-47b33501ba99" movesLeft="2" damage="0" transport="null"/>
+        <unit type="destroyer" owner="Americans" territory="11 Sea Zone" id="c66dae52-8977-4fe9-b690-6810ee8352da" movesLeft="2" damage="0" transport="null"/>
+        <unit type="cruiser" owner="British" territory="13 Sea Zone" id="35800324-25c7-4f66-a497-d947b0dfb434" movesLeft="2" damage="0" transport="null"/>
+        <unit type="transport" owner="Germans" territory="15 Sea Zone" id="ed77c724-f397-4b89-b8ae-1add241d471d" movesLeft="2" damage="0" transport="null"/>
+        <unit type="battleship" owner="Germans" territory="15 Sea Zone" id="3f63bdde-5ef2-4d60-a3dd-2a9d3ccdd45f" movesLeft="2" damage="0" transport="null"/>
+        <unit type="destroyer" owner="British" territory="17 Sea Zone" id="fa846c40-84da-4cf1-86e2-bcc7ae0988ed" movesLeft="2" damage="0" transport="null"/>
+        <unit type="cruiser" owner="Americans" territory="19 Sea Zone" id="22297ab2-c185-4f6a-a637-21e5b7899928" movesLeft="2" damage="0" transport="null"/>
+        <unit type="carrier" owner="British" territory="35 Sea Zone" id="30f3456f-2ff3-4827-b78b-5ca293796d27" movesLeft="2" damage="0" transport="null"/>
+        <unit type="transport" owner="British" territory="35 Sea Zone" id="ec00f9d6-a5ec-40de-be44-495c83ff25c0" movesLeft="2" damage="0" transport="null"/>
+        <unit type="fighter" owner="British" territory="35 Sea Zone" id="b7b3576b-3c4e-4c02-b0ee-d5dd33f3420b" movesLeft="4" damage="0" transport="null"/>
+        <unit type="cruiser" owner="British" territory="35 Sea Zone" id="4a3e37ad-c8d8-435e-894c-b54d786ef682" movesLeft="2" damage="0" transport="null"/>
+        <unit type="battleship" owner="Japanese" territory="37 Sea Zone" id="6a02769f-e6af-473d-a72e-28daa353c915" movesLeft="2" damage="0" transport="null"/>
+        <unit type="fighter" owner="Japanese" territory="37 Sea Zone" id="a631220d-7cd4-4822-a249-e7bae5da4381" movesLeft="4" damage="0" transport="null"/>
+        <unit type="fighter" owner="Japanese" territory="37 Sea Zone" id="bae0b49f-9255-4f2e-9ad9-300b9eeb6713" movesLeft="4" damage="0" transport="null"/>
+        <unit type="carrier" owner="Japanese" territory="37 Sea Zone" id="388ef29f-d292-4832-a610-b96d0d1c15da" movesLeft="2" damage="0" transport="null"/>
+        <unit type="transport" owner="British" territory="39 Sea Zone" id="c26b1f8c-3e91-4696-9922-29206dfb59f5" movesLeft="2" damage="0" transport="null"/>
+        <unit type="submarine" owner="British" territory="39 Sea Zone" id="6a2cbb7f-84ed-4a0d-9f71-161c0c50708a" movesLeft="2" damage="0" transport="null"/>
+        <unit type="cruiser" owner="British" territory="39 Sea Zone" id="1c112ed4-0042-4a2c-8601-721e67b41b71" movesLeft="2" damage="0" transport="null"/>
+        <unit type="submarine" owner="Japanese" territory="44 Sea Zone" id="5fe34189-19ae-4197-be96-ad9b74e59190" movesLeft="2" damage="0" transport="null"/>
+        <unit type="fighter" owner="Japanese" territory="50 Sea Zone" id="3de8e44d-c2be-42e4-933f-f5be85e534c0" movesLeft="4" damage="0" transport="null"/>
+        <unit type="cruiser" owner="Japanese" territory="50 Sea Zone" id="915102ad-326b-43fb-b054-8dc22d286751" movesLeft="2" damage="0" transport="null"/>
+        <unit type="carrier" owner="Japanese" territory="50 Sea Zone" id="14aac8bc-dfef-40af-b3a0-b80d3ec1f9c9" movesLeft="2" damage="0" transport="null"/>
+        <unit type="fighter" owner="Americans" territory="53 Sea Zone" id="b7c95025-952e-4e70-9fb7-85abef93dfd5" movesLeft="4" damage="0" transport="null"/>
+        <unit type="carrier" owner="Americans" territory="53 Sea Zone" id="3d4b8f63-3de6-42a5-8ef8-cb7e5b5ffd1a" movesLeft="2" damage="0" transport="null"/>
+        <unit type="submarine" owner="Americans" territory="53 Sea Zone" id="a58d76a1-8824-4e1b-8348-46117d0f37a2" movesLeft="2" damage="0" transport="null"/>
+        <unit type="destroyer" owner="Americans" territory="53 Sea Zone" id="e1865ab4-628a-4f53-8c8c-83fce7635e5d" movesLeft="2" damage="0" transport="null"/>
+        <unit type="battleship" owner="Americans" territory="56 Sea Zone" id="8295bf07-2b3f-47b6-9dd4-432c9697ce3d" movesLeft="2" damage="0" transport="null"/>
+        <unit type="destroyer" owner="Americans" territory="56 Sea Zone" id="d7aa0e43-197f-443f-b0ca-6c01f2b96ad2" movesLeft="2" damage="0" transport="null"/>
+        <unit type="transport" owner="Americans" territory="56 Sea Zone" id="8ee099f8-24a8-4175-8e50-e0331462e7ed" movesLeft="2" damage="0" transport="null"/>
+        <unit type="transport" owner="Japanese" territory="60 Sea Zone" id="1347cf98-b74b-404b-9313-b1a5baae2109" movesLeft="2" damage="0" transport="null"/>
+        <unit type="battleship" owner="Japanese" territory="60 Sea Zone" id="f3dd3df5-708c-4a69-a698-97c0c00695e3" movesLeft="2" damage="0" transport="null"/>
+        <unit type="destroyer" owner="Japanese" territory="60 Sea Zone" id="b51e13fd-aacb-4daf-af4e-218fdf5730be" movesLeft="2" damage="0" transport="null"/>
+        <unit type="transport" owner="Japanese" territory="61 Sea Zone" id="816e7c40-736a-4ff9-907c-7e459b423516" movesLeft="2" damage="0" transport="null"/>
+        <unit type="destroyer" owner="Japanese" territory="61 Sea Zone" id="c6b812f2-594e-467c-9f26-34f10d42a1fb" movesLeft="2" damage="0" transport="null"/>
+        <unit type="infantry" owner="Americans" territory="Alaska" id="616f0af4-67bb-49d1-9d85-21f342ae2098" movesLeft="1" damage="0" transport="null"/>
+        <unit type="infantry" owner="Germans" territory="Algeria" id="9416e9dc-4d4f-430f-8547-2d95eaa44b07" movesLeft="1" damage="0" transport="null"/>
+        <unit type="artillery" owner="Germans" territory="Algeria" id="6338cb35-4972-4dca-ba64-38fcbc32e1b6" movesLeft="1" damage="0" transport="null"/>
+        <unit type="infantry" owner="Americans" territory="Anhwei" id="0098e3b3-acfb-4af6-9c7c-edbab6d56556" movesLeft="1" damage="0" transport="null"/>
+        <unit type="infantry" owner="Americans" territory="Anhwei" id="ec67370c-b8db-4b55-ad5d-38c4206d65dc" movesLeft="1" damage="0" transport="null"/>
+        <unit type="armour" owner="Russians" territory="Archangel" id="4caa1f08-b759-4d55-a40d-39e11902c910" movesLeft="2" damage="0" transport="null"/>
+        <unit type="infantry" owner="Russians" territory="Archangel" id="03844466-6ba6-454d-959a-86a506c69894" movesLeft="1" damage="0" transport="null"/>
+        <unit type="infantry" owner="Germans" territory="Baltic States" id="e40f5b9e-c543-4644-a6f8-3c607e90c76f" movesLeft="1" damage="0" transport="null"/>
+        <unit type="armour" owner="Germans" territory="Baltic States" id="b7fe0b58-9628-4f8e-9cb0-29318b2d0115" movesLeft="2" damage="0" transport="null"/>
+        <unit type="infantry" owner="Germans" territory="Belorussia" id="222d7f38-3245-45ec-9da5-202ece8f606c" movesLeft="1" damage="0" transport="null"/>
+        <unit type="infantry" owner="Germans" territory="Belorussia" id="0a702445-2b91-4736-a117-c48ce3c87561" movesLeft="1" damage="0" transport="null"/>
+        <unit type="infantry" owner="Germans" territory="Belorussia" id="3559fa83-fe30-4df0-90b7-6a17524acb3f" movesLeft="1" damage="0" transport="null"/>
+        <unit type="infantry" owner="Japanese" territory="Borneo" id="d051815e-656b-41af-91fc-597f6af91e56" movesLeft="1" damage="0" transport="null"/>
+        <unit type="infantry" owner="Germans" territory="Bulgaria Romania" id="f98b22a5-b1d6-454e-b1da-d0405bcdc15d" movesLeft="1" damage="0" transport="null"/>
+        <unit type="infantry" owner="Germans" territory="Bulgaria Romania" id="d3e5eb3e-8a93-4a86-9e66-84fc896fe014" movesLeft="1" damage="0" transport="null"/>
+        <unit type="fighter" owner="Germans" territory="Bulgaria Romania" id="0a2be62f-fe15-44cd-85fa-4e9f366d3ffb" movesLeft="4" damage="0" transport="null"/>
+        <unit type="armour" owner="Germans" territory="Bulgaria Romania" id="c7bf27f6-2c7f-4513-84c9-aa89edbe1b6c" movesLeft="2" damage="0" transport="null"/>
+        <unit type="infantry" owner="British" territory="Burma" id="11eaf279-9603-4d19-8a23-a6703488f191" movesLeft="1" damage="0" transport="null"/>
+        <unit type="infantry" owner="Russians" territory="Buryatia S.S.R." id="630cc028-2626-4932-9f3a-5fae620fd035" movesLeft="1" damage="0" transport="null"/>
+        <unit type="infantry" owner="Russians" territory="Buryatia S.S.R." id="52954cb0-6df6-44d6-be96-d02ed16dbee2" movesLeft="1" damage="0" transport="null"/>
+        <unit type="infantry" owner="Japanese" territory="Caroline Islands" id="19da3b0d-8699-47f2-9400-c8f9c092f769" movesLeft="1" damage="0" transport="null"/>
+        <unit type="factory" owner="Russians" territory="Caucasus" id="7d172ca7-1fd2-4c17-af73-a83c1c5a3fb3" movesLeft="0" damage="0" transport="null"/>
+        <unit type="aaGun" owner="Russians" territory="Caucasus" id="d3c9561e-6697-41de-88f6-6ac534a4ff76" movesLeft="1" damage="0" transport="null"/>
+        <unit type="artillery" owner="Russians" territory="Caucasus" id="d89e96b7-d180-4dff-abf6-c2275ce4aa11" movesLeft="1" damage="0" transport="null"/>
+        <unit type="infantry" owner="Russians" territory="Caucasus" id="45cfc040-5771-4695-8a90-74b0dfd35fc7" movesLeft="1" damage="0" transport="null"/>
+        <unit type="infantry" owner="Russians" territory="Caucasus" id="3608c17f-0d58-4373-ae26-10c70058067b" movesLeft="1" damage="0" transport="null"/>
+        <unit type="infantry" owner="Russians" territory="Caucasus" id="e4ff47b9-5a66-464a-9408-312dd85d0380" movesLeft="1" damage="0" transport="null"/>
+        <unit type="armour" owner="Russians" territory="Caucasus" id="a6721d7c-8183-4dcb-a6e7-5c43b0133953" movesLeft="2" damage="0" transport="null"/>
+        <unit type="infantry" owner="Americans" territory="Central United States" id="c0a5ddd2-0746-426c-a2b3-8d1db02adc3c" movesLeft="1" damage="0" transport="null"/>
+        <unit type="infantry" owner="Japanese" territory="East Indies" id="96e09eca-783b-42f5-a434-e980d85b4726" movesLeft="1" damage="0" transport="null"/>
+        <unit type="infantry" owner="Japanese" territory="East Indies" id="ee8f3989-b83d-46bf-800f-509c1f5e0bb1" movesLeft="1" damage="0" transport="null"/>
+        <unit type="infantry" owner="British" territory="Eastern Australia" id="8a04e4c1-3d11-439a-ba81-c6065d1556d6" movesLeft="1" damage="0" transport="null"/>
+        <unit type="infantry" owner="British" territory="Eastern Australia" id="4c58c5ee-8526-4c2f-821b-85296ef8faf2" movesLeft="1" damage="0" transport="null"/>
+        <unit type="armour" owner="British" territory="Eastern Canada" id="809faa5e-7de3-4fb6-9c9b-604ffb75656f" movesLeft="2" damage="0" transport="null"/>
+        <unit type="factory" owner="Americans" territory="Eastern United States" id="36002501-7f91-4d4d-8a10-4b24e0680ce3" movesLeft="0" damage="0" transport="null"/>
+        <unit type="armour" owner="Americans" territory="Eastern United States" id="00ac8ccf-8309-41f1-ad6b-75648243f380" movesLeft="2" damage="0" transport="null"/>
+        <unit type="aaGun" owner="Americans" territory="Eastern United States" id="30b9fa8a-6f57-4648-9567-4aaa9230a8eb" movesLeft="1" damage="0" transport="null"/>
+        <unit type="infantry" owner="Americans" territory="Eastern United States" id="33216c16-af06-4371-9d32-e8ae93ad7069" movesLeft="1" damage="0" transport="null"/>
+        <unit type="infantry" owner="Americans" territory="Eastern United States" id="20ea341a-6c40-40fe-a392-1c45654ef89c" movesLeft="1" damage="0" transport="null"/>
+        <unit type="artillery" owner="Americans" territory="Eastern United States" id="1648ab26-97fc-4a95-acff-c395a8cdd4f6" movesLeft="1" damage="0" transport="null"/>
+        <unit type="fighter" owner="Americans" territory="Eastern United States" id="781084e2-d48c-435e-87e2-2d66a218238c" movesLeft="4" damage="0" transport="null"/>
+        <unit type="bomber" owner="Americans" territory="Eastern United States" id="ffc354cb-6b1c-497d-8ca7-91feb80192ce" movesLeft="6" damage="0" transport="null"/>
+        <unit type="infantry" owner="British" territory="Egypt" id="bd8b5a17-0e08-4ae4-81a0-9ae7a3138929" movesLeft="1" damage="0" transport="null"/>
+        <unit type="artillery" owner="British" territory="Egypt" id="b9bdf5ba-2cef-414b-8174-3d20b19b7d42" movesLeft="1" damage="0" transport="null"/>
+        <unit type="armour" owner="British" territory="Egypt" id="13ed3687-8d97-4077-a8af-20f5fd6638bf" movesLeft="2" damage="0" transport="null"/>
+        <unit type="fighter" owner="British" territory="Egypt" id="64295310-b759-495e-a8c9-8d3083836303" movesLeft="4" damage="0" transport="null"/>
+        <unit type="infantry" owner="Russians" territory="Evenki National Okrug" id="ea3272fa-c511-40eb-b5a0-955888ef5945" movesLeft="1" damage="0" transport="null"/>
+        <unit type="infantry" owner="Russians" territory="Evenki National Okrug" id="dab271d1-5f3d-4433-b8f4-cf55d7c99c9f" movesLeft="1" damage="0" transport="null"/>
+        <unit type="infantry" owner="Germans" territory="Finland" id="8f378df4-f6d8-43fd-af87-e827194eae81" movesLeft="1" damage="0" transport="null"/>
+        <unit type="infantry" owner="Germans" territory="Finland" id="17ee8e88-45c3-4288-ae0e-4169d4a369a8" movesLeft="1" damage="0" transport="null"/>
+        <unit type="infantry" owner="Germans" territory="Finland" id="787b8e59-c465-4584-8eec-d3544218c1de" movesLeft="1" damage="0" transport="null"/>
+        <unit type="aaGun" owner="Germans" territory="France" id="536939e3-b8aa-4ccf-bd8d-fba1532b9be7" movesLeft="1" damage="0" transport="null"/>
+        <unit type="infantry" owner="Germans" territory="France" id="706389b5-7645-4e24-8803-688200736abc" movesLeft="1" damage="0" transport="null"/>
+        <unit type="armour" owner="Germans" territory="France" id="d7a91721-4f67-49b3-b5c3-6fdbb2f47b09" movesLeft="2" damage="0" transport="null"/>
+        <unit type="armour" owner="Germans" territory="France" id="72e37a92-e24b-439b-b194-815c1bb61ee5" movesLeft="2" damage="0" transport="null"/>
+        <unit type="fighter" owner="Japanese" territory="French Indo-China Thailand" id="b4dd2649-c74e-4fd5-b0a3-5172bcbda3a3" movesLeft="4" damage="0" transport="null"/>
+        <unit type="infantry" owner="Japanese" territory="French Indo-China Thailand" id="053fc371-2444-4066-9470-59949c545c58" movesLeft="1" damage="0" transport="null"/>
+        <unit type="infantry" owner="Japanese" territory="French Indo-China Thailand" id="5cca8bc5-0e2a-4841-843c-984a94af036f" movesLeft="1" damage="0" transport="null"/>
+        <unit type="artillery" owner="Japanese" territory="French Indo-China Thailand" id="62254832-d082-4c0f-8a7f-d92f80346a7f" movesLeft="1" damage="0" transport="null"/>
+        <unit type="factory" owner="Germans" territory="Germany" id="59df55db-85c4-4abd-b0d7-2f0c10dd900e" movesLeft="0" damage="0" transport="null"/>
+        <unit type="aaGun" owner="Germans" territory="Germany" id="c883a16e-15cc-418f-aefb-677fbe742115" movesLeft="1" damage="0" transport="null"/>
+        <unit type="infantry" owner="Germans" territory="Germany" id="4c6ed346-a7da-40cd-ae48-78426c8f0f12" movesLeft="1" damage="0" transport="null"/>
+        <unit type="infantry" owner="Germans" territory="Germany" id="016d05e0-12dd-4cd0-a889-2f0453cad468" movesLeft="1" damage="0" transport="null"/>
+        <unit type="infantry" owner="Germans" territory="Germany" id="cdb9f908-9d2d-4eb9-abaf-96ca69cdd532" movesLeft="1" damage="0" transport="null"/>
+        <unit type="armour" owner="Germans" territory="Germany" id="7c560d66-46cb-4eb5-8159-5f38d1eb8864" movesLeft="2" damage="0" transport="null"/>
+        <unit type="armour" owner="Germans" territory="Germany" id="c55d5229-6cf2-4f82-970b-e51f8d35ac1e" movesLeft="2" damage="0" transport="null"/>
+        <unit type="fighter" owner="Germans" territory="Germany" id="6ca96906-c163-4d43-bee7-37b314d487f6" movesLeft="4" damage="0" transport="null"/>
+        <unit type="infantry" owner="Americans" territory="Hawaiian Islands" id="9ed121a7-f830-4dce-94d3-8f5503496ed6" movesLeft="1" damage="0" transport="null"/>
+        <unit type="fighter" owner="Americans" territory="Hawaiian Islands" id="35a3dda5-f497-477c-8150-71d93246bf14" movesLeft="4" damage="0" transport="null"/>
+        <unit type="aaGun" owner="British" territory="India" id="5cbd0c06-328a-43cc-8821-3d45a51111e2" movesLeft="1" damage="0" transport="null"/>
+        <unit type="factory" owner="British" territory="India" id="20af417d-3110-46e8-99d6-0219de764170" movesLeft="0" damage="0" transport="null"/>
+        <unit type="infantry" owner="British" territory="India" id="75860f12-06dc-49f9-8b51-fe9e8dc8ce2f" movesLeft="1" damage="0" transport="null"/>
+        <unit type="infantry" owner="British" territory="India" id="1c870560-553d-43c6-94e4-fb3b97c1dff2" movesLeft="1" damage="0" transport="null"/>
+        <unit type="infantry" owner="British" territory="India" id="8e932978-762f-4904-aa1a-a43e2da0d848" movesLeft="1" damage="0" transport="null"/>
+        <unit type="infantry" owner="British" territory="India" id="0bf70edd-7e8d-4145-ac79-3a550f143b8f" movesLeft="1" damage="0" transport="null"/>
+        <unit type="infantry" owner="British" territory="India" id="2c6114e6-f60a-45b9-af87-08ea6e244157" movesLeft="1" damage="0" transport="null"/>
+        <unit type="aaGun" owner="Germans" territory="Italy" id="b23e5d30-f69b-4853-98c0-a6f28cdfec73" movesLeft="1" damage="0" transport="null"/>
+        <unit type="armour" owner="Germans" territory="Italy" id="743e4e59-765c-4295-8749-9acebc393935" movesLeft="2" damage="0" transport="null"/>
+        <unit type="factory" owner="Germans" territory="Italy" id="615a4d51-9e96-41eb-8c12-e134a7b4cefe" movesLeft="0" damage="0" transport="null"/>
+        <unit type="infantry" owner="Germans" territory="Italy" id="600faf26-5b4e-40e3-b3a9-ba7f2eac88a2" movesLeft="1" damage="0" transport="null"/>
+        <unit type="infantry" owner="Japanese" territory="Iwo Jima" id="030d6ce0-12bb-4a92-9cb9-b7cc400ce1f6" movesLeft="1" damage="0" transport="null"/>
+        <unit type="aaGun" owner="Japanese" territory="Japan" id="52e41e18-6ecb-42eb-8a3c-e5de7bef354b" movesLeft="1" damage="0" transport="null"/>
+        <unit type="factory" owner="Japanese" territory="Japan" id="4b60e760-0798-461b-815d-392482b402ad" movesLeft="0" damage="0" transport="null"/>
+        <unit type="infantry" owner="Japanese" territory="Japan" id="5c1dee58-b9b7-4f60-860f-76660ffd516b" movesLeft="1" damage="0" transport="null"/>
+        <unit type="infantry" owner="Japanese" territory="Japan" id="c29b5a91-5d21-414a-a2ca-a74a7e2b6a02" movesLeft="1" damage="0" transport="null"/>
+        <unit type="infantry" owner="Japanese" territory="Japan" id="ce2d82cc-1399-4463-a8c6-006d9801875a" movesLeft="1" damage="0" transport="null"/>
+        <unit type="infantry" owner="Japanese" territory="Japan" id="a4133d9b-fbc6-489b-9f05-489e996b053a" movesLeft="1" damage="0" transport="null"/>
+        <unit type="artillery" owner="Japanese" territory="Japan" id="32649419-57e3-494f-a7d7-a340fc722d3b" movesLeft="1" damage="0" transport="null"/>
+        <unit type="armour" owner="Japanese" territory="Japan" id="c9d68563-3fa5-4a41-8f93-36915bb8f134" movesLeft="2" damage="0" transport="null"/>
+        <unit type="fighter" owner="Japanese" territory="Japan" id="0d4153ad-450e-47e6-948c-9fbbf303f13e" movesLeft="4" damage="0" transport="null"/>
+        <unit type="bomber" owner="Japanese" territory="Japan" id="373eea60-331f-4afb-97d2-c4abda5784c6" movesLeft="6" damage="0" transport="null"/>
+        <unit type="infantry" owner="Russians" territory="Karelia S.S.R." id="0551d121-d5c0-4c1b-a064-d716be12787b" movesLeft="1" damage="0" transport="null"/>
+        <unit type="infantry" owner="Russians" territory="Karelia S.S.R." id="3266ee21-09d6-4520-82d2-c620c7b73dae" movesLeft="1" damage="0" transport="null"/>
+        <unit type="infantry" owner="Russians" territory="Karelia S.S.R." id="857b31bc-cec7-42ee-9021-201735eb6c56" movesLeft="1" damage="0" transport="null"/>
+        <unit type="infantry" owner="Russians" territory="Karelia S.S.R." id="238e0baf-eb69-478f-a7f2-c600260b7fde" movesLeft="1" damage="0" transport="null"/>
+        <unit type="fighter" owner="Russians" territory="Karelia S.S.R." id="d6acc36e-0c62-4239-b706-b1ad11f88c51" movesLeft="4" damage="0" transport="null"/>
+        <unit type="artillery" owner="Russians" territory="Karelia S.S.R." id="290658df-b7f2-4dbe-b5a1-777b418b450a" movesLeft="1" damage="0" transport="null"/>
+        <unit type="factory" owner="Russians" territory="Karelia S.S.R." id="6e15a0ed-eb7f-4d6a-9ede-7d6a0e092dcb" movesLeft="0" damage="0" transport="null"/>
+        <unit type="infantry" owner="Russians" territory="Kazakh S.S.R." id="b9021e22-e4e1-4e56-9d76-b22f1e817376" movesLeft="1" damage="0" transport="null"/>
+        <unit type="infantry" owner="Japanese" territory="Kiangsu" id="e32677cf-e303-43b9-900b-48e64aa66721" movesLeft="1" damage="0" transport="null"/>
+        <unit type="infantry" owner="Japanese" territory="Kiangsu" id="0e6bcb37-3947-46e4-9dce-2aa2293ffd05" movesLeft="1" damage="0" transport="null"/>
+        <unit type="infantry" owner="Japanese" territory="Kiangsu" id="4dc8a127-e7b0-4e20-a3ee-c0d827d34ab4" movesLeft="1" damage="0" transport="null"/>
+        <unit type="infantry" owner="Japanese" territory="Kiangsu" id="397d56b6-8d8d-48ae-9fdb-21ef3e06b11e" movesLeft="1" damage="0" transport="null"/>
+        <unit type="infantry" owner="Japanese" territory="Kwangtung" id="38063dd2-5ea8-4bba-9e73-5d624c3f83fc" movesLeft="1" damage="0" transport="null"/>
+        <unit type="artillery" owner="Japanese" territory="Kwangtung" id="2bf5418c-4f48-4c7b-93a0-27d53436b0c9" movesLeft="1" damage="0" transport="null"/>
+        <unit type="infantry" owner="Germans" territory="Libya" id="c25ed1fc-b0e0-4767-b55a-2d69ee3ef9c0" movesLeft="1" damage="0" transport="null"/>
+        <unit type="armour" owner="Germans" territory="Libya" id="c8b3a67e-c7bb-48ef-ad91-ce6e50567653" movesLeft="2" damage="0" transport="null"/>
+        <unit type="infantry" owner="Japanese" territory="Malaya" id="354bcdab-9587-4e7d-9875-ba319aa3dbbd" movesLeft="1" damage="0" transport="null"/>
+        <unit type="fighter" owner="Japanese" territory="Manchuria" id="5ecb682a-221a-4355-ad85-afd50e2b2f9a" movesLeft="4" damage="0" transport="null"/>
+        <unit type="infantry" owner="Japanese" territory="Manchuria" id="989a6a6e-9d3a-4f55-8e9a-cc79ab05a297" movesLeft="1" damage="0" transport="null"/>
+        <unit type="infantry" owner="Japanese" territory="Manchuria" id="4d949f2e-159f-4b24-a8e4-1b81e0a8e26e" movesLeft="1" damage="0" transport="null"/>
+        <unit type="infantry" owner="Japanese" territory="Manchuria" id="fce1fc6c-e9c2-4852-bfb4-cb81accfb692" movesLeft="1" damage="0" transport="null"/>
+        <unit type="infantry" owner="Americans" territory="Midway" id="806075c5-b531-4c5a-a63c-1b808639943d" movesLeft="1" damage="0" transport="null"/>
+        <unit type="infantry" owner="Germans" territory="Morocco" id="485134b4-a6f2-46b8-8d90-7c16f7ae0d20" movesLeft="1" damage="0" transport="null"/>
+        <unit type="infantry" owner="Japanese" territory="New Guinea" id="847d969b-1eb7-4391-aaf9-2b96a16e9c6b" movesLeft="1" damage="0" transport="null"/>
+        <unit type="infantry" owner="British" territory="New Zealand" id="2ac8ec56-d7bf-45cd-b620-c9101ba494e2" movesLeft="1" damage="0" transport="null"/>
+        <unit type="fighter" owner="Germans" territory="Northwestern Europe" id="38aa91b4-21d4-4e66-bd7e-668adf57254b" movesLeft="4" damage="0" transport="null"/>
+        <unit type="infantry" owner="Germans" territory="Northwestern Europe" id="a591f196-4a17-44a1-8238-f41c3c65f47e" movesLeft="1" damage="0" transport="null"/>
+        <unit type="armour" owner="Germans" territory="Northwestern Europe" id="202c3b6b-8e71-46aa-a177-14ebeda1ef40" movesLeft="2" damage="0" transport="null"/>
+        <unit type="infantry" owner="Germans" territory="Norway" id="538d443a-7ca0-4710-bbac-20597f50269e" movesLeft="1" damage="0" transport="null"/>
+        <unit type="infantry" owner="Germans" territory="Norway" id="f76b7574-2183-4a95-ae62-45e60af7c0a7" movesLeft="1" damage="0" transport="null"/>
+        <unit type="fighter" owner="Germans" territory="Norway" id="92a35813-d063-42e6-a208-f4f1af485a1e" movesLeft="4" damage="0" transport="null"/>
+        <unit type="infantry" owner="Russians" territory="Novosibirsk" id="20f6d816-43b1-47f2-bf82-3dc0381daa2b" movesLeft="1" damage="0" transport="null"/>
+        <unit type="infantry" owner="Japanese" territory="Okinawa" id="1326cd5f-ec2d-4c68-aff2-a6c74adf2cb8" movesLeft="1" damage="0" transport="null"/>
+        <unit type="infantry" owner="British" territory="Persia" id="84a9efb9-f28f-4aff-8fed-ecaad29e1cfb" movesLeft="1" damage="0" transport="null"/>
+        <unit type="infantry" owner="Japanese" territory="Philippine Islands" id="75274923-9023-4ede-b01f-d37fb591372b" movesLeft="1" damage="0" transport="null"/>
+        <unit type="artillery" owner="Japanese" territory="Philippine Islands" id="ed2b97cd-be6b-4282-babd-51b782feffc2" movesLeft="1" damage="0" transport="null"/>
+        <unit type="armour" owner="Germans" territory="Poland" id="78ff616d-5818-4d86-ba2f-d7f0276eccad" movesLeft="2" damage="0" transport="null"/>
+        <unit type="fighter" owner="Germans" territory="Poland" id="fa71535f-0e10-487f-81de-7a0d9bcdfa90" movesLeft="4" damage="0" transport="null"/>
+        <unit type="infantry" owner="Germans" territory="Poland" id="ff3396ff-b1d6-465b-97ef-9ef7d488a07a" movesLeft="1" damage="0" transport="null"/>
+        <unit type="infantry" owner="Germans" territory="Poland" id="2f64dc79-12e7-444d-8f3b-a1bee8ef3c7b" movesLeft="1" damage="0" transport="null"/>
+        <unit type="factory" owner="Russians" territory="Russia" id="528020b7-1ed6-42bc-8391-6db388430ad1" movesLeft="0" damage="0" transport="null"/>
+        <unit type="aaGun" owner="Russians" territory="Russia" id="6a051bbb-85fc-45fa-9adb-704b2fc220cf" movesLeft="1" damage="0" transport="null"/>
+        <unit type="infantry" owner="Russians" territory="Russia" id="b3ee6738-176c-4d64-ab91-7b869d8b4e35" movesLeft="1" damage="0" transport="null"/>
+        <unit type="infantry" owner="Russians" territory="Russia" id="46f832b6-894b-4f2d-8876-abe0bc850060" movesLeft="1" damage="0" transport="null"/>
+        <unit type="infantry" owner="Russians" territory="Russia" id="96ceff19-0220-411b-9eb8-1e5c9889a9be" movesLeft="1" damage="0" transport="null"/>
+        <unit type="infantry" owner="Russians" territory="Russia" id="ff819854-56dd-47e3-b1ad-bcf69a3530d9" movesLeft="1" damage="0" transport="null"/>
+        <unit type="artillery" owner="Russians" territory="Russia" id="c310350d-537d-4a43-a3da-2b0e4659be3d" movesLeft="1" damage="0" transport="null"/>
+        <unit type="armour" owner="Russians" territory="Russia" id="39d8c07f-572b-483c-bcff-4f33da02ca55" movesLeft="2" damage="0" transport="null"/>
+        <unit type="armour" owner="Russians" territory="Russia" id="a6a90496-5e2a-494a-acdc-ca78d735c188" movesLeft="2" damage="0" transport="null"/>
+        <unit type="fighter" owner="Russians" territory="Russia" id="251615f1-0d0f-40e4-a8ad-ed52f29bb3bf" movesLeft="4" damage="0" transport="null"/>
+        <unit type="infantry" owner="Japanese" territory="Solomon Islands" id="99a3b5eb-a193-4a26-bca8-90336843a17e" movesLeft="1" damage="0" transport="null"/>
+        <unit type="infantry" owner="Germans" territory="Southern Europe" id="b99e2710-9c20-4cdb-9213-8b51c3973e58" movesLeft="1" damage="0" transport="null"/>
+        <unit type="artillery" owner="Germans" territory="Southern Europe" id="0501aabc-8300-404e-9f95-d30e6aafc781" movesLeft="1" damage="0" transport="null"/>
+        <unit type="infantry" owner="Russians" territory="Soviet Far East" id="f8b17303-4a91-4076-8a26-0edf72d0d987" movesLeft="1" damage="0" transport="null"/>
+        <unit type="infantry" owner="Russians" territory="Soviet Far East" id="b55e9738-b003-4362-ab15-b53e17b66987" movesLeft="1" damage="0" transport="null"/>
+        <unit type="infantry" owner="Americans" territory="Szechwan" id="cc5fd9e2-f82e-4af4-a89d-69849b339acc" movesLeft="1" damage="0" transport="null"/>
+        <unit type="infantry" owner="Americans" territory="Szechwan" id="81b92208-c66b-457e-a23e-3162fbdbc610" movesLeft="1" damage="0" transport="null"/>
+        <unit type="fighter" owner="Americans" territory="Szechwan" id="f7831c53-00cf-414c-8069-894e0f9e245e" movesLeft="4" damage="0" transport="null"/>
+        <unit type="infantry" owner="British" territory="Trans-Jordan" id="f7e898cc-1466-451f-a10c-50f426e21b4e" movesLeft="1" damage="0" transport="null"/>
+        <unit type="artillery" owner="Germans" territory="Ukraine S.S.R." id="f538f2ea-723b-4a83-b9bf-c3ec01dbefb2" movesLeft="1" damage="0" transport="null"/>
+        <unit type="infantry" owner="Germans" territory="Ukraine S.S.R." id="1cab62dd-09be-4284-816a-ccce133cab4e" movesLeft="1" damage="0" transport="null"/>
+        <unit type="infantry" owner="Germans" territory="Ukraine S.S.R." id="25c4b1a0-8581-4708-8233-b6a27a2023e8" movesLeft="1" damage="0" transport="null"/>
+        <unit type="infantry" owner="Germans" territory="Ukraine S.S.R." id="eec6ce7d-50e5-4f95-8df9-74fda0267d7d" movesLeft="1" damage="0" transport="null"/>
+        <unit type="armour" owner="Germans" territory="Ukraine S.S.R." id="bb5386a0-083c-46e3-b023-0a2968d637b2" movesLeft="2" damage="0" transport="null"/>
+        <unit type="fighter" owner="Germans" territory="Ukraine S.S.R." id="2a80d0e0-a280-474d-a44f-5bc7968ceacf" movesLeft="4" damage="0" transport="null"/>
+        <unit type="bomber" owner="Germans" territory="Ukraine S.S.R." id="18522d59-9747-42f1-9d8e-bc10e6cd88e1" movesLeft="6" damage="0" transport="null"/>
+        <unit type="infantry" owner="British" territory="Union of South Africa" id="30af9b73-2105-4044-8e19-068c7d3489e4" movesLeft="1" damage="0" transport="null"/>
+        <unit type="infantry" owner="British" territory="United Kingdom" id="b626cb03-05aa-4050-b254-0fb3cf9a06d8" movesLeft="1" damage="0" transport="null"/>
+        <unit type="infantry" owner="British" territory="United Kingdom" id="8d356f0c-948f-4c5b-9d67-17dcbcac1fdd" movesLeft="1" damage="0" transport="null"/>
+        <unit type="artillery" owner="British" territory="United Kingdom" id="3f95aaad-7da9-47be-9f37-f8b9d9c61400" movesLeft="1" damage="0" transport="null"/>
+        <unit type="armour" owner="British" territory="United Kingdom" id="7aaed01c-0897-4b44-a397-270d23705a9e" movesLeft="2" damage="0" transport="null"/>
+        <unit type="factory" owner="British" territory="United Kingdom" id="6cb59830-7f6e-4323-86e1-d64633e80705" movesLeft="0" damage="0" transport="null"/>
+        <unit type="aaGun" owner="British" territory="United Kingdom" id="5c67acdc-e0c8-4a61-8bc4-f4a3189a929c" movesLeft="1" damage="0" transport="null"/>
+        <unit type="fighter" owner="British" territory="United Kingdom" id="31b4d60a-5768-4ddc-a1be-f5ebd11eb101" movesLeft="4" damage="0" transport="null"/>
+        <unit type="fighter" owner="British" territory="United Kingdom" id="0f67e7d9-40b7-4cde-a6bb-1b932e9b786c" movesLeft="4" damage="0" transport="null"/>
+        <unit type="bomber" owner="British" territory="United Kingdom" id="682e2a0f-b4a3-478b-8e0f-7ab36bc50a4d" movesLeft="6" damage="0" transport="null"/>
+        <unit type="infantry" owner="Japanese" territory="Wake Island" id="a273bc95-f4c9-4c30-9cbf-1df51e30175c" movesLeft="1" damage="0" transport="null"/>
+        <unit type="infantry" owner="Germans" territory="West Russia" id="3bf74f34-afac-4416-83b9-e0762868a58b" movesLeft="1" damage="0" transport="null"/>
+        <unit type="infantry" owner="Germans" territory="West Russia" id="522459de-7d6c-42d8-8a49-2036260568c9" movesLeft="1" damage="0" transport="null"/>
+        <unit type="infantry" owner="Germans" territory="West Russia" id="5c3be460-8f8a-4a31-88bf-85fb0d1cbaeb" movesLeft="1" damage="0" transport="null"/>
+        <unit type="artillery" owner="Germans" territory="West Russia" id="5f97283e-4df8-4471-9eb3-93d17ca29560" movesLeft="1" damage="0" transport="null"/>
+        <unit type="armour" owner="Germans" territory="West Russia" id="f5c73434-efa0-484e-944d-6debef17ba97" movesLeft="2" damage="0" transport="null"/>
+        <unit type="infantry" owner="British" territory="Western Australia" id="b07deb1d-3a2d-460b-8c89-d67070101047" movesLeft="1" damage="0" transport="null"/>
+        <unit type="infantry" owner="British" territory="Western Canada" id="5af2c4aa-f9ed-4b53-b3f2-9a49bce1abda" movesLeft="1" damage="0" transport="null"/>
+        <unit type="aaGun" owner="Americans" territory="Western United States" id="215b4b87-81a4-4d54-920a-8e866c8652b6" movesLeft="1" damage="0" transport="null"/>
+        <unit type="factory" owner="Americans" territory="Western United States" id="2f3b9be5-304f-4db2-97b6-ebeabdf13761" movesLeft="0" damage="0" transport="null"/>
+        <unit type="infantry" owner="Americans" territory="Western United States" id="3724afef-a97c-4d25-87fa-e009943c1210" movesLeft="1" damage="0" transport="null"/>
+        <unit type="infantry" owner="Americans" territory="Western United States" id="83d8e7a8-f6e2-4e8a-b5e6-0d95885470fa" movesLeft="1" damage="0" transport="null"/>
+        <unit type="fighter" owner="Americans" territory="Western United States" id="5c70b752-527d-4b4a-87f5-d9bcdaa9f285" movesLeft="4" damage="0" transport="null"/>
+        <unit type="infantry" owner="Russians" territory="Yakut S.S.R." id="13bf9a19-e75f-4494-a471-8deb4f15973b" movesLeft="1" damage="0" transport="null"/>
+        <unit type="infantry" owner="Americans" territory="Yunnan" id="2786c026-a800-4c4d-89e8-f1b435740335" movesLeft="1" damage="0" transport="null"/>
+        <unit type="infantry" owner="Americans" territory="Yunnan" id="3a5a3cab-3c97-4a56-9480-b788e3453bc7" movesLeft="1" damage="0" transport="null"/>
+    </units>
+</game>

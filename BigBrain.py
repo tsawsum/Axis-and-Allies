@@ -128,7 +128,7 @@ class Heuristics:
                     dists[0] = dist
                     remaining -= 1
                 # Distance to nearest enemy capital
-                if dists[1] < 0 and game.rules.board[ter].is_capital and game.rules.teams[game.rules.board[ter].is_capital] == enemy_team:
+                if dists[1] < 0 and game.rules.board[ter].is_capital and game.rules.teams[game.state_dict[ter].owner] == enemy_team:
                     dists[1] = dist
                     remaining -= 1
                 # Distance to nearest enemy factory
@@ -370,11 +370,14 @@ class IsWinning(Heuristics):
 
 
 class GameController:
-    def __init__(self, xml_file=''):
+    def __init__(self, xml_file='', brain=None):
         self.game = BoardState.Game()
         if not xml_file:
             self.game.export_reader(xml_file)
-        self.brain = Brain()
+        if not brain:
+            self.brain = Brain()
+        else:
+            self.brain = brain
         while self.do_one_phase():
             pass
 
@@ -387,7 +390,7 @@ class GameController:
             print('Running purchase phase for ' + player + '...')
             phases.Build(self.game).build_units()
             print('The following units were purchased:')
-            for unit_state in self.game.purchased_units:
+            for unit_state in self.game.purchased_units[player]:
                 print(self.game.rules.get_unit(unit_state).name)
             self.game.turn_state.phase += 1
             print('Purchase phase complete.')
