@@ -24,7 +24,7 @@ class ExpectedValues:
     def get_expected_risk_tolerance(self, game, player, territory_name):
         # TODO: Find a way to get risk tolerance based on values we know
         #  This is what we train the Neural Network with
-        #  Output should be normalized to be between 0 and 1
+        #  Output should be the threshold value of James' function that the AI would no longer attack at
         return 0
 
     def get_expected_importance_value(self, game, player, territory_name):
@@ -90,7 +90,7 @@ class Trainer:
         model = keras.models.Sequential()
         model.add(keras.layers.Dense(12, input_dim=len(self.risk_tolerance_data[0][0]), activation='relu'))
         model.add(keras.layers.Dense(8, activation='relu'))
-        model.add(keras.layers.Dense(1, activation='sigmoid'))
+        model.add(keras.layers.Dense(1, activation='relu'))
         model.compile(loss='mean_squared_error', optimizer='adam', metrics=['accuracy'])
 
         # Train and test the model
@@ -146,8 +146,8 @@ class Trainer:
 
 
 # Example use:
-# trainer = Trainer([('xmlfiles/Game5', 'Axis'),
-#                    ('xmlfiles/Game20', 'Allies'),
-#                    ('xmlfiles/Game27', 'Axis'),
-#                    ('xmlfiles/Game45', 'Allies')])
+# trainer = Trainer([('path/to/xmlfiles/Game5', 'Axis'),
+#                    ('path/to/xmlfiles/Game20', 'Allies'),
+#                    ('path/to/xmlfiles/Game27', 'Axis'),
+#                    ('path/to/xmlfiles/Game45', 'Allies')])
 # trainer.train_all()

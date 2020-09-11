@@ -653,6 +653,8 @@ class Rules:
         self.win_cons = ["France", "Germany", "Italy", "Karelia S.S.R.", "United Kingdom", "Eastern United States", 
                          "Western United States", "Russia", "India", "Kiangsu", "Japan", "Philippine Islands", "Hawaiian Islands"]
 
+        self.aa_flyover = True
+
     def get_unit(self, index):
         return self.units[index]
 
@@ -738,7 +740,7 @@ class Game:
                         "Russia": Player('Russia', 'Russia'),
                         "Germany": Player('Germany', 'Germany'),
                         "Japan": Player('Japan', 'Japan')}
-
+        self.purchased_units = list()
         # dictionary from territory names to territory states (containing unit_states)
         self.state_dict = {"1 Sea Zone": TerritoryState("Sea Zone", []),
                            "2 Sea Zone": TerritoryState("Sea Zone", []),
@@ -1016,6 +1018,7 @@ class Game:
             return ""                      
 
     def export_reader(self, xml_file):
+        # TODO: Must get purchased units from savegame
         # Read xml
         root = ET.parse(xml_file).getroot()
         turn = root.find("turn")
@@ -1031,7 +1034,7 @@ class Game:
             i += 1
         player, phase = player_phase[:i], player_phase[i:]
         turn_state_indices = {"russian": 0, "german": 1, "british": 2, "japanese": 3, "american": 4,
-                              "Tech": 0, "Purchase": 2, "CombatMove": 3, "Battle": 3, "NonCombatMove": 5, "Place": 6,
+                              "Tech": 2, "Purchase": 2, "CombatMove": 3, "Battle": 4, "NonCombatMove": 5, "Place": 6,
                               "TechActivation": 6, "EndTurn": 6}  # Why are there several things attatched to each number
         self.turn_state = TurnState(int(turn.get("round")), turn_state_indices[player], turn_state_indices[phase])
 

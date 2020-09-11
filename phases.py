@@ -66,7 +66,7 @@ class UnitStack:
 #   then determine the ratio: and pick like the top 5 to battle calculate
 #  Make sure to both prioritize taking factory territories and to not include them in the above calculation
 class Attackable:
-    def __init__(self, game, player, ai_importance, risk_tolerance, factory_risk=None, capital_risk=None, vuln=None):
+    def __init__(self, game, player, ai_importance, risk_tolerances, vuln=None):
         self.game = game
         self.player = player
         if vuln:
@@ -74,15 +74,7 @@ class Attackable:
         else:
             self.vuln = Vulnerability(game)
         self.importance = ai_importance
-        self.risk_tolerance = risk_tolerance
-        if factory_risk:
-            self.factory_risk = factory_risk
-        else:
-            self.factory_risk = risk_tolerance
-        if capital_risk:
-            self.capital_risk = capital_risk
-        else:
-            self.capital_risk = risk_tolerance
+        self.risk_tolerances = risk_tolerances
 
     def get_is_frontline(self, territory_name):
         enemy_team = self.game.rules.enemy_team(player=self.game.state_dict[territory_name].owner)
@@ -113,9 +105,7 @@ class Attackable:
 
         return self.game.rules.teams[owner] != self.game.rules.teams[self.player] \
                and (has_enemy_units or not has_friendly_units) \
-               and (vulnerability > 1 - self.risk_tolerance
-                    or (self.game.rules.board[territory_name].is_capital and vulnerability > 1 - self.capital_risk)
-                    or (has_factory and vulnerability > 1 - self.factory_risk))
+               and vulnerability >= self.risk_tolerances[territory_name]
 
     def get_best_attacks(self, just_get_territories=False):
         possible_territories = sorted([territory_name for territory_name in self.game.state_dict.keys()
@@ -239,7 +229,8 @@ class Attackable:
                 for unit_stack in battles[territory_name]:
                     for unit_state in unit_stack.get_unit_states():
                         unit_state_list.append(unit_state)
-                battle_sim = BattleCalculator(self.game, self.player, unit_state_list, self.game.rules.board[territory_name].ipc)
+                battle_sim = BattleCalculator(self.game, self.player, unit_state_list, self.game.rules.board[territory_name].ipc,
+                                              self.importance[territory_name])
                 if not self.is_worth_attacking_battle_sim(territory_name, battle_sim):
                     not_worth.append(territory_name)
             if not not_worth:
@@ -258,7 +249,8 @@ class Attackable:
                     for other_unit_stack in battles[theoretical_attack[unit_stack]]:
                         for unit_state in other_unit_stack.get_unit_states():
                             unit_state_list.append(unit_state)
-                    battle_sim = BattleCalculator(self.game, self.player, unit_state_list, self.game.rules.board[theoretical_attack[unit_stack]].ipc)
+                    battle_sim = BattleCalculator(self.game, self.player, unit_state_list, self.game.rules.board[theoretical_attack[unit_stack]].ipc,
+                                                  self.importance[theoretical_attack[unit_stack]])
                     if self.is_worth_attacking_battle_sim(theoretical_attack[unit_stack], battle_sim):
                         not_worth.remove(theoretical_attack[unit_stack])
             del battles[worst_battle]
@@ -550,10 +542,9 @@ class Vulnerability:
         worst_case = max(values)
         return worst_case
 
-    def is_vulnerable(self, territory_name, theoretical_append=list(), attacker='', defender='', risk_tolerance=0):
+    def is_vulnerable(self, territory_name, risk_tolerances, theoretical_append=list(), attacker='', defender=''):
         vulnerability = self.get_vulnerability(territory_name, theoretical_append, attacker, defender)
-        # TODO: AI: Have AI decide risk_tolerance based on its estimate of losing or not.
-        return vulnerability > 1 - risk_tolerance
+        return vulnerability >= risk_tolerances[territory_name]
 
 
 class Build:
@@ -561,7 +552,7 @@ class Build:
     AI decides upon priority values. Purchases are determiend by the ratio of each priority value to the sum times the total ipc.
     """
 
-    def __init__(self, game, endangered_name_list):  # game.turn_state, etc.
+    def __init__(self, game):  # game.turn_state, etc.
         self.game = game
         self.player = self.game.turn_state.player
         self.ipc = self.game.turn_state.player.ipc
@@ -586,6 +577,7 @@ class Build:
         self.prioritization_list.append(['artillery', 0])  # 14
         self.prioritization_list.append(['infantry', 0])  # 15
 
+    def build_units(self):
         # sea
         self.sea_defense_sum = self.prioritization_list[1][1] + self.prioritization_list[3][1] \
                                + self.prioritization_list[4][1] + self.prioritization_list[6][1] + \
@@ -642,6 +634,8 @@ class Build:
             self.purchased_unit_state_list.append(BoardState.UnitState(self.player, 0))  # infantry
             self.ipc -= 3
 
+        self.game.purchased_units = self.purchased_unit_state_list[:]
+
     def prioritizer(self, prioritization, strength):
         # Something the AI can call if it wants to change the build priority of a unit
         for arr in self.prioritization_list:
@@ -656,7 +650,7 @@ class BattleCalculator:
 
     # account for land units on transpots in ipc swing
 
-    def __init__(self, game, attacking_player, unit_state_list, territory_value, attacker_one_land_unit_remaining=False,
+    def __init__(self, game, attacking_player, unit_state_list, territory_value, territory_importance, attacker_one_land_unit_remaining=False,
                  attacker_prioritize_unit_index=-1, defender_prioritize_unit_index=-1):
         self.unit_state_list = unit_state_list
         self.ipc_swing = 0
@@ -669,7 +663,7 @@ class BattleCalculator:
         self.defend_priority = defender_prioritize_unit_index
         self.attacking_player = attacking_player
         self.battle_sim(500)
-        self.net_ipc_swing = self.ipc_swing + ((self.embattled_territory_value * long_term_affinity) * self.victory_chance)  # TODO: AI: Have the AI decide on long_term_affinity
+        self.net_ipc_swing = self.ipc_swing + ((self.embattled_territory_value * territory_importance * 2) * self.victory_chance)
 
     def num_casualties(self, total_power):
         return total_power // 6 + (random.randint(1, 6) < total_power % 6)
@@ -743,9 +737,8 @@ class BattleCalculator:
 
 
 class CombatMove:
-    def __init__(self, game, aa_flyover=True):
+    def __init__(self, game):
         self.game = game
-        self.aa_flyover = aa_flyover
 
     def can_move(self, unit_state, current_territory, goal_territory):
         return self.game.calc_movement(unit_state, current_territory, goal_territory)[0] >= 0
@@ -754,13 +747,17 @@ class CombatMove:
         dist, path = self.game.calc_movement(unit_state, current_territory, goal_territory)
         if dist == -1:
             return False
+
         current_territory_state, goal_territory_state = self.game.state_dict[current_territory.name], \
                                                         self.game.state_dict[goal_territory.name]
         current_territory_state.unit_state_list.remove(unit_state)
         unit = self.game.rules.get_unit(unit_state.type_index)
+        print('Moved', unit.name, 'from', current_territory, 'to', goal_territory)
+        if unit.name == 'transport':
+            print('    - Unit is carrying', [land_unit.index(unit_state).name for land_unit in unit_state.attached_units])
 
         # AA guns
-        if self.aa_flyover and unit.unit_type == 'air':
+        if self.game.rules.aa_flyover and unit.unit_type == 'air':
             # Check for aa guns in each territory
             for ter_name in path:
                 territory_state = self.game.state_dict[ter_name]
@@ -771,15 +768,22 @@ class CombatMove:
                         if other_unit_state.shots_taken < 3:
                             other_unit_state.shots_taken += 1
                             if random.randint(1, 6) == 1:
+                                print('    - Unit shot down by AA gun in', ter_name)
+                                current_territory_state.unit_state_list.remove(unit_state)
                                 return True
 
         # Bombing factories
         if bombing and unit.name == 'bomber':
+            unit_state.retreated = True
             for other_unit_state in goal_territory_state:
                 if other_unit_state.type_index == 4 and other_unit_state.shots_taken < 3:
-                    self.game.players[unit_state.owner].ipc -= random.randint(1, 6)
+                    dmg = random.randint(1, 6)
+                    print('    - Unit shot factory for', dmg, 'damage')
+                    self.game.players[unit_state.owner].ipc -= dmg
                     other_unit_state.shots_taken += 1
                     if random.randint(1, 6) == 1:
+                        print('    - Unit shot down by factory')
+                        current_territory_state.unit_state_list.remove(unit_state)
                         return True
 
         # Update unit
@@ -787,6 +791,7 @@ class CombatMove:
         unit_state.moves_used += dist
         unit_state.moved_from = path
         if unit_state.attached_to:
+            print('    - Unit was on transport carrying', [land_unit.index(unit_state).name for land_unit in unit_state.attachted_to.attached_units])
             unit_state.attached_to.attached_units.remove(unit_state)
             unit_state.attached_to.moves_used = 2
             unit_state.attached_to = None
@@ -807,10 +812,15 @@ class CombatMove:
                             if not other_unit_state.shots_taken:
                                 other_unit_state.shots_taken += 1
                                 unit_state.moves_used = unit.movement
+                                other_unit_state.retreated = True
                                 if random.randint(1, 6) <= 4:
+                                    print('    - Battleship successfully bombarded')
                                     Battles(self.game, just_casualty_selector=True).casualty_selector(
                                         self.game.rules.enemy_team(player=unit_state.owner),
                                         goal_territory_state.unit_state_list, 'defense', 1)
+                                else:
+                                    print('    - Battleship unsuccessfully bombarded')
+
         if goal_territory.is_water and unit.unit_type == 'land':
             # Attach to transport
             if unit.name == 'infantry':
@@ -836,11 +846,15 @@ class CombatMove:
                                 unit_state.attached_to = other_unit_state
                                 other_unit_state.attached_units.append(unit_state)
                                 break
+            if len(unit_state.attachted_to.attached_units) == 1:
+                print('    - Attached unit to empty transport')
+            else:
+                name = unit_state.attachted_to.attached_units[1 - unit_state.attachted_to.attached_units.index(unit_state)].name
+                print('    - Attached unit to transport carrying', name)
         return True
 
-    def do_combat_move(self, ai_importance, risk_tolerance, factory_risk=None, capital_risk=None):
-        attackable = Attackable(self.game, self.game.turn_state.player, ai_importance, risk_tolerance, factory_risk,
-                                capital_risk)
+    def do_combat_move(self, ai_importance, risk_tolerances):
+        attackable = Attackable(self.game, self.game.turn_state.player, ai_importance, risk_tolerances)
         moves_to_do = attackable.get_best_attacks()
         # TODO: Later: Currently can't bomb or bombard lol
         for unit_state, current_territory, goal_territory in moves_to_do:
@@ -857,7 +871,6 @@ class Battles:
         self.territory_states = game.state_dict
         self.player = game.turn_state.player
         self.team = game.rules.teams[self.player]
-        game.turn_state.phase = 4
 
         self.importances = ai_importance
         self.retreating = False
@@ -873,11 +886,13 @@ class Battles:
 
             if self.embattled(unit_state_list):
                 # if two different team's units are in a territory at the end of combat move
+                print('Resolving battle in', territory_state)
 
                 # resets unit_state_list to be equal to the remaining units
                 unit_state_list = self.battler(unit_state_list, territory_key)
                 for unit_state in unit_state_list:
-                    if unit_state.owner == self.player:  # factories are technically enemy
+                    if unit_state.owner == self.player and not unit_state.retreated:
+                        print('    - Won battle')
                         territory_state.just_captured = True
                         # Check if original owner has capital and is ally, if so give it back to them
                         original_owner = self.game.rules.board[territory_key].original_owner
@@ -891,6 +906,9 @@ class Battles:
                                 original_owner = self.game.rules.board[territory_key].original_owner
                                 self.game.players[self.player].ipc += self.game.players[original_owner].ipc
                                 self.game.players[original_owner].ipc = 0
+                        break
+                if not territory_state.just_captured:
+                    print('    - Lost battle')
             else:
                 pass
 
@@ -915,7 +933,7 @@ class Battles:
                         offensive_destroyer = True
                 else:
                     defense_units.append(unit_state)
-                    if unit.type_index == 6:
+                    if unit_state.type_index == 6:
                         sub_attack += 2
                     else:
                         if unit_state.type_index == 7:
@@ -925,14 +943,16 @@ class Battles:
         for unit_state in unit_state_list:
             if unit_state.type_index == 6:
                 if self.game.rules.teams[unit_state.owner] == self.team:
-                    if Vulnerability(game).battle_formula(offense_units, defense_units) <= 0.25 \
+                    if Vulnerability(self.game).battle_formula(offense_units, defense_units) <= 0.25 \
                             and not defensive_destroyer:  # 0.25 is arbitrary. change if needed.
                         unit_state.retreated = True
+                        print('    - Offensive submarine submerged')
                 else:
-                    if Vulnerability(game).battle_formula(offense_units, defense_units) <= 0.95 \
+                    if Vulnerability(self.game).battle_formula(offense_units, defense_units) <= 0.95 \
                     and defensive_power < sub_attack \
                     and not offensive_destroyer:
                         unit_state.retreated = True
+                        print('    - Defensive submarine submerged')
 
     def battler(self, unit_state_list, territory_name):
         # inputs units (unit_states) originally in embattled territory and returns remaining units
@@ -992,13 +1012,14 @@ class Battles:
             # these modify unit_state_list
 
             # Unexpected retreat decision
-            self.battle_calculator = BattleCalculator(unit_state_list, territory_value)
+            self.battle_calculator = BattleCalculator(unit_state_list, territory_value, self.importances[territory_name])
             if (self.battle_calculator.net_ipc_swing <= 0) and not self.kamikaze:
                 self.retreating = True
 
             if self.retreating and (land_retreat_options or water_retreat_options):
                 still_battling = False
                 self.retreating = False
+                print('    - Retreated units')
                 for unit_state in offense_units:
                     # Planes don't retreat
                     if self.game.rules.get_unit(unit_state.type_index).unit_type == 'air':
@@ -1060,6 +1081,7 @@ class Battles:
 
         # check if can simply wipe the list
         if casualty_count >= len(friendly_units):
+            print('    - All remaining', team, 'units died')
             for unit_state in friendly_units:
                 unit_state_list.remove(unit_state)
             return False
@@ -1101,6 +1123,7 @@ class Battles:
                 friendly_units.remove(lowest_cost_unit)  # for the while loop
                 lowest_power_list.remove(lowest_cost_unit)  # for the while loop
                 casualty_count = casualty_count - 1
+                print('    -', team, self.game.rules.get_unit(lowest_cost_unit).name, 'died')
 
             # refills friendly_units with the units we tried to save if there are too many deaths
             if not friendly_units:
@@ -1115,12 +1138,10 @@ class Battles:
 
 
 class NonCombatMove:
-    def __init__(self, game, aa_flyover):
+    def __init__(self, game, ai_importance, risk_tolerances):
         self.game = game
-        self.aa_flyover = aa_flyover
-
-        # TODO: AI: Have the AI get importance values
-        self.important_territories = {}
+        self.importances = ai_importance
+        self.risk_tolerances = risk_tolerances
 
     def can_move(self, unit_state, current_territory, goal_territory):
         return self.game.calc_movement(unit_state, current_territory, goal_territory)[0] >= 0
@@ -1132,7 +1153,7 @@ class NonCombatMove:
 
         territory_name_list = []
 
-        for territory_key in self.important_territories:
+        for territory_key in self.importances:
             for territory_name in self.game.state_dict:
                 if territory_key == territory_name and \
                         self.game.rule.teams[self.game.state_dict[territory_name].owner] == self.game.rule.teams[self.game.turn_state.player]:
@@ -1142,15 +1163,18 @@ class NonCombatMove:
         dist, path = self.game.calc_movement(unit_state, current_territory, goal_territory)
         if dist == -1:
             return False
-        current_territory_state, goal_territory_state = self.game.state_dict[current_territory.name], \
-                                                        self.game.state_dict[goal_territory.name]
+        current_territory_state, goal_territory_state = self.game.state_dict[current_territory], \
+                                                        self.game.state_dict[goal_territory]
         current_territory_state.unit_state_list.remove(unit_state)
         for other_unit_state in unit_state.attached_units:
             current_territory_state.unit_state_list.remove(other_unit_state)
         unit = self.game.rules.get_unit(unit_state.type_index)
+        print('Moved', unit.name, 'from', current_territory, 'to', goal_territory)
+        if unit.name == 'transport':
+            print('    - Unit is carrying', [land_unit.index(unit_state).name for land_unit in unit_state.attached_units])
 
         # AA guns
-        if self.aa_flyover and unit.unit_type == 'air':
+        if self.game.rules.aa_flyover and unit.unit_type == 'air':
             # Check for aa guns in each territory
             for ter_name in path:
                 if ter_name not in unit_state.moved_from:
@@ -1162,6 +1186,7 @@ class NonCombatMove:
                             if other_unit_state.shots_taken < 3:
                                 other_unit_state.shots_taken += 1
                                 if random.randint(1, 6) == 1:
+                                    print('    - Unit shot down by AA gun in', ter_name)
                                     return True
 
         # Update unit
@@ -1171,9 +1196,10 @@ class NonCombatMove:
         unit_state.moves_used += dist
         unit_state.moved_from = path
         if unit_state.attached_to:
+            print('    - Unit was on transport carrying', [land_unit.index(unit_state).name for land_unit in unit_state.attachted_to.attached_units])
             unit_state.attached_to.attached_units.remove(unit_state)
             unit_state.attached_to = None
-        if goal_territory.is_water and unit.unit_type == 'land':
+        if self.game.rules.board[goal_territory].is_water and unit.unit_type == 'land':
             # Attach to transport
             if unit.name == 'infantry':
                 # Look for open infantry spots
@@ -1198,9 +1224,14 @@ class NonCombatMove:
                                 unit_state.attached_to = other_unit_state
                                 other_unit_state.attached_units.append(unit_state)
                                 break
+            if len(unit_state.attachted_to.attached_units) == 1:
+                print('    - Attached unit to empty transport')
+            else:
+                name = unit_state.attachted_to.attached_units[1 - unit_state.attachted_to.attached_units.index(unit_state)].name
+                print('    - Attached unit to transport carrying', name)
         return True
 
-    def do_non_combat_move(self, ai_importance, risk_tolerance, factory_risk=None, capital_risk=None):
+    def do_non_combat_move(self):
         # Get which units even have moves left
         available_units = list()
         total_moves = [self.game.rules.get_unit(i).movement for i in range(len(self.game.rules.units))]
@@ -1225,7 +1256,7 @@ class NonCombatMove:
                 vuln_copy.territories = vulnerability.territories.copy()
                 vuln_copy.invalid = False
                 # Simulate opponent trying to attack
-                attackable = Attackable(self.game, player, ai_importance, risk_tolerance, factory_risk, capital_risk)
+                attackable = Attackable(self.game, player, self.importances, self.risk_tolerances)
                 territories_under_threat.update(attackable.get_best_attacks(just_get_territories=True))
 
         # For each unit, check which of these territories it is able to help, and find the most important one.
@@ -1236,13 +1267,12 @@ class NonCombatMove:
                 if self.game.calc_movement(unit_state, territory_name, goal_territory, phase=5)[0] >= 0:
                     can_move_to.append(goal_territory)
             if can_move_to:
-                most_important_territory = max(can_move_to, key=lambda x: ai_importance[x])
+                most_important_territory = max(can_move_to, key=lambda x: self.importances[x])
                 vulnerability.territories[territory_name][self.game.rules.teams[self.game.turn_state.player]].remove(
                     unit_state)
-                if ai_importance[most_important_territory] > ai_importance[territory_name] \
+                if self.importances[most_important_territory] > self.importances[territory_name] \
                         or not vulnerability.is_vulnerable(territory_name, defender=self.game.turn_state.player):
-                    vulnerability.territories[most_important_territory][
-                        self.game.rules.teams[self.game.turn_state.player]].append(unit_state)
+                    vulnerability.territories[most_important_territory][self.game.rules.teams[self.game.turn_state.player]].append(unit_state)
                     self.move_unit(unit_state, territory_name, most_important_territory)
                 else:
                     vulnerability.territories[territory_name][
@@ -1255,9 +1285,7 @@ class Place:
     is a pretty linear, albeit complicated, process.
     """
 
-    # TODO: AI: Make the AI decide "build importance" for every territory
-    def __init__(self, game, purchased_unit_state_list, build_importance):
-        game.turn_state.phase = 6
+    def __init__(self, game, purchased_unit_state_list, build_importance, risk_tolerances):
         self.placements = {}
         self.build_importance = build_importance
         self.game = game
@@ -1265,8 +1293,7 @@ class Place:
         self.immediate_defensive_requirements = list()
         self.latent_defensive_requirements = list()
         self.vulnerability = Vulnerability(game)
-        self.endangered_name_list = self.get_territories_under_threat(build_importance, risk_tolerance)
-        # TODO: AI: Have the Ai pass these values
+        self.endangered_name_list = self.get_territories_under_threat(build_importance, risk_tolerances)
 
         self.factories = []
         for territory_name in self.game.state_dict:
@@ -1403,7 +1430,7 @@ class Place:
                     and vulnerability_reader:
                 if len(theoretical_append) < build_slots:
                     if vulnerability_reader_active \
-                            or len(theoretical_append) < build_importance_getter(territory_name):
+                            or len(theoretical_append) < self.build_importance[territory_name]:
                         theoretical_append.append(unit_state)
 
     def adjacent_factory_finder(self, territory_name):
@@ -1445,7 +1472,7 @@ class Place:
                 for fac_territory_name in adjacent_factory_list:
                     if i == 0 and len(theoretical_append) < self.build_slots(fac_territory_name):
                         if vulnerability_reader_active \
-                                or len(theoretical_append) < build_importance_getter(territory_name):
+                                or len(theoretical_append) < self.build_importance[territory_name]:
                             i = 1
                             theoretical_append.append(unit_state)
                             # TODO: AI: Have the AI organize the placements list.
@@ -1468,7 +1495,7 @@ class Place:
                 for fac_territory_name in adjacent_factory_list:
                     if i == 0 and len(theoretical_append) < self.build_slots(fac_territory_name):
                         if vulnerability_reader_active or \
-                                len(theoretical_append) < build_importance_getter(territory_name):
+                                len(theoretical_append) < self.build_importance[territory_name]:
                             i = 1
                             theoretical_append.append(unit_state)
 
@@ -1476,7 +1503,7 @@ class Place:
             elif (unit_state.type_index == 0 or unit_state.type_index == 1) and not vulnerability_reader_active:
                 for fac_territory_name in adjacent_factory_list:
                     if len(theoretical_append) < self.build_slots(fac_territory_name) \
-                            and len(theoretical_append) < build_importance_getter(territory_name):
+                            and len(theoretical_append) < self.build_importance[territory_name]:
                         for unit_state2 in theoretical_append:
                             if unit_state2.type_index == 5:
                                 transport_space += self.game.rules.get_unit(5).transport_capacity
@@ -1613,16 +1640,18 @@ class Place:
         for territory_key in self.placements:
             for unit_state in self.placements[territory_key]:
                 self.game.state_dict[territory_key].unit_state_list.append(unit_state)
+                print('Placed', self.game.rules.get_unit(unit_state.type_index).name, 'in', territory_key)
         self.vulnerability.invalid = True
 
 
 class Cleanup:
     def __init__(self, game):
-        
-        if game.has_won(): # decides if there is a winner
-            return game.has_won()
 
-        game.turn_state.phase = 7
+        self.game_result = game.has_won()
+        if self.game_result:
+            return
+
+        game.turn_state.phase = 2
 
         for territory_key in game.state_dict:
             for unit_state in game.state_dict[territory_key].unit_state_list:
@@ -1632,6 +1661,7 @@ class Cleanup:
                     unit_state.owner = game.state_dict[territory_key].owner  # reset factory ownership
             for territory_state in game.state_dict[territory_key]:
                 territory_state.built_units = 0  # reset built_units
+                territory_state.just_captured = False
                 for unit_state in territory_state.unit_state_list:
                     unit_state.moves_used = 0
                     if unit_state.type_index != 5:  # this is irrelevant because bombing directly affects IPCs. Allows change
