@@ -743,30 +743,31 @@ class Game:
                         "Japan": Player('Japan', 'Japan')}
         self.purchased_units = {player: list() for player in self.players.keys()}
         # dictionary from territory names to territory states (containing unit_states)
+        # TODO: Indices in state_dict (for unit type) need to be 1 less
         self.state_dict = {"1 Sea Zone": TerritoryState("Sea Zone", []),
                            "2 Sea Zone": TerritoryState("Sea Zone", []),
                            "3 Sea Zone": TerritoryState("Sea Zone", []),
-                           "4 Sea Zone": TerritoryState("Sea Zone", [UnitState("Russia", 7)]),
-                           "5 Sea Zone": TerritoryState("Sea Zone", [UnitState("Germany", 6), UnitState("Germany", 7),
-                                                                     UnitState("Germany", 9)]),
-                           "6 Sea Zone": TerritoryState("Sea Zone", [UnitState("Britain", 6), UnitState("Britain", 8),
-                                                                     UnitState("Britain", 11)]),
-                           "7 Sea Zone": TerritoryState("Sea Zone", []),
+                           "4 Sea Zone": TerritoryState("Sea Zone", [UnitState("Russia", 6)]),
+                           "5 Sea Zone": TerritoryState("Sea Zone", [UnitState("Germany", 5), UnitState("Germany", 6),
+                                                                     UnitState("Germany", 8)]),
+                           "6 Sea Zone": TerritoryState("Sea Zone", []),
+                           "7 Sea Zone": TerritoryState("Sea Zone", [UnitState("Britain", 5), UnitState("Britain", 7),
+                                                                     UnitState("Britain", 10)]),
                            "8 Sea Zone": TerritoryState("Sea Zone", []),
-                           "9 Sea Zone": TerritoryState("Sea Zone", [UnitState("Germany", 7), UnitState("Germany", 7)]),
+                           "9 Sea Zone": TerritoryState("Sea Zone", [UnitState("Germany", 6), UnitState("Germany", 6)]),
                            "10 Sea Zone": TerritoryState("Sea Zone",
-                                                         [UnitState("Britain", 6), UnitState("Britain", 8)]),
-                           "11 Sea Zone": TerritoryState("Sea Zone", [UnitState("America", 6), UnitState("America", 6),
-                                                                      UnitState("America", 8)]),
+                                                         [UnitState("Britain", 5), UnitState("Britain", 7)]),
+                           "11 Sea Zone": TerritoryState("Sea Zone", [UnitState("America", 5), UnitState("America", 5),
+                                                                      UnitState("America", 7)]),
                            "12 Sea Zone": TerritoryState("Sea Zone", []),
-                           "13 Sea Zone": TerritoryState("Sea Zone", [UnitState("Britain", 9)]),
+                           "13 Sea Zone": TerritoryState("Sea Zone", [UnitState("Britain", 8)]),
                            "14 Sea Zone": TerritoryState("Sea Zone", []),
                            "15 Sea Zone": TerritoryState("Sea Zone",
-                                                         [UnitState("Germany", 6), UnitState("Germany", 11)]),
+                                                         [UnitState("Germany", 5), UnitState("Germany", 10)]),
                            "16 Sea Zone": TerritoryState("Sea Zone", []),
-                           "17 Sea Zone": TerritoryState("Sea Zone", [UnitState("Britain", 8)]),
+                           "17 Sea Zone": TerritoryState("Sea Zone", [UnitState("Britain", 7)]),
                            "18 Sea Zone": TerritoryState("Sea Zone", []),
-                           "19 Sea Zone": TerritoryState("Sea Zone", [UnitState("America", 9)]),
+                           "19 Sea Zone": TerritoryState("Sea Zone", [UnitState("America", 8)]),
                            "20 Sea Zone": TerritoryState("Sea Zone", []),
                            "21 Sea Zone": TerritoryState("Sea Zone", []),
                            "22 Sea Zone": TerritoryState("Sea Zone", []),
@@ -782,222 +783,221 @@ class Game:
                            "32 Sea Zone": TerritoryState("Sea Zone", []),
                            "33 Sea Zone": TerritoryState("Sea Zone", []),
                            "34 Sea Zone": TerritoryState("Sea Zone", []),
-                           "35 Sea Zone": TerritoryState("Sea Zone", [UnitState("Britain", 6), UnitState("Britain", 9),
-                                                                      UnitState("Britain", 10),
-                                                                      UnitState("Britain", 12)]),
+                           "35 Sea Zone": TerritoryState("Sea Zone", [UnitState("Britain", 5), UnitState("Britain", 8),
+                                                                      UnitState("Britain", 9),
+                                                                      UnitState("Britain", 11)]),
                            "36 Sea Zone": TerritoryState("Sea Zone", []),
-                           "37 Sea Zone": TerritoryState("Sea Zone", [UnitState("Japan", 10), UnitState("Japan", 11),
-                                                                      UnitState("Japan", 12),
-                                                                      UnitState("Japan", 12)]),
-                           "38 Sea Zone": TerritoryState("Sea Zone", [UnitState("Britain", 6), UnitState("Britain", 7),
-                                                                      UnitState("Britain", 9)]),
-                           "39 Sea Zone": TerritoryState("Sea Zone", []),
+                           "37 Sea Zone": TerritoryState("Sea Zone", [UnitState("Japan", 9), UnitState("Japan", 10),
+                                                                      UnitState("Japan", 11),
+                                                                      UnitState("Japan", 11)]),
+                           "38 Sea Zone": TerritoryState("Sea Zone", []),
+                           "39 Sea Zone": TerritoryState("Sea Zone", [UnitState("Britain", 5), UnitState("Britain", 6),
+                                                                      UnitState("Britain", 8)]),
                            "40 Sea Zone": TerritoryState("Sea Zone", []),
                            "41 Sea Zone": TerritoryState("Sea Zone", []),
                            "42 Sea Zone": TerritoryState("Sea Zone", []),
                            "43 Sea Zone": TerritoryState("Sea Zone", []),
-                           "44 Sea Zone": TerritoryState("Sea Zone", [UnitState("Japan", 7)]),
+                           "44 Sea Zone": TerritoryState("Sea Zone", [UnitState("Japan", 6)]),
                            "45 Sea Zone": TerritoryState("Sea Zone", []),
                            "46 Sea Zone": TerritoryState("Sea Zone", []),
                            "47 Sea Zone": TerritoryState("Sea Zone", []),
                            "48 Sea Zone": TerritoryState("Sea Zone", []),
                            "49 Sea Zone": TerritoryState("Sea Zone", []),
-                           "50 Sea Zone": TerritoryState("Sea Zone", [UnitState("Japan", 9), UnitState("Japan", 10),
-                                                                      UnitState("Japan", 12)]),
+                           "50 Sea Zone": TerritoryState("Sea Zone", [UnitState("Japan", 8), UnitState("Japan", 9),
+                                                                      UnitState("Japan", 11)]),
                            "51 Sea Zone": TerritoryState("Sea Zone", []),
                            "52 Sea Zone": TerritoryState("Sea Zone", []),
-                           "53 Sea Zone": TerritoryState("Sea Zone", [UnitState("America", 7), UnitState("America", 8),
-                                                                      UnitState("America", 10),
-                                                                      UnitState("America", 12)]),
+                           "53 Sea Zone": TerritoryState("Sea Zone", [UnitState("America", 6), UnitState("America", 7),
+                                                                      UnitState("America", 9),
+                                                                      UnitState("America", 11)]),
                            "54 Sea Zone": TerritoryState("Sea Zone", []),
                            "55 Sea Zone": TerritoryState("Sea Zone", []),
-                           "56 Sea Zone": TerritoryState("Sea Zone",
-                                                         [UnitState("America", 6), UnitState("America", 8),
-                                                          UnitState("America", 11)]),
+                           "56 Sea Zone": TerritoryState("Sea Zone", [UnitState("America", 5), UnitState("America", 7),
+                                                                      UnitState("America", 10)]),
                            "57 Sea Zone": TerritoryState("Sea Zone", []),
                            "58 Sea Zone": TerritoryState("Sea Zone", []),
                            "59 Sea Zone": TerritoryState("Sea Zone", []),
-                           "60 Sea Zone": TerritoryState("Sea Zone", [UnitState("Japan", 6), UnitState("Japan", 8),
-                                                                      UnitState("Japan", 11)]),
-                           "61 Sea Zone": TerritoryState("Sea Zone", [UnitState("Japan", 6), UnitState("Japan", 8)]),
+                           "60 Sea Zone": TerritoryState("Sea Zone", [UnitState("Japan", 5), UnitState("Japan", 7),
+                                                                      UnitState("Japan", 10)]),
+                           "61 Sea Zone": TerritoryState("Sea Zone", [UnitState("Japan", 5), UnitState("Japan", 7)]),
                            "62 Sea Zone": TerritoryState("Sea Zone", []),
                            "63 Sea Zone": TerritoryState("Sea Zone", []),
                            "64 Sea Zone": TerritoryState("Sea Zone", []),
                            "65 Sea Zone": TerritoryState("Sea Zone", []),
                            "Afghanistan": TerritoryState("Neutral", []),
-                           "Alaska": TerritoryState("America", [UnitState("America", 1)]),
-                           "Algeria": TerritoryState("Germany", [UnitState("Germany", 1), UnitState("Germany", 2)]),
+                           "Alaska": TerritoryState("America", [UnitState("America", 0)]),
+                           "Algeria": TerritoryState("Germany", [UnitState("Germany", 0), UnitState("Germany", 1)]),
                            "Anglo-Egyptian Sudan": TerritoryState("Britain", []),
                            "Angola": TerritoryState("Neutral", []),
-                           "Anhwei": TerritoryState("America", [UnitState("America", 1), UnitState("America", 1)]),
-                           "Archangel": TerritoryState("Russia", [UnitState("Russia", 1), UnitState("Russia", 3)]),
+                           "Anhwei": TerritoryState("America", [UnitState("America", 0), UnitState("America", 0)]),
+                           "Archangel": TerritoryState("Russia", [UnitState("Russia", 0), UnitState("Russia", 2)]),
                            "Baltic States": TerritoryState("Germany",
-                                                           [UnitState("Germany", 1), UnitState("Germany", 3)]),
+                                                           [UnitState("Germany", 0), UnitState("Germany", 2)]),
                            "Belgian Congo": TerritoryState("Britain", []),
-                           "Belorussia": TerritoryState("Germany", [UnitState("Germany", 1), UnitState("Germany", 1),
-                                                                    UnitState("Germany", 1)]),
-                           "Borneo": TerritoryState("Japan", [UnitState("Japan", 1)]),
+                           "Belorussia": TerritoryState("Germany", [UnitState("Germany", 0), UnitState("Germany", 0),
+                                                                    UnitState("Germany", 0)]),
+                           "Borneo": TerritoryState("Japan", [UnitState("Japan", 0)]),
                            "Brazil": TerritoryState("America", []),
                            "Bulgaria Romania": TerritoryState("Germany",
-                                                              [UnitState("Germany", 1), UnitState("Germany", 1),
-                                                               UnitState("Germany", 3),
-                                                               UnitState("Germany", 12)]),
-                           "Burma": TerritoryState("Britain", [UnitState("Britain", 1)]),
+                                                              [UnitState("Germany", 0), UnitState("Germany", 0),
+                                                               UnitState("Germany", 2),
+                                                               UnitState("Germany", 11)]),
+                           "Burma": TerritoryState("Britain", [UnitState("Britain", 0)]),
                            "Buryatia S.S.R.": TerritoryState("Russia",
-                                                             [UnitState("Russia", 1), UnitState("Russia", 1)]),
-                           "Caroline Islands": TerritoryState("Japan", [UnitState("Japan", 1)]),
-                           "Caucasus": TerritoryState("Russia", [UnitState("Russia", 1), UnitState("Russia", 1),
-                                                                 UnitState("Russia", 1),
-                                                                 UnitState("Russia", 2), UnitState("Russia", 3),
-                                                                 UnitState("Russia", 4),
-                                                                 UnitState("Russia", 5)]),
+                                                             [UnitState("Russia", 0), UnitState("Russia", 0)]),
+                           "Caroline Islands": TerritoryState("Japan", [UnitState("Japan", 0)]),
+                           "Caucasus": TerritoryState("Russia", [UnitState("Russia", 0), UnitState("Russia", 0),
+                                                                 UnitState("Russia", 0),
+                                                                 UnitState("Russia", 1), UnitState("Russia", 2),
+                                                                 UnitState("Russia", 3),
+                                                                 UnitState("Russia", 4)]),
                            "Central America": TerritoryState("America", []),
-                           "Central United States": TerritoryState("America", [UnitState("America", 1)]),
+                           "Central United States": TerritoryState("America", [UnitState("America", 0)]),
                            "Chile": TerritoryState("Neutral", []),
                            "Colombia Equador": TerritoryState("Neutral", []),
-                           "East Indies": TerritoryState("Britain", [UnitState("Japan", 1), UnitState("Japan", 1)]),
+                           "East Indies": TerritoryState("Japan", [UnitState("Japan", 0), UnitState("Japan", 0)]),
                            "East Mexico": TerritoryState("America", []),
                            "Eastern Australia": TerritoryState("Britain",
-                                                               [UnitState("Britain", 1), UnitState("Britain", 1)]),
-                           "Eastern Canada": TerritoryState("Britain", [UnitState("Britain", 3)]),
+                                                               [UnitState("Britain", 0), UnitState("Britain", 0)]),
+                           "Eastern Canada": TerritoryState("Britain", [UnitState("Britain", 2)]),
                            "Eastern United States": TerritoryState("America",
-                                                                   [UnitState("America", 1), UnitState("America", 2),
-                                                                    UnitState("America", 3),
-                                                                    UnitState("America", 4), UnitState("America", 5),
-                                                                    UnitState("America", 12),
-                                                                    UnitState("America", 13)]),
-                           "Egypt": TerritoryState("Britain", [UnitState("Britain", 1), UnitState("Britain", 2),
-                                                               UnitState("Britain", 3),
-                                                               UnitState("Britain", 12)]),
+                                                                   [UnitState("America", 0), UnitState("America", 0),
+                                                                    UnitState("America", 1), UnitState("America", 2),
+                                                                    UnitState("America", 3), UnitState("America", 4),
+                                                                    UnitState("America", 11),
+                                                                    UnitState("America", 12)]),
+                           "Egypt": TerritoryState("Britain", [UnitState("Britain", 0), UnitState("Britain", 1),
+                                                               UnitState("Britain", 2),
+                                                               UnitState("Britain", 11)]),
                            "Eire": TerritoryState("Neutral", []),
                            "Evenki National Okrug": TerritoryState("Russia",
-                                                                   [UnitState("Russia", 1), UnitState("Russia", 1)]),
-                           "Finland": TerritoryState("Germany", [UnitState("Germany", 1), UnitState("Germany", 1),
-                                                                 UnitState("Germany", 1)]),
+                                                                   [UnitState("Russia", 0), UnitState("Russia", 0)]),
+                           "Finland": TerritoryState("Germany", [UnitState("Germany", 0), UnitState("Germany", 0),
+                                                                 UnitState("Germany", 0)]),
                            "Formosa": TerritoryState("Japan", []),
-                           "France": TerritoryState("Germany", [UnitState("Germany", 1), UnitState("Germany", 3),
-                                                                UnitState("Germany", 3),
-                                                                UnitState("Germany", 4)]),
+                           "France": TerritoryState("Germany", [UnitState("Germany", 0), UnitState("Germany", 2),
+                                                                UnitState("Germany", 2),
+                                                                UnitState("Germany", 3)]),
                            "French Equatorial Africa": TerritoryState("Britain", []),
                            "French Indo-China Thailand": TerritoryState("Japan",
-                                                                        [UnitState("Japan", 1), UnitState("Japan", 1),
-                                                                         UnitState("Japan", 2),
-                                                                         UnitState("Japan", 12)]),
+                                                                        [UnitState("Japan", 0), UnitState("Japan", 0),
+                                                                         UnitState("Japan", 1),
+                                                                         UnitState("Japan", 11)]),
                            "French Madagascar": TerritoryState("Britain", []),
                            "French West Africa": TerritoryState("Britain", []),
-                           "Germany": TerritoryState("Germany", [UnitState("Germany", 1), UnitState("Germany", 1),
-                                                                 UnitState("Germany", 1),
-                                                                 UnitState("Germany", 3), UnitState("Germany", 3),
-                                                                 UnitState("Germany", 4),
-                                                                 UnitState("Germany", 5), UnitState("Germany", 12)]),
+                           "Germany": TerritoryState("Germany", [UnitState("Germany", 0), UnitState("Germany", 0),
+                                                                 UnitState("Germany", 0),
+                                                                 UnitState("Germany", 2), UnitState("Germany", 2),
+                                                                 UnitState("Germany", 3),
+                                                                 UnitState("Germany", 4), UnitState("Germany", 11)]),
                            "Gibraltar": TerritoryState("Britain", []),
                            "Greenland": TerritoryState("America", []),
                            "Hawaiian Islands": TerritoryState("America",
-                                                              [UnitState("America", 1), UnitState("America", 12)]),
+                                                              [UnitState("America", 0), UnitState("America", 11)]),
                            "Himalaya": TerritoryState("Neutral", []),
                            "Iceland": TerritoryState("Britain", []),
-                           "India": TerritoryState("Britain", [UnitState("Britain", 1), UnitState("Britain", 1),
-                                                               UnitState("Britain", 1),
-                                                               UnitState("Britain", 1), UnitState("Britain", 1),
-                                                               UnitState("Britain", 4),
-                                                               UnitState("Britain", 5)]),
+                           "India": TerritoryState("Britain", [UnitState("Britain", 0), UnitState("Britain", 0),
+                                                               UnitState("Britain", 0),
+                                                               UnitState("Britain", 0), UnitState("Britain", 0),
+                                                               UnitState("Britain", 3),
+                                                               UnitState("Britain", 4)]),
                            "Italian East Africa": TerritoryState("Britain", []),
-                           "Italy": TerritoryState("Germany", [UnitState("Germany", 1), UnitState("Germany", 3),
-                                                               UnitState("Germany", 4)]),
-                           "Iwo Jima": TerritoryState("Japan", [UnitState("Japan", 1)]),
+                           "Italy": TerritoryState("Germany", [UnitState("Germany", 0), UnitState("Germany", 2),
+                                                               UnitState("Germany", 3), UnitState("Germany", 4)]),
+                           "Iwo Jima": TerritoryState("Japan", [UnitState("Japan", 0)]),
                            "Japan": TerritoryState("Japan",
-                                                   [UnitState("Japan", 1), UnitState("Japan", 1), UnitState("Japan", 1),
-                                                    UnitState("Japan", 1),
-                                                    UnitState("Japan", 2), UnitState("Japan", 3), UnitState("Japan", 4),
-                                                    UnitState("Japan", 5),
-                                                    UnitState("Japan", 12), UnitState("Japan", 13)]),
-                           "Karelia S.S.R.": TerritoryState("Russia", [UnitState("Russia", 1), UnitState("Russia", 1),
-                                                                       UnitState("Russia", 1),
-                                                                       UnitState("Russia", 1), UnitState("Russia", 2),
-                                                                       UnitState("Russia", 5),
-                                                                       UnitState("Russia", 12)]),
-                           "Kazakh S.S.R.": TerritoryState("Russia", [UnitState("Russia", 1)]),
-                           "Kiangsu": TerritoryState("Japan", [UnitState("Japan", 1), UnitState("Japan", 1),
-                                                               UnitState("Japan", 1),
-                                                               UnitState("Japan", 1)]),
-                           "Kwangtung": TerritoryState("Japan", [UnitState("Japan", 1), UnitState("Japan", 2)]),
-                           "Libya": TerritoryState("Germany", [UnitState("Germany", 1), UnitState("Germany", 3)]),
-                           "Malaya": TerritoryState("Britain", [UnitState("Japan", 1)]),
-                           "Manchuria": TerritoryState("Japan", [UnitState("Japan", 1), UnitState("Japan", 1),
-                                                                 UnitState("Japan", 1),
-                                                                 UnitState("Japan", 12)]),
+                                                   [UnitState("Japan", 0), UnitState("Japan", 0), UnitState("Japan", 0),
+                                                    UnitState("Japan", 0),
+                                                    UnitState("Japan", 1), UnitState("Japan", 2), UnitState("Japan", 3),
+                                                    UnitState("Japan", 4),
+                                                    UnitState("Japan", 11), UnitState("Japan", 12)]),
+                           "Karelia S.S.R.": TerritoryState("Russia", [UnitState("Russia", 0), UnitState("Russia", 0),
+                                                                       UnitState("Russia", 0),
+                                                                       UnitState("Russia", 0), UnitState("Russia", 1),
+                                                                       UnitState("Russia", 4),
+                                                                       UnitState("Russia", 11)]),
+                           "Kazakh S.S.R.": TerritoryState("Russia", [UnitState("Russia", 0)]),
+                           "Kiangsu": TerritoryState("Japan", [UnitState("Japan", 0), UnitState("Japan", 0),
+                                                               UnitState("Japan", 0),
+                                                               UnitState("Japan", 0)]),
+                           "Kwangtung": TerritoryState("Japan", [UnitState("Japan", 0), UnitState("Japan", 1)]),
+                           "Libya": TerritoryState("Germany", [UnitState("Germany", 0), UnitState("Germany", 2)]),
+                           "Malaya": TerritoryState("Japan", [UnitState("Japan", 0)]),
+                           "Manchuria": TerritoryState("Japan", [UnitState("Japan", 0), UnitState("Japan", 0),
+                                                                 UnitState("Japan", 0),
+                                                                 UnitState("Japan", 11)]),
                            "Mexico": TerritoryState("America", []),
-                           "Midway": TerritoryState("America", [UnitState("America", 1)]),
+                           "Midway": TerritoryState("America", [UnitState("America", 0)]),
                            "Mongolia": TerritoryState("Neutral", []),
-                           "Morocco": TerritoryState("Germany", [UnitState("Germany", 1)]),
+                           "Morocco": TerritoryState("Germany", [UnitState("Germany", 0)]),
                            "Mozambique": TerritoryState("Neutral", []),
-                           "New Guinea": TerritoryState("Japan", [UnitState("Japan", 1)]),
-                           "New Zealand": TerritoryState("Britain", [UnitState("Britain", 1)]),
+                           "New Guinea": TerritoryState("Japan", [UnitState("Japan", 0)]),
+                           "New Zealand": TerritoryState("Britain", [UnitState("Britain", 0)]),
                            "Northwestern Europe": TerritoryState("Germany",
-                                                                 [UnitState("Germany", 1), UnitState("Germany", 3),
-                                                                  UnitState("Germany", 12)]),
-                           "Norway": TerritoryState("Germany", [UnitState("Germany", 1), UnitState("Germany", 1),
-                                                                UnitState("Germany", 12)]),
-                           "Novosibirsk": TerritoryState("Russia", [UnitState("Russia", 1)]),
-                           "Okinawa": TerritoryState("Japan", [UnitState("Japan", 1)]),
-                           "Persia": TerritoryState("Britain", [UnitState("Britain", 1)]),
+                                                                 [UnitState("Germany", 0), UnitState("Germany", 2),
+                                                                  UnitState("Germany", 11)]),
+                           "Norway": TerritoryState("Germany", [UnitState("Germany", 0), UnitState("Germany", 0),
+                                                                UnitState("Germany", 11)]),
+                           "Novosibirsk": TerritoryState("Russia", [UnitState("Russia", 0)]),
+                           "Okinawa": TerritoryState("Japan", [UnitState("Japan", 0)]),
+                           "Persia": TerritoryState("Britain", [UnitState("Britain", 0)]),
                            "Peru Argentina": TerritoryState("Neutral", []),
                            "Philippine Islands": TerritoryState("Japan",
-                                                                [UnitState("Japan", 1), UnitState("Japan", 2)]),
-                           "Poland": TerritoryState("Germany", [UnitState("Germany", 1), UnitState("Germany", 1),
-                                                                UnitState("Germany", 3),
-                                                                UnitState("Germany", 12)]),
+                                                                [UnitState("Japan", 0), UnitState("Japan", 1)]),
+                           "Poland": TerritoryState("Germany", [UnitState("Germany", 0), UnitState("Germany", 0),
+                                                                UnitState("Germany", 2),
+                                                                UnitState("Germany", 11)]),
                            "Rhodesia": TerritoryState("Britain", []),
-                           "Russia": TerritoryState("Russia", [UnitState("Russia", 1), UnitState("Russia", 1),
-                                                               UnitState("Russia", 1),
-                                                               UnitState("Russia", 1), UnitState("Russia", 2),
-                                                               UnitState("Russia", 3),
-                                                               UnitState("Russia", 3), UnitState("Russia", 4),
-                                                               UnitState("Russia", 5),
-                                                               UnitState("Russia", 12)]),
+                           "Russia": TerritoryState("Russia", [UnitState("Russia", 0), UnitState("Russia", 0),
+                                                               UnitState("Russia", 0),
+                                                               UnitState("Russia", 0), UnitState("Russia", 1),
+                                                               UnitState("Russia", 2),
+                                                               UnitState("Russia", 2), UnitState("Russia", 3),
+                                                               UnitState("Russia", 4),
+                                                               UnitState("Russia", 11)]),
                            "Sahara": TerritoryState("Neutral", []),
                            "Saudi Arabia": TerritoryState("Neutral", []),
                            "Sinkiang": TerritoryState("America", []),
-                           "Solomon Islands": TerritoryState("Japan", [UnitState("Japan", 1)]),
+                           "Solomon Islands": TerritoryState("Japan", [UnitState("Japan", 0)]),
                            "Southern Europe": TerritoryState("Germany",
-                                                             [UnitState("Germany", 1), UnitState("Germany", 2)]),
+                                                             [UnitState("Germany", 0), UnitState("Germany", 1)]),
                            "Soviet Far East": TerritoryState("Russia",
-                                                             [UnitState("Russia", 1), UnitState("Russia", 1)]),
+                                                             [UnitState("Russia", 0), UnitState("Russia", 0)]),
                            "Spain Portugal": TerritoryState("Neutral", []),
                            "Sweden": TerritoryState("Neutral", []),
                            "Switzerland": TerritoryState("Neutral", []),
-                           "Szechwan": TerritoryState("America", [UnitState("America", 1), UnitState("America", 1),
-                                                                  UnitState("America", 12)]),
-                           "Trans-Jordan": TerritoryState("Britain", [UnitState("Britain", 1)]),
+                           "Szechwan": TerritoryState("America", [UnitState("America", 0), UnitState("America", 0),
+                                                                  UnitState("America", 11)]),
+                           "Trans-Jordan": TerritoryState("Britain", [UnitState("Britain", 0)]),
                            "Turkey": TerritoryState("Neutral", []),
                            "Ukraine S.S.R.": TerritoryState("Germany",
-                                                            [UnitState("Germany", 1), UnitState("Germany", 1),
-                                                             UnitState("Germany", 1),
-                                                             UnitState("Germany", 2), UnitState("Germany", 3),
-                                                             UnitState("Germany", 12), UnitState("Germany", 13)]),
-                           "Union of South Africa": TerritoryState("Britain", [UnitState("Britain", 1)]),
+                                                            [UnitState("Germany", 0), UnitState("Germany", 0),
+                                                             UnitState("Germany", 0),
+                                                             UnitState("Germany", 1), UnitState("Germany", 2),
+                                                             UnitState("Germany", 11), UnitState("Germany", 12)]),
+                           "Union of South Africa": TerritoryState("Britain", [UnitState("Britain", 0)]),
                            "United Kingdom": TerritoryState("Britain",
-                                                            [UnitState("Britain", 1), UnitState("Britain", 1),
-                                                             UnitState("Britain", 2),
-                                                             UnitState("Britain", 3), UnitState("Britain", 4),
-                                                             UnitState("Britain", 5),
-                                                             UnitState("Britain", 12), UnitState("Britain", 12),
-                                                             UnitState("Britain", 13)]),
+                                                            [UnitState("Britain", 0), UnitState("Britain", 0),
+                                                             UnitState("Britain", 1),
+                                                             UnitState("Britain", 2), UnitState("Britain", 3),
+                                                             UnitState("Britain", 4),
+                                                             UnitState("Britain", 11), UnitState("Britain", 11),
+                                                             UnitState("Britain", 12)]),
                            "Venezuela": TerritoryState("Neutral", []),
                            "Vologda": TerritoryState("Russia", []),
-                           "Wake Island": TerritoryState("America", [UnitState("Japan", 1)]),
+                           "Wake Island": TerritoryState("Japan", [UnitState("Japan", 0)]),
                            "West Indies": TerritoryState("America", []),
-                           "West Russia": TerritoryState("Germany", [UnitState("Germany", 1), UnitState("Germany", 1),
-                                                                     UnitState("Germany", 1),
-                                                                     UnitState("Germany", 2), UnitState("Germany", 3)]),
-                           "Western Australia": TerritoryState("Britain", [UnitState("Britain", 1)]),
-                           "Western Canada": TerritoryState("Britain", [UnitState("Britain", 1)]),
+                           "West Russia": TerritoryState("Germany", [UnitState("Germany", 0), UnitState("Germany", 0),
+                                                                     UnitState("Germany", 0),
+                                                                     UnitState("Germany", 1), UnitState("Germany", 2)]),
+                           "Western Australia": TerritoryState("Britain", [UnitState("Britain", 0)]),
+                           "Western Canada": TerritoryState("Britain", [UnitState("Britain", 0)]),
                            "Western United States": TerritoryState("America",
-                                                                   [UnitState("America", 1), UnitState("America", 1),
-                                                                    UnitState("America", 4),
-                                                                    UnitState("America", 5), UnitState("America", 12)]),
-                           "Yakut S.S.R.": TerritoryState("Russia", [UnitState("Russia", 1)]),
-                           "Yunnan": TerritoryState("America", [UnitState("America", 1), UnitState("America", 1)])}
+                                                                   [UnitState("America", 0), UnitState("America", 0),
+                                                                    UnitState("America", 3),
+                                                                    UnitState("America", 4), UnitState("America", 11)]),
+                           "Yakut S.S.R.": TerritoryState("Russia", [UnitState("Russia", 0)]),
+                           "Yunnan": TerritoryState("America", [UnitState("America", 0), UnitState("America", 0)])}
 
         # Set original owners
         for k, v in self.state_dict.items():
@@ -1034,7 +1034,7 @@ class Game:
         while player_phase[i].islower():
             i += 1
         player, phase = player_phase[:i], player_phase[i:]
-        turn_state_indices = {"russian": 0, "german": 1, "british": 2, "japanese": 3, "american": 4,
+        turn_state_indices = {"russian": 'Russia', "german": 'Germany', "british": 'Britain', "japanese": 'Japan', "american": 'America',
                               "Tech": 2, "Purchase": 2, "CombatMove": 3, "Battle": 4, "NonCombatMove": 5, "Place": 6,
                               "TechActivation": 6, "EndTurn": 6}  # Why are there several things attatched to each number
         self.turn_state = TurnState(int(turn.get("round")), turn_state_indices[player], turn_state_indices[phase])
@@ -1042,7 +1042,7 @@ class Game:
         # Set resources
         country_names = {"Americans": "America", "British": "Britain", "Germans": "Germany", "Japanese": "Japan",
                          "Russians": "Russia", "Neutral": "Neutral"}
-        for elem in players: #What the fug is elem
+        for elem in players:
             player = self.players[country_names[elem.get("name")]]
             for resource in elem.findall("resource"):
                 if resource.get("name") == "PUs":
@@ -1052,7 +1052,10 @@ class Game:
 
         # Set territory owners
         for territory in territories:
-            self.state_dict[territory.get("name")].owner = country_names[territory.get("owner")]
+            name, owner = territory.get("name"), country_names[territory.get("owner")]
+            if 'Sea Zone' in name and owner == 'Neutral':
+                owner = 'Sea Zone'
+            self.state_dict[name].owner = owner
 
         # Reset territory units and values
         for territory in self.state_dict.values():
@@ -1100,20 +1103,20 @@ class Game:
             team = self.rules.teams[self.turn_state.player]
         return self.rules.teams[self.state_dict["Central America"].owner] == team
 
-    def calc_movement(self, unit_state, current_territory, goal_territory, phase=-1):
+    def calc_movement(self, unit_state, current_territory, goal_territory, phase=-1, ignore_pos=False):
         """
         a function that will check if a theoretical move is valid, and returns the movement required to move there, as well as the path taken.
         Returns -1 if impossible
         This replaces the old "passable" function
         """
-        if unit_state not in self.state_dict[current_territory].unit_state_list:
+        if not ignore_pos and unit_state not in self.state_dict[current_territory].unit_state_list:
             return -1, list()
         if current_territory == goal_territory:
             return 0, [goal_territory]
 
         # Check if it would be possible to move to goal territory at all before doing BFS
         unit = self.rules.get_unit(unit_state.type_index)
-        goal_territory_state = self.state_dict[goal_territory.name]
+        goal_territory_state = self.state_dict[goal_territory]
         if phase == -1:
             phase = self.turn_state.phase
 
@@ -1121,11 +1124,15 @@ class Game:
         if unit_state.moves_used == unit.movement:
             return -1, list()
 
+        # AA guns can't move in combat turns
+        if phase == 3 and unit.name == 'aa':
+            return -1, list()
+
         # Sea units can only move to sea, and land can only move to land
         # Unless land units move to an adjacent transport
-        if goal_territory.is_water:
+        if self.rules.board[goal_territory].is_water:
             if unit.unit_type == "land":
-                if unit_state.moves_used > 0 or goal_territory.name not in self.rules.board[current_territory.name].neighbors:
+                if unit_state.moves_used > 0 or goal_territory not in self.rules.board[current_territory].neighbors:
                     return -1, list()  # Tanks can move 2, wouldn't moves used be greater than 1 to end turn?
                 for other_unit_state in goal_territory_state.unit_state_list:
                     # Check for allied transports
@@ -1134,7 +1141,7 @@ class Game:
                         # Check if the transport has space
                         if len(other_unit_state.attached_units) == 0 or (len(other_unit_state.attached_units) == 1 and (
                                 unit_state.type_index == 0 or other_unit_state.attached_units[0].type_index == 0)):
-                            return 0, [current_territory.name, goal_territory.name]
+                            return 0, [current_territory, goal_territory]
                 return -1, list()
         else:
             if unit.unit_type == 'sea':
@@ -1156,38 +1163,39 @@ class Game:
                     if not 4 <= other_unit_state.type_index <= 6:  # Can move through factories, transports, and subs
                         if unit.name != 'sub' or other_unit_state.type_index == 7:  # Subs can move through anything except destroyers
                             return -1, list()
-        # AA guns can't move in combat turns
-        elif phase == 3:
-            if unit.name == 'aa':
-                return -1, list()
 
         # Transported units can only move to adjacent land
         if unit_state.attached_to:
             # Must move to land, with all of their movement, and to an adjacent space
-            if goal_territory.is_water or unit_state.moves_used > 0 or goal_territory.name not in self.rules.board[current_territory.name].neighbors:
+            if self.rules.board[goal_territory].is_water or unit_state.moves_used > 0 or goal_territory not in self.rules.board[current_territory].neighbors:
                 return -1, list()
             # If it is the non-combat move phase, and there are enemy units, it can't move
             if phase == 5:
-                for other_unit_state in goal_territory.unit_state_list:
+                for other_unit_state in goal_territory_state.unit_state_list:
                     if self.rules.teams[other_unit_state.owner] != self.rules.teams[unit_state.owner]:
                         return -1, list()
             # Otherwise, it can move there
-            return unit.movement, [current_territory.name, goal_territory.name]
+            return unit.movement, [current_territory, goal_territory]
 
         # Breadth-First Search to find shortest path
-        path = self.bfs(unit_state, current_territory.name, goal_territory.name, unit.movement - unit_state.moves_used, phase=phase)
+        path = self.bfs(unit_state, current_territory, goal_territory, unit.movement - unit_state.moves_used, phase=phase)
         if not path:
             return -1, list()
 
         # Land/sea units can't move after combat, so use all remaining movement
         if phase == 3 and unit.unit_type != 'air':
             # Check for enemy units/destroyers
-            enemy_units = False
-            for other_unit_state in goal_territory.unit_state_list:
+            enemy_units, enemy_destroyer = False, False
+            for other_unit_state in goal_territory_state.unit_state_list:
                 if self.rules.teams[other_unit_state.owner] != self.rules.teams[unit_state.owner]:
-                    enemy_units = True
-            if enemy_units and unit.name != 'sub':
-                return unit.movement - unit_state.moves_used, path
+                    if other_unit_state.type_index < 4 or other_unit_state.type_index > 6:  # Ignore subs/transports/factories
+                        if not other_unit_state.attached_to:  # Ignore transported units
+                            enemy_units = True
+                            if self.rules.get_unit(other_unit_state.type_index).name == 'destroyer':
+                                enemy_destroyer = True
+            if enemy_units:
+                if not (unit.name == "sub" and not enemy_destroyer):
+                    return unit.movement - unit_state.moves_used, path
 
         # Check if air units can return (only necessary if combat move)
         if unit.unit_type == 'air' and phase == 3:
@@ -1215,7 +1223,7 @@ class Game:
                             max_movement = self.rules.units[9].movement - min(
                                 [carrier.moves_used for carrier in carriers])
                         # BFS to find all possible spots this carrier could move to
-                        queue = [self.rules.board[name]]
+                        queue = [name]
                         checked = {name}
                         possible_carrier_spots.add(name)
                         for _ in range(max_movement):
@@ -1224,24 +1232,24 @@ class Game:
                             while queue:
                                 ter = queue.pop()
                                 # Go through each neighbor
-                                for neighbor in ter.neighbors:
+                                for neighbor in self.rules.board[ter].neighbors:
                                     # See if this neighbor has already been checked, and is water
-                                    if neighbor.is_water and neighbor.name not in checked:
-                                        checked.add(neighbor.name)
+                                    if self.rules.board[neighbor].is_water and neighbor not in checked:
+                                        checked.add(neighbor)
                                         # Can't move through enemies
                                         has_enemies = False
-                                        for other_unit_state in self.state_dict[neighbor.name].unit_state_list:
+                                        for other_unit_state in self.state_dict[neighbor].unit_state_list:
                                             if self.rules.teams[other_unit_state.owner] != self.rules.teams[unit_state.owner]:
                                                 has_enemies = True
                                                 break
                                         if not has_enemies:
                                             next_queue.append(neighbor)
-                                            possible_carrier_spots.add(neighbor.name)
+                                            possible_carrier_spots.add(neighbor)
                             queue = next_queue
-                return_path = self.bfs(unit_state, goal_territory.name, None, unit.movement - (len(path) - 1),
+                return_path = self.bfs(unit_state, goal_territory, None, unit.movement - unit_state.moves_used - (len(path) - 1),
                                        carrier_spots=possible_carrier_spots, phase=phase)
             else:
-                return_path = self.bfs(unit_state, goal_territory.name, None, unit.movement - (len(path) - 1), phase=phase)
+                return_path = self.bfs(unit_state, goal_territory, None, unit.movement - unit_state.moves_used - (len(path) - 1), phase=phase)
             if not return_path:
                 return -1, list()
 
@@ -1258,6 +1266,11 @@ class Game:
         # FIFO queue to determine order to check nodes, as well as distance to reach them
         queue = [(root, 0)]
 
+        # Check current territory first
+        if (not target and self.passable(unit_state, root, root, True, carrier_spots, phase=5)) or \
+                (root == target and self.passable(unit_state, root, root, True, carrier_spots, phase=phase)):
+            return [root]
+
         while queue:
             # Dequeue node and check every neighbor
             current, dist = queue.pop(0)
@@ -1265,13 +1278,13 @@ class Game:
                 # Must be within movement range
                 if dist < max_dist:
                     # Check if current neighbor is the target
-                    if not target or neighbor == target:
-                        if self.passable(unit_state, current, neighbor, True, carrier_spots, phase=phase):
-                            # Could just return distance, but path may be useful for debugging
-                            path = [neighbor, current]
-                            while path[-1] != root:
-                                path.append(parents[path[-1]])
-                            return path
+                    if (not target and self.passable(unit_state, current, neighbor, True, carrier_spots, phase=5)) \
+                            or (neighbor == target and self.passable(unit_state, current, neighbor, True, carrier_spots, phase=phase)):
+                        # Could just return distance, but path may be useful for debugging
+                        path = [neighbor, current]
+                        while path[-1] != root:
+                            path.append(parents[path[-1]])
+                        return path[::-1]
                     # If not valid target, check if it can be moved through, and hasn't yet been visited
                     if neighbor not in parents.keys():
                         if self.passable(unit_state, current, neighbor, phase=phase):
@@ -1324,9 +1337,9 @@ class Game:
             if phase == 5 and final_move:
                 # Can't land in water, unless fighter + carrier
                 if territory_state.owner == "Sea Zone":
-                    if unit_state.name == "bomber":
+                    if unit.name == "bomber":
                         return False
-                    elif unit_state.name == "fighter":
+                    elif unit.name == "fighter":
                         # When checking for a return trip on a combat turn, account for carrier movement
                         if carrier_spots is not None:
                             if goal_territory_name not in carrier_spots:
@@ -1362,24 +1375,27 @@ class Game:
                 # Can't move into territories with enemy units
                 for other_unit_state in territory_state.unit_state_list:
                     if self.rules.teams[other_unit_state.owner] != self.rules.teams[unit_state.owner]:
-                        return False
+                        if not 4 <= other_unit_state.type_index <= 6:  # Can move through factories, transports, and subs
+                            if unit.name != 'sub' or other_unit_state.type_index == 7:  # Subs can move through anything except destroyers
+                                return False
             # Combat movement
             elif phase == 3:
                 # AA guns can't move in combat phase
                 if unit.name == "aa":
                     return False
 
-                # Land/sea units must stop moving if there are enemy units (with exception for subs)
+                # Land/sea units must stop moving if there are enemy units (with exception for subs, and moving past subs/transports/factories)
                 # But this only matters if this is not the unit's final move
                 if not final_move:
                     # Check for enemy units/destroyers
                     enemy_units, enemy_destroyer = False, False
                     for other_unit_state in territory_state.unit_state_list:
                         if self.rules.teams[other_unit_state.owner] != self.rules.teams[unit_state.owner]:
-                            if self.rules.get_unit(other_unit_state.type_index).name != 'factory':
-                                enemy_units = True
-                                if self.rules.get_unit(other_unit_state.type_index).name == 'destroyer':
-                                    enemy_destroyer = True
+                            if other_unit_state.type_index < 4 or other_unit_state.type_index > 6:  # Ignore subs/transports/factories
+                                if not other_unit_state.attached_to:  # Ignore transported units
+                                    enemy_units = True
+                                    if self.rules.get_unit(other_unit_state.type_index).name == 'destroyer':
+                                        enemy_destroyer = True
 
                     # Land/sea units must stop moving if there are enemy units (with exception for subs)
                     if enemy_units:
@@ -1393,6 +1409,10 @@ class Game:
                              transport_territory, goal_territory, phase=-1, return_paths=False):
         if phase == -1:
             phase = self.turn_state.phase
+
+        # AA guns can't move in combat
+        if phase == 3 and land_unit_state.type_index == 3:
+            return list() if return_paths else False
 
         # Check if already on a different transport
         if land_unit_state.attached_to and land_unit_state.attached_to != transport_state:
@@ -1412,7 +1432,7 @@ class Game:
             # Check if unit can even unload here
             prev_attach = land_unit_state.attached_to
             land_unit_state.attached_to = transport_state
-            if self.calc_movement(land_unit_state, unloadable_territories[0], goal_territory, phase=phase)[0] < 0:
+            if self.calc_movement(land_unit_state, unloadable_territories[0], goal_territory, phase=phase, ignore_pos=True)[0] < 0:
                 land_unit_state.attached_to = prev_attach
                 return list() if return_paths else False
             land_unit_state.attached_to = prev_attach
@@ -1430,13 +1450,26 @@ class Game:
         transport_movement = transport_state.moves_used
         for territory_1 in loadable_territories:
             for territory_2 in unloadable_territories:
-                dist_1, path_1 = self.calc_movement(transport_state, transport_territory, territory_1, phase=phase)
-                if dist_1 >= 0:
-                    transport_state.moves_used += dist_1
-                    dist_2, path_2 = self.calc_movement(transport_state, territory_1, territory_2, phase=phase)
-                    if dist_2 >= 0:
-                        paths.append(path_1[:-1] + path_2)
-                    transport_state.moves_used = transport_movement
+                if transport_territory == territory_1 == territory_2:
+                    paths.append([transport_territory])
+                elif transport_territory == territory_1 or territory_1 == territory_2:
+                    if transport_territory in self.rules.board[territory_2].neighbors:
+                        if self.passable(transport_state, transport_territory, territory_2, phase=phase):
+                            paths.append([transport_territory, territory_2])
+                    else:
+                        for mid in self.rules.board[transport_territory].neighbors:
+                            if mid in self.rules.board[territory_2].neighbors:
+                                if self.passable(transport_state, transport_territory, mid, phase=phase) \
+                                        and self.passable(transport_state, mid, territory_2, phase=phase):
+                                    paths.append([transport_territory, mid, territory_2])
+                else:
+                    dist_1, path_1 = self.calc_movement(transport_state, transport_territory, territory_1, phase=phase)
+                    if dist_1 >= 0:
+                        transport_state.moves_used += dist_1
+                        dist_2, path_2 = self.calc_movement(transport_state, territory_1, territory_2, phase=phase, ignore_pos=True)
+                        if dist_2 >= 0:
+                            paths.append(path_1[:-1] + path_2)
+                        transport_state.moves_used = transport_movement
 
         return paths if return_paths else (len(paths) > 0)
 
@@ -1468,7 +1501,7 @@ class Game:
             if path[-1] not in ending_spots:
                 ending_spots[path[-1]] = [[], []]
             ending_spots[path[-1]][0].append(path)
-        for path in paths_1:
+        for path in paths_2:
             if path[-1] not in ending_spots:
                 ending_spots[path[-1]] = [[], []]
             ending_spots[path[-1]][1].append(path)
