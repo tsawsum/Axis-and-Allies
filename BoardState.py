@@ -633,7 +633,7 @@ class Rules:
                       Unit("tank", "land", 6, 3, 3, 2, 3), Unit("aa", "land", 6, 0, 0, 1, 3),
                       Unit("factory", "land", 15, 0, 0, 0), Unit("transport", "sea", 7, 0, 0, 2, 100, 100, 5),
                       Unit("sub", "sea", 6, 2, 1, 2), Unit("destroyer", "sea", 8, 2, 2, 2),
-                      Unit("cruiser", "sea", 12, 3, 3, 2), Unit("carrier", "sea", 14, 1, 2, 100, 100, 0, 10),
+                      Unit("cruiser", "sea", 12, 3, 3, 2), Unit("carrier", "sea", 14, 1, 2, 2, 100, 100, 0, 10),
                       Unit("battleship", "sea", 20, 4, 4, 2), Unit("fighter", "air", 10, 3, 4, 4, 100, 5),
                       Unit("bomber", "air", 12, 4, 1, 6)]
 
@@ -660,6 +660,7 @@ class Rules:
 
     def enemy_team(self, player='', team=''):
         return 'Allies' if self.teams[player] == 'Axis' or team == 'Axis' else 'Axis'
+
 
 class TerritoryState:
     """
@@ -740,7 +741,7 @@ class Game:
                         "Russia": Player('Russia', 'Russia'),
                         "Germany": Player('Germany', 'Germany'),
                         "Japan": Player('Japan', 'Japan')}
-        self.purchased_units = list()
+        self.purchased_units = {player: list() for player in self.players.keys()}
         # dictionary from territory names to territory states (containing unit_states)
         self.state_dict = {"1 Sea Zone": TerritoryState("Sea Zone", []),
                            "2 Sea Zone": TerritoryState("Sea Zone", []),
@@ -1179,7 +1180,7 @@ class Game:
             return -1, list()
 
         # Land/sea units can't move after combat, so use all remaining movement
-        if phase == 3:
+        if phase == 3 and unit.unit_type != 'air':
             # Check for enemy units/destroyers
             enemy_units = False
             for other_unit_state in goal_territory.unit_state_list:
