@@ -41,7 +41,7 @@ class Unit:
         self.carrier_capacity = carrier_capacity
 
     def power(self, attack_or_defense):
-        return self.attack if attack_or_defense == 'attack' else self.defense #determines which power to use
+        return self.attack if attack_or_defense == 'attack' else self.defense  # determines which power to use
 
 
 class Rules:
@@ -659,7 +659,10 @@ class Rules:
         return self.units[index]
 
     def enemy_team(self, player='', team=''):
-        return 'Allies' if self.teams[player] == 'Axis' or team == 'Axis' else 'Axis'
+        if team:
+            return 'Allies' if team == 'Axis' else 'Axis'
+        else:
+            return 'Allies' if self.teams[player] == 'Axis' else 'Axis'
 
 
 class TerritoryState:
@@ -682,15 +685,21 @@ class UnitState:
     Provides fluid information for units
     """
 
-    def __init__(self, owner, type_number, attached_units=[], attached_to=None, moves_used=0, damage=0, moved_from=[],
+    def __init__(self, owner, type_number, attached_units=None, attached_to=None, moves_used=0, damage=0, moved_from=None,
                  shots_taken=0):
         self.owner = owner
         self.type_index = type_number
         self.moves_used = moves_used
         self.damaged = damage
-        self.attached_units = attached_units
+        if attached_units:
+            self.attached_units = attached_units
+        else:
+            self.attached_units = list()
         self.attached_to = attached_to
-        self.moved_from = moved_from
+        if moved_from:
+            self.moved_from = moved_from
+        else:
+            self.moved_from = list()
         self.shots_taken = shots_taken
         self.retreated = False
         if self.type_index == 4:
@@ -736,14 +745,13 @@ class Game:
         # player 0 = russia, 1 = germany, 2 = britain, 3 = japan, 4 = us
         # phase 0 = tech, 1 = repair, 2 = buy, 3 = combat move, 4 = combat phase, 5 = non-combat, 6 = place, 7 = cleanup
         self.turn_state = TurnState(1, "Russia", 2)
-        self.players = {"America": Player('America', 'Eastern United States'),    # This implimentation of capitals is redudant. Code uses both. It's fine.
-                        "Britain": Player('Britain', 'United Kingdom'),
-                        "Russia": Player('Russia', 'Russia'),
-                        "Germany": Player('Germany', 'Germany'),
-                        "Japan": Player('Japan', 'Japan')}
+        self.players = {"America": Player('America', 'Eastern United States', 42),  # This implementation of capitals is redundant
+                        "Britain": Player('Britain', 'United Kingdom', 31),         # But other implementation requires searching through entire
+                        "Russia": Player('Russia', 'Russia', 24),                   # game board any time you need a certain player's capital
+                        "Germany": Player('Germany', 'Germany', 41),
+                        "Japan": Player('Japan', 'Japan', 30)}
         self.purchased_units = {player: list() for player in self.players.keys()}
         # dictionary from territory names to territory states (containing unit_states)
-        # TODO: Indices in state_dict (for unit type) need to be 1 less
         self.state_dict = {"1 Sea Zone": TerritoryState("Sea Zone", []),
                            "2 Sea Zone": TerritoryState("Sea Zone", []),
                            "3 Sea Zone": TerritoryState("Sea Zone", []),
@@ -1019,7 +1027,7 @@ class Game:
             return ""                      
 
     def export_reader(self, xml_file):
-        # TODO: Must get purchased units from savegame
+        # TODO: Must get purchased units from save game
         # Read xml
         root = ET.parse(xml_file).getroot()
         turn = root.find("turn")
@@ -1103,13 +1111,13 @@ class Game:
             team = self.rules.teams[self.turn_state.player]
         return self.rules.teams[self.state_dict["Central America"].owner] == team
 
-    def calc_movement(self, unit_state, current_territory, goal_territory, phase=-1, ignore_pos=False):
+    def calc_movement(self, unit_state, current_territory, goal_territory, phase=-1):
         """
         a function that will check if a theoretical move is valid, and returns the movement required to move there, as well as the path taken.
         Returns -1 if impossible
         This replaces the old "passable" function
         """
-        if not ignore_pos and unit_state not in self.state_dict[current_territory].unit_state_list:
+        if unit_state not in self.state_dict[current_territory].unit_state_list:
             return -1, list()
         if current_territory == goal_territory:
             return 0, [goal_territory]
@@ -1167,7 +1175,8 @@ class Game:
         # Transported units can only move to adjacent land
         if unit_state.attached_to:
             # Must move to land, with all of their movement, and to an adjacent space
-            if self.rules.board[goal_territory].is_water or unit_state.moves_used > 0 or goal_territory not in self.rules.board[current_territory].neighbors:
+            if self.rules.board[goal_territory].is_water or unit_state.moves_used > 0\
+                    or goal_territory not in self.rules.board[current_territory].neighbors:
                 return -1, list()
             # If it is the non-combat move phase, and there are enemy units, it can't move
             if phase == 5:
@@ -1430,12 +1439,8 @@ class Game:
         else:
             unloadable_territories = [neighbor for neighbor in self.rules.board[goal_territory].neighbors if self.rules.board[neighbor].is_water]
             # Check if unit can even unload here
-            prev_attach = land_unit_state.attached_to
-            land_unit_state.attached_to = transport_state
-            if self.calc_movement(land_unit_state, unloadable_territories[0], goal_territory, phase=phase, ignore_pos=True)[0] < 0:
-                land_unit_state.attached_to = prev_attach
+            if not self.passable(land_unit_state, unloadable_territories[0], goal_territory, phase=phase, final_move=True):
                 return list() if return_paths else False
-            land_unit_state.attached_to = prev_attach
 
         # Already attached to/next to transport, so don't bother checking other loadable territories
         if land_unit_state.attached_to == transport_state or transport_territory in loadable_territories:
@@ -1447,7 +1452,6 @@ class Game:
 
         # Check all possible territory combinations and see which ones are possible
         paths = list()
-        transport_movement = transport_state.moves_used
         for territory_1 in loadable_territories:
             for territory_2 in unloadable_territories:
                 if transport_territory == territory_1 == territory_2:
@@ -1463,13 +1467,14 @@ class Game:
                                         and self.passable(transport_state, mid, territory_2, phase=phase):
                                     paths.append([transport_territory, mid, territory_2])
                 else:
-                    dist_1, path_1 = self.calc_movement(transport_state, transport_territory, territory_1, phase=phase)
-                    if dist_1 >= 0:
-                        transport_state.moves_used += dist_1
-                        dist_2, path_2 = self.calc_movement(transport_state, territory_1, territory_2, phase=phase, ignore_pos=True)
-                        if dist_2 >= 0:
-                            paths.append(path_1[:-1] + path_2)
-                        transport_state.moves_used = transport_movement
+                    if transport_territory in self.rules.board[territory_1].neighbors and territory_2 in self.rules.board[territory_1].neighbors:
+                        if self.passable(transport_state, transport_territory, territory_1, phase=phase) \
+                                and self.passable(transport_state, territory_1, territory_2, phase=phase):
+                            paths.append([transport_territory, territory_1, territory_2])
+
+        for i in range(len(paths)-1, -1, -1):
+            if len(paths[i]) > 3 - transport_state.moves_used:
+                paths.pop(i)
 
         return paths if return_paths else (len(paths) > 0)
 
@@ -1510,27 +1515,20 @@ class Game:
         # Otherwise, add paths that match exactly
         paths = list()
         for p1, p2 in ending_spots.values():
-            if min(len(path) for path in p1) < 3:
-                # All of p2 is valid
-                for path in p2:
-                    if p2 not in paths:
-                        paths.append(path)
-            if min(len(path) for path in p2) < 3:
-                # All of p1 is valid
+            if p1 and p2:
+                if min(len(path) for path in p1) < 3:
+                    # All of p2 is valid
+                    for path in p2:
+                        if p2 not in paths:
+                            paths.append(path)
+                if min(len(path) for path in p2) < 3:
+                    # All of p1 is valid
+                    for path in p1:
+                        if p1 not in paths:
+                            paths.append(path)
+                # Get identical paths
                 for path in p1:
-                    if p1 not in paths:
+                    if path in p2 and path not in paths:
                         paths.append(path)
-            # Get identical paths
-            for path in p1:
-                if path in p2 and path not in paths:
-                    paths.append(path)
 
         return paths if return_paths else (len(paths) > 0)
-
-
-# heuristic algorithm? NN? minimax
-
-# classic pathfinding = dijkstra search or A*
-
-
-game = Game()
