@@ -1,5 +1,4 @@
 import BoardState
-import phases
 import BigBrain
 import random
 
@@ -13,7 +12,7 @@ class FakeBrain(BigBrain.Brain):
 
     def get_all_values(self, game, player=''):
         risk_tolerances = {territory: 0.85 + random.random()/5 for territory in game.state_dict.keys()}
-        importance_values = {territory: game.rules.board[territory].ipc / 12 for territory in game.state_dict.keys()}
+        importance_values = {territory: (game.rules.board[territory].ipc + 1) / 13 for territory in game.state_dict.keys()}
         build_averages = {territory: max(0, random.randint(-15, 5)) for territory in game.state_dict.keys()}
         winning = random.random()
         return risk_tolerances, importance_values, build_averages, winning

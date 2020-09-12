@@ -372,7 +372,7 @@ class IsWinning(Heuristics):
 class GameController:
     def __init__(self, xml_file='', brain=None):
         self.game = BoardState.Game()
-        if not xml_file:
+        if xml_file:
             self.game.export_reader(xml_file)
         if not brain:
             self.brain = Brain()
@@ -391,15 +391,14 @@ class GameController:
             phases.Build(self.game).build_units()
             print('The following units were purchased:')
             for unit_state in self.game.purchased_units[player]:
-                print(self.game.rules.get_unit(unit_state).name)
+                print(self.game.rules.get_unit(unit_state.type_index).name)
             self.game.turn_state.phase += 1
             print('Purchase phase complete.')
             input('------------------------------------------------------------------------------')
         # Combat move phase
         elif phase_num == 3:
             print('Running combat move phase for ' + player + '...')
-            combat_move = phases.CombatMove(self.game)
-            combat_move.do_combat_move(importance_values, risk_tolerances)
+            phases.CombatMove(self.game).do_combat_move(importance_values, risk_tolerances)
             self.game.turn_state.phase += 1
             print('Combat move phase complete.')
             input('------------------------------------------------------------------------------')
@@ -413,15 +412,16 @@ class GameController:
         # Non combat move phase
         elif phase_num == 5:
             print('Running non-combat move phase for ' + player + '...')
-            non_combat = phases.NonCombatMove(self.game, importance_values, risk_tolerances)
-            non_combat.do_non_combat_move()
+            phases.NonCombatMove(self.game, importance_values, risk_tolerances).do_non_combat_move()
             self.game.turn_state.phase += 1
             print('Non-combat move phase complete.')
             input('------------------------------------------------------------------------------')
         # Placement phase
         elif phase_num == 6:
             print('Running placement phase for ' + player + '...')
-            phases.Place(self.game, self.game.purchased_units, build_averages, risk_tolerances)
+            placement = phases.Place(self.game, self.game.purchased_units[player][:], build_averages, risk_tolerances)
+            placement.build_strategy()
+            placement.place()
             self.game.turn_state.phase = 2
             print('Placement phase complete.')
             print('Running cleanup phase...')
@@ -438,7 +438,5 @@ class GameController:
             return False
         return True
 
-
 # Run with:
 # GameController('path/to/xmlfile.xml')
-
