@@ -1027,7 +1027,6 @@ class Game:
             return ""                      
 
     def export_reader(self, xml_file):
-        # TODO: Must get purchased units from save game
         # Read xml
         root = ET.parse(xml_file).getroot()
         turn = root.find("turn")
@@ -1091,15 +1090,16 @@ class Game:
             self.state_dict[territory].unit_state_list.append(
                 UnitState(owner, unit_type, moves_used=moves_used, damage=damage))
             # Keep track of where this unit is for later
-            all_units[unit_id] = (territory, len(self.state_dict[territory].unit_state_list) - 1, transport)
+            all_units[unit_id] = (territory, self.state_dict[territory].unit_state_list[-1], transport)
 
         # Second pass through list to attach units to transports
-        for ter, idx, transport in all_units.values():
+        for ter, land_unit, transport in all_units.values():
             if transport:
-                transport_unit = self.state_dict[all_units[transport][0]].unit_state_list[all_units[transport][1]]
-                land_unit = self.state_dict[ter].unit_state_list[idx]
+                transport_unit = all_units[transport][1]
                 transport_unit.attached_units.append(land_unit)
                 land_unit.attached_to = transport_unit
+
+        return all_units
 
     def controls_suez(self, team=''):
         if not team:

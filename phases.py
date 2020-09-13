@@ -491,7 +491,7 @@ class Vulnerability:
         attack_value = total_attack_power + (num_attackers * avg_power) + (attack_stdev * (0.5 + num_attackers) / 4.5)
         defense_value = total_defense_power + (num_defenders * avg_power) + (defense_stdev * (0.5 + num_defenders) / 4.5)
 
-        return attack_value / defense_value
+        return attack_value - defense_value
 
     def get_estimated_defensibility(self, territory_name, defender=''):
         if defender in self.game.rules.teams.keys():
@@ -582,9 +582,6 @@ class Build:
         self.prioritization_list.append(['aa', 0])  # 13
         self.prioritization_list.append(['artillery', 0])  # 14
         self.prioritization_list.append(['infantry', 0])  # 15
-        # TODO: Make the AI do this
-        for arr in self.prioritization_list:
-            arr[1] = max(0, random.randint(-10, 5))
 
     def build_units(self):
         # sea
@@ -1519,7 +1516,6 @@ class NonCombatMove:
                         self.game.rules.teams[self.game.turn_state.player]].append(unit_state)
 
 
-# TODO George: Why is this able to place units in enemy territories lmao
 class Place:
     """
     this class is primarily a long list of If's. Actual machine learning would be wasted here, as placing units
@@ -1538,7 +1534,7 @@ class Place:
         self.risk_tolerances = risk_tolerances
 
         self.factories = []
-        for territory_name in self.game.state_dict:
+        for territory_name, territory_state in self.game.state_dict.items():
             if territory_state.owner == self.game.turn_state.player: 
                 for unit_state in self.game.state_dict[territory_name].unit_state_list:
                     if unit_state.type_index == 4:
@@ -1885,12 +1881,15 @@ class Place:
 
     def place(self):
         for territory_key in self.placements:
-            # TODO George: I put this check here as a temporary fix to this placing units in enemy territories. Needs to be fixed still tho
             if self.game.state_dict[territory_key].owner == self.game.turn_state.player:
                 for unit_state in self.placements[territory_key]:
                     self.game.state_dict[territory_key].unit_state_list.append(unit_state)
                     print('Placed', self.game.rules.get_unit(unit_state.type_index).name, 'in', territory_key)
                     self.game.purchased_units[self.game.turn_state.player].remove(unit_state)
+            else:
+                print("Hopefully shouldn't reach this code")
+        if self.game.purchased_units[self.game.turn_state.player]:
+            print('There are still', len(self.game.purchased_units[self.game.turn_state.player]), 'unplaced units')
         self.vulnerability.invalid = True
 
 

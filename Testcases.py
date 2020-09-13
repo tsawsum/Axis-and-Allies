@@ -10,12 +10,19 @@ class FakeBrain(BigBrain.Brain):
         self.build = None
         self.winning = None
 
-    def get_all_values(self, game, player=''):
-        risk_tolerances = {territory: 0.85 + random.random()/5 for territory in game.state_dict.keys()}
-        importance_values = {territory: (game.rules.board[territory].ipc + 1) / 13 for territory in game.state_dict.keys()}
-        build_averages = {territory: max(0, random.randint(-15, 5)) for territory in game.state_dict.keys()}
-        winning = random.random()
-        return risk_tolerances, importance_values, build_averages, winning
+    def get_values(self, game, player='', is_winning=False, risk=False, importance=False, build=False, prioritization=False):
+        result = list()
+        if is_winning:
+            result.append(random.random())
+        if risk:
+            result.append({territory: 3 * random.random() - 2 for territory in game.state_dict.keys()})
+        if importance:
+            result.append({territory: (game.rules.board[territory].ipc + 1) / 13 for territory in game.state_dict.keys()})
+        if build:
+            result.append({territory: max(0, random.randint(-50, 20)) for territory in game.state_dict.keys()})
+        if prioritization:
+            result.append([max(0, random.randint(-10, 5)) for _ in range(13)])
+        return result
 
 
 class Testcases:
@@ -987,4 +994,5 @@ class Testcases:
         return True
 
 
-Testcases().test_all()
+if __name__ == '__main__':
+    Testcases().test_all()
