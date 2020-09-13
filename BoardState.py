@@ -1438,6 +1438,8 @@ class Game:
             unloadable_territories = [goal_territory]
         else:
             unloadable_territories = [neighbor for neighbor in self.rules.board[goal_territory].neighbors if self.rules.board[neighbor].is_water]
+            if not unloadable_territories:
+                return list() if return_paths else False
             # Check if unit can even unload here
             if not self.passable(land_unit_state, unloadable_territories[0], goal_territory, phase=phase, final_move=True):
                 return list() if return_paths else False
@@ -1447,7 +1449,7 @@ class Game:
             loadable_territories = [transport_territory]
 
         # If not next to water, then obviously can't transport
-        if not loadable_territories or not unloadable_territories:
+        if not loadable_territories:
             return list() if return_paths else False
 
         # Check all possible territory combinations and see which ones are possible
