@@ -5,8 +5,8 @@ import os
 # Make sure converterX.X.jar are in the same directory as this SavegamesToXml.py
 if __name__ == '__main__':
     # Parameters
-    input_directory = 'path/to/directory/with/savegames'
-    output_directory = 'path/where/you/want/xml/files/to/go'
+    input_directory = input('path/to/directory/with/savegames: ')
+    output_directory = input('path/where/you/want/xml/files/to/go: ')
 
     # Create a list of all file paths in the input directory, and their corresponding output path
     filepaths = list()
