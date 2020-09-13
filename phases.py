@@ -1539,9 +1539,10 @@ class Place:
 
         self.factories = []
         for territory_name in self.game.state_dict:
-            for unit_state in self.game.state_dict[territory_name].unit_state_list:
-                if unit_state.type_index == 4:
-                    self.factories.append(territory_name)
+            if territory_state.owner == self.game.turn_state.player: 
+                for unit_state in self.game.state_dict[territory_name].unit_state_list:
+                    if unit_state.type_index == 4:
+                        self.factories.append(territory_name)
         # self.factories now has a list of names having factories
 
     def get_territories_under_threat(self, risk_tolerance, factory_risk=None, capital_risk=None):
@@ -1682,9 +1683,10 @@ class Place:
         neighbors = self.game.rules.board[territory_name].neighbors
         for neighbor_name in neighbors:
             territory_state = self.game.state_dict[neighbor_name]
-            for unit_state in territory_state.unit_state_list:
-                if unit_state.type_index == 4:  # factory
-                    adjacent_factory_list.append(neighbor_name)
+            if territory_state.owner == self.game.turn_state.player:
+                for unit_state in territory_state.unit_state_list:
+                    if unit_state.type_index == 4:  # factory
+                        adjacent_factory_list.append(neighbor_name)
 
         adjacent_factory_list.sort(key=lambda x: self.game.rules.board[x].ipc)
         return adjacent_factory_list
