@@ -720,6 +720,7 @@ class BattleCalculator:
         return power
 
     def battle_sim(self, run_count):
+        # TODO: Battleships with two health in casualty orders
         attack_casualty_order = self.get_casualty_order(self.game.rules.teams[self.attacking_player], self.unit_state_list,
                                                         True, self.one_land, self.attack_priority)
         defense_casualty_order = self.get_casualty_order(self.game.rules.enemy_team(player=self.attacking_player),
@@ -758,6 +759,8 @@ class CombatMove:
         return self.game.calc_movement(unit_state, current_territory, goal_territory)[0] >= 0
 
     def move_unit(self, unit_state, current_territory, goal_territory, bombing=False, bombarding=False):
+        # TODO: Make sure tanks take free territories
+        # TODO: Moves way too many units into territories
         dist, path = self.game.calc_movement(unit_state, current_territory, goal_territory)
         if dist == -1:
             return False
@@ -927,6 +930,8 @@ class Battles:
         self.kamikaze = False
         self.battle_calculator = None
         # TODO: Hardcode: Have the AI decide on retreating and kamikaze values
+        # TODO: Says lost battle when won, maybe because of factory?
+        # TODO: Set random seed to zero when testing
 
         self.enemy_team = self.game.rules.enemy_team(player=self.player)
 
@@ -1102,6 +1107,7 @@ class Battles:
                                     self.game.state_dict[retreat_choice].unit_state_list.append(unit_state)
                                     self.game.state_dict[territory_name].unit_state_list.remove(unit_state)
                                     unit_state.retreated = True
+                                    print('    - Retreated ' + self.game.rules.get_unit(unit_state.type_index).name + ' to ' + retreat_choice)
                                 else:
                                     print('Definitely not supposed to reach this code')
                                 if unit_state in unit_state_list:
@@ -1139,6 +1145,8 @@ class Battles:
         #   retreatAfterXUnitsLeft
         #   retreatWhenOnlyAirLeft
         #  I'm not sure if you want to use this info to change the battler or not
+
+        # TODO George: Battleships have 2 hp dumbass
 
         for unit_state in unit_state_list:
             if (self.game.rules.teams[unit_state.owner] == team) \
@@ -1897,7 +1905,7 @@ class Place:
                             self.theoretical_to_placements(theoretical_append, territory_name)
                     if self.game.rules.get_unit(unit_state.type_index).unit_type == "sea":
                         if len(theoretical_append) < build_slots:
-                            seazone_list = self.adjacent_seazone_finder(self, territory_name)
+                            seazone_list = self.adjacent_seazone_finder(territory_name)
                             for sea_zone in seazone_list:
                                 theoretical_append.append(unit_state)
                                 self.theoretical_to_placements(theoretical_append, sea_zone, territory_name)
@@ -1914,6 +1922,7 @@ class Place:
         if self.game.purchased_units[self.game.turn_state.player]:
             print('There are still', len(self.game.purchased_units[self.game.turn_state.player]), 'unplaced units')
         self.vulnerability.invalid = True
+        # TODO: Refund non-placed units?
 
 
 class Cleanup:

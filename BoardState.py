@@ -1119,14 +1119,24 @@ class Game:
         """
         if unit_state not in self.state_dict[current_territory].unit_state_list:
             return -1, list()
-        if current_territory == goal_territory:
-            return 0, [goal_territory]
 
         # Check if it would be possible to move to goal territory at all before doing BFS
         unit = self.rules.get_unit(unit_state.type_index)
         goal_territory_state = self.state_dict[goal_territory]
         if phase == -1:
             phase = self.turn_state.phase
+
+        # Can't move into neutral territories
+        if goal_territory_state.owner == "Neutral":
+            return -1, list()
+
+        # Deal with some planes landing stuff
+        if phase == 5 and unit.unit_type == 'air':
+            if self.rules.board[goal_territory].is_water or self.rules.teams[goal_territory_state.owner] != self.rules.teams[unit_state.owner] or goal_territory_state.just_captured:
+                return -1, list()
+
+        if current_territory == goal_territory:
+            return 0, [goal_territory]
 
         # Can't move if no movement left
         if unit_state.moves_used == unit.movement:
@@ -1154,10 +1164,6 @@ class Game:
         else:
             if unit.unit_type == 'sea':
                 return -1, list()
-
-        # Can't move into neutral territories
-        if goal_territory_state.owner == "Neutral":
-            return -1, list()
 
         # Non-combat movement
         if phase == 5:
