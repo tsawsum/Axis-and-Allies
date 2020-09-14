@@ -1535,7 +1535,8 @@ class Place:
 
         self.factories = []
         for territory_name, territory_state in self.game.state_dict.items():
-            if territory_state.owner == self.game.turn_state.player: 
+            if territory_state.owner == self.game.turn_state.player \
+            and not territory_state.just_captured:
                 for unit_state in self.game.state_dict[territory_name].unit_state_list:
                     if unit_state.type_index == 4:
                         self.factories.append(territory_name)
@@ -1567,6 +1568,7 @@ class Place:
 
         self.purchased_unit_state_list.remove(unit_state)
         self.placements[territory_name].append(unit_state)
+        # TODO: Impliment this. We might have forgot...
 
     def set_defensive_requirements(self, endangered_name_list):
         for territory_name in endangered_name_list:
@@ -1679,7 +1681,8 @@ class Place:
         neighbors = self.game.rules.board[territory_name].neighbors
         for neighbor_name in neighbors:
             territory_state = self.game.state_dict[neighbor_name]
-            if territory_state.owner == self.game.turn_state.player:
+            if territory_state.owner == self.game.turn_state.player \
+            and not territory_state.just_captured:
                 for unit_state in territory_state.unit_state_list:
                     if unit_state.type_index == 4:  # factory
                         adjacent_factory_list.append(neighbor_name)
