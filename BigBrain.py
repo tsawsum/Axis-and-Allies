@@ -346,7 +346,7 @@ class IsWinning(Heuristics):
 
         return heuristics
 
-
+# TODO: Player # should be input heuristic (and team? idk) for all of these
 class Prioritization(Heuristics):
     def __init__(self, load_net=True):
         super().__init__('prioritization', load_net)
