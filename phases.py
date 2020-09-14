@@ -1535,7 +1535,8 @@ class Place:
 
         self.factories = []
         for territory_name, territory_state in self.game.state_dict.items():
-            if territory_state.owner == self.game.turn_state.player: 
+            if territory_state.owner == self.game.turn_state.player \
+            and not territory_state.just_captured:
                 for unit_state in self.game.state_dict[territory_name].unit_state_list:
                     if unit_state.type_index == 4:
                         self.factories.append(territory_name)
@@ -1567,6 +1568,7 @@ class Place:
 
         self.purchased_unit_state_list.remove(unit_state)
         self.placements[territory_name].append(unit_state)
+        # TODO: Impliment this. We might have forgot...
 
     def set_defensive_requirements(self, endangered_name_list):
         for territory_name in endangered_name_list:
@@ -1679,7 +1681,8 @@ class Place:
         neighbors = self.game.rules.board[territory_name].neighbors
         for neighbor_name in neighbors:
             territory_state = self.game.state_dict[neighbor_name]
-            if territory_state.owner == self.game.turn_state.player:
+            if territory_state.owner == self.game.turn_state.player \
+            and not territory_state.just_captured:
                 for unit_state in territory_state.unit_state_list:
                     if unit_state.type_index == 4:  # factory
                         adjacent_factory_list.append(neighbor_name)
@@ -1755,7 +1758,11 @@ class Place:
                                     transport_space -= \
                                         self.game.rules.get_unit(attached_unit_state.type_index).transport_weight
                 if transport_space >= self.game.rules.get_unit(unit_state.type_index).transport_weight:
-                    theoretical_append.append(unit_state)
+                    if unit_state in self.purchased_unit_state_list:
+                        self.purchased_unit_state_list.remove(unit_state)
+                        self.placements[territory_name].append(unit_state)
+                        self.game.state_dict[factory_name].built_units += 1
+                        self.vulnerability.place_unit(unit_state, territory_name)           
 
     def update_vulnerable_builds(self, territory_name, theoretical_append):
         i = 0
@@ -1878,6 +1885,23 @@ class Place:
                         self.sea_zone_builder(theoretical_append, seazone_name, False)
 
                     self.theoretical_to_placements(theoretical_append, territory_name)
+            
+            # places any unplaced units if there is space
+            for territory_name in self.factories:
+                theoretical_append = []
+                build_slots = self.build_slots(territory_name)
+                    for unit_state in self.purchased_unit_state_list:
+                        if self.game.rules.get_unit(unit_state.type_index).unit_type != "sea":
+                            if len(theoretical_append) < build_slots:
+                                theoretical_append.append(unit_state)
+                                self.theoretical_to_placements(theoretical_append, territory_name)
+                        if self.game.rules.get_unit(unit_state.type_index).unit_type == "sea":
+                            if len(theoretical_append) < build_slots:
+                                seazone_list = adjacent_seazone_finder(self, territory_name)
+                                for sea_zone in seazone_list:
+                                    theoretical_append.append(unit_state)
+                                    self.theoretical_to_placements(theoretical_append, sea_zone, territory_name)
+
 
     def place(self):
         for territory_key in self.placements:
