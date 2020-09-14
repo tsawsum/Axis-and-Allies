@@ -1761,7 +1761,7 @@ class Place:
                     if unit_state in self.purchased_unit_state_list:
                         self.purchased_unit_state_list.remove(unit_state)
                         self.placements[territory_name].append(unit_state)
-                        self.game.state_dict[factory_name].built_units += 1
+                        self.game.state_dict[fac_territory_name].built_units += 1
                         self.vulnerability.place_unit(unit_state, territory_name)           
 
     def update_vulnerable_builds(self, territory_name, theoretical_append):
@@ -1890,18 +1890,17 @@ class Place:
             for territory_name in self.factories:
                 theoretical_append = []
                 build_slots = self.build_slots(territory_name)
-                    for unit_state in self.purchased_unit_state_list:
-                        if self.game.rules.get_unit(unit_state.type_index).unit_type != "sea":
-                            if len(theoretical_append) < build_slots:
+                for unit_state in self.purchased_unit_state_list:
+                    if self.game.rules.get_unit(unit_state.type_index).unit_type != "sea":
+                        if len(theoretical_append) < build_slots:
+                            theoretical_append.append(unit_state)
+                            self.theoretical_to_placements(theoretical_append, territory_name)
+                    if self.game.rules.get_unit(unit_state.type_index).unit_type == "sea":
+                        if len(theoretical_append) < build_slots:
+                            seazone_list = self.adjacent_seazone_finder(self, territory_name)
+                            for sea_zone in seazone_list:
                                 theoretical_append.append(unit_state)
-                                self.theoretical_to_placements(theoretical_append, territory_name)
-                        if self.game.rules.get_unit(unit_state.type_index).unit_type == "sea":
-                            if len(theoretical_append) < build_slots:
-                                seazone_list = adjacent_seazone_finder(self, territory_name)
-                                for sea_zone in seazone_list:
-                                    theoretical_append.append(unit_state)
-                                    self.theoretical_to_placements(theoretical_append, sea_zone, territory_name)
-
+                                self.theoretical_to_placements(theoretical_append, sea_zone, territory_name)
 
     def place(self):
         for territory_key in self.placements:
