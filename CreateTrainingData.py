@@ -43,7 +43,7 @@ class CreateData:
         importances = dict()
         for ter, ter_state in game.state_dict.items():
             if ter_state.owner == 'Sea Zone' or ter_state.owner == game.turn_state.player:
-                importances[ter] = vuln.get_vulnerability(ter, defender=game.turn_state.player)
+                importances[ter] = vuln.get_estimated_defensibility(ter, defender=game.turn_state.player)
         max_vuln = max(importances.values())
         min_vuln = min(importances.values())
         for ter in importances.keys():
