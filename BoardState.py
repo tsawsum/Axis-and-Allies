@@ -1132,7 +1132,19 @@ class Game:
 
         # Deal with some planes landing stuff
         if phase == 5 and unit.unit_type == 'air':
-            if self.rules.board[goal_territory].is_water or self.rules.teams[goal_territory_state.owner] != self.rules.teams[unit_state.owner] or goal_territory_state.just_captured:
+            if self.rules.board[goal_territory].is_water:
+                if unit_state.type_index == 12:
+                    return -1, list()
+                open_spots = 0
+                for us in goal_territory_state.unit_state_list:
+                    if self.rules.teams[unit_state.owner] == self.rules.teams[us.owner]:
+                        if us.type_index == 11:
+                            open_spots -= 1
+                        elif us.type_index == 9:
+                            open_spots += 2
+                if open_spots <= 0:
+                    return -1, list()
+            elif self.rules.teams[goal_territory_state.owner] != self.rules.teams[unit_state.owner] or goal_territory_state.just_captured:
                 return -1, list()
 
         if current_territory == goal_territory:

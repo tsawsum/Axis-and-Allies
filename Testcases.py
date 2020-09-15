@@ -995,4 +995,5 @@ class Testcases:
 
 
 if __name__ == '__main__':
+    random.seed(0)
     Testcases().test_all()

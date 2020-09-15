@@ -130,4 +130,4 @@ class CreateData:
 
 
 if __name__ == '__main__':
-    CreateData([('training_data/Game27', 'Allies'), ('training_data/Game45', 'Axis')], 'NNData').parse_games()
+    CreateData([('D:/RandomCrap/training_data/Game27', 'Allies'), ('D:/RandomCrap/training_data/Game45', 'Axis')], 'NNData').parse_games()

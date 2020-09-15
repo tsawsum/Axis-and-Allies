@@ -6,11 +6,11 @@ import numpy as np
 class Trainer:
     def __init__(self, data_folder):
         data_files = [os.path.join(data_folder, file_name) for file_name in ('importance_values.txt', 'should_attack.txt', 'build_averages.txt', 'is_winning.txt', 'prioritization.txt')]
-        # self.train_is_winning(self.get_data(data_files[3]))
+        self.train_is_winning(self.get_data(data_files[3]))
         self.train_importance_value(self.get_data(data_files[0]))
-        # self.train_build_average(self.get_data(data_files[2]))
-        # self.train_prioritization(self.get_data(data_files[4]))
-        # self.train_should_attack(self.get_data(data_files[1]))
+        self.train_build_average(self.get_data(data_files[2]))
+        self.train_prioritization(self.get_data(data_files[4]))
+        self.train_should_attack(self.get_data(data_files[1]))
 
     def get_data(self, filename):
         inputs, outputs = list(), list()
@@ -108,7 +108,7 @@ class Trainer:
         model.compile(loss='mean_squared_error', optimizer='adam', metrics=['accuracy'])
 
         # Train and test the model
-        model.fit(X, Y, epochs=500, batch_size=8, validation_split=0.1)
+        model.fit(X, Y, epochs=750, batch_size=10, validation_split=0.1)
         _, accuracy = model.evaluate(X, Y)
         print('Prioritization accuracy: %.2f%%' % (accuracy * 100))
 
