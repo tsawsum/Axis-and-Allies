@@ -28,6 +28,7 @@ import phases
 import BoardState
 import numpy as np
 import time
+import random
 
 
 class Brain:
@@ -105,6 +106,13 @@ class Heuristics:
 
         # Turn number
         heuristics.append(game.turn_state.round_num)
+
+        # Player #
+        heuristics.append(1 if player == 'Russia' else 0)
+        heuristics.append(1 if player == 'Germany' else 0)
+        heuristics.append(1 if player == 'Britain' else 0)
+        heuristics.append(1 if player == 'Japan' else 0)
+        heuristics.append(1 if player == 'America' else 0)
 
         # Who is winning
         heuristics.append(winning)
@@ -346,15 +354,22 @@ class IsWinning(Heuristics):
 
         return heuristics
 
-# TODO: Player # should be input heuristic (and team? idk) for all of these
+
 class Prioritization(Heuristics):
     def __init__(self, load_net=True):
         super().__init__('prioritization', load_net)
 
     def get_heuristics(self, game, player='', territory_name='', vuln=None, winning=0.5):
-        # TODO: This needs to be changed to be better
         heuristics = list()
         team = game.rules.teams[player]
+
+        # Player #
+        heuristics.append(1 if player == 'Russia' else 0)
+        heuristics.append(1 if player == 'Germany' else 0)
+        heuristics.append(1 if player == 'Britain' else 0)
+        heuristics.append(1 if player == 'Japan' else 0)
+        heuristics.append(1 if player == 'America' else 0)
+
         # Controls Suez
         heuristics.append(1 if game.controls_suez(team) else 0)
 
@@ -533,6 +548,17 @@ class RiskTolerance(Heuristics):
         super().__init__('should_attack', load_net)
 
     def get_value(self, game, territory_name='', player='', vuln=None, winning=0.5):
+        # TODO (Later): The risk tolerance values this gets are really shitty so I just hardcoded it temporarily
+        tolerance = 0
+        if game.rules.board[territory_name].is_capital:
+            tolerance -= 0.5
+        if territory_name in game.rules.win_cons:
+            tolerance -= 0.5
+        if 4 in [us.type_index for us in game.state_dict[territory_name].unit_state_list]:
+            tolerance -= 0.5
+        tolerance -= game.rules.board[territory_name].ipc / 40
+        return tolerance
+        """
         # This NN outputs 1 or 0 for whether or not to attack for a certain vulnerability
         # So, do a binary search to figure threshold vulnerability
         inputs = np.array([self.get_heuristics(game, player, territory_name, vuln, winning)])
@@ -544,7 +570,7 @@ class RiskTolerance(Heuristics):
                 max_val = current
             else:
                 min_val = current
-        return (min_val + max_val) / 2
+        return (min_val + max_val) / 2"""
 
 
 class GameController:
@@ -573,7 +599,7 @@ class GameController:
             build.build_units()
             print('The following units were purchased:')
             for unit_state in self.game.purchased_units[player]:
-                print(self.game.rules.get_unit(unit_state.type_index).name)
+                print('  - ' + self.game.rules.get_unit(unit_state.type_index).name)
             self.game.turn_state.phase += 1
             print('Purchase phase complete.')
             input('------------------------------------------------------------------------------')
@@ -581,7 +607,7 @@ class GameController:
         elif phase_num == 3:
             risk_tolerances, importance_values = self.brain.get_values(self.game, player, risk=True, importance=True)
             print('Running combat move phase for ' + player + '...')
-            phases.CombatMove(self.game).do_combat_move(importance_values, risk_tolerances)
+            phases.CombatMove(self.game, importance_values).do_combat_move(risk_tolerances)
             self.game.turn_state.phase += 1
             print('Combat move phase complete.')
             input('------------------------------------------------------------------------------')
@@ -589,7 +615,7 @@ class GameController:
         elif phase_num == 4:
             importance_values = self.brain.get_values(self.game, player, importance=True)[0]
             print('Running battle phase for ' + player + '...')
-            phases.Battles(self.game, importance_values)
+            phases.Battles(self.game, importance_values).resolve_all_battles()
             self.game.turn_state.phase += 1
             print('Battle phase complete.')
             input('------------------------------------------------------------------------------')
@@ -627,4 +653,5 @@ class GameController:
 
 if __name__ == '__main__':
     # For a specific save, run GameController('path/to/xmlfile.xml')
+    random.seed(0)
     GameController()
